@@ -1,32 +1,24 @@
 module.exports = {
     siteMetadata: {
-        title: `Novela by Narative`,
-        name: `Narative`,
-        siteUrl: `https://novela.narative.co`,
-        description: `This is my description that will be used in the meta tags and important for search results`,
+        title: `Swizec Teller`,
+        name: `Swizec Teller`,
+        siteUrl: `https://swizec.com/blog`,
+        description: `This is where I write thing.`,
         hero: {
             heading: `Welcome to Novela, the simplest way to start publishing with Gatsby.`,
             maxWidth: 652,
         },
         social: [{
                 name: `twitter`,
-                url: `https://twitter.com/narative`,
+                url: `https://twitter.com/swizec`,
             },
             {
                 name: `github`,
-                url: `https://github.com/narative`,
+                url: `https://github.com/swizec`,
             },
             {
                 name: `instagram`,
-                url: `https://instagram.com/narative.co`,
-            },
-            {
-                name: `linkedin`,
-                url: `https://www.linkedin.com/company/narative/`,
-            },
-            {
-                name: `dribbble`,
-                url: `https://dribbble.com/narativestudio`,
+                url: `https://instagram.com/swizec`,
             },
         ],
     },
@@ -41,9 +33,9 @@ module.exports = {
         {
             resolve: `gatsby-plugin-manifest`,
             options: {
-                name: `Novela by Narative`,
-                short_name: `Novela`,
-                start_url: `/`,
+                name: `Swizec Teller`,
+                short_name: `Swizec`,
+                start_url: `/blog`,
                 background_color: `#fff`,
                 theme_color: `#fff`,
                 display: `standalone`,

@@ -1,24 +1,5 @@
-- name: Dennis Brotzky
+- name: Swizec Teller
   bio: |
-    Written by You. This is where your author bio lives. Share your work, your
-    joys and of course, your Twitter handle.
-  avatar: ./avatars/dennis-brotzky.jpg
+      Swizec Teller is a geek with a hat. He does stuff and writes things.
+  avatar: ./avatars/swizec-teller.jpg
   featured: true
-
-- name: Thiago Costa
-  bio: |
-    Written by You. This is where your author bio lives. Share your work, your
-    joys and of course, your Twitter handle.
-  avatar: ./avatars/thiago-costa.png
-
-- name: Brad Tiller
-  bio: |
-    Written by You. This is where your author bio lives. Share your work, your
-    joys and of course, your Twitter handle.
-  avatar: ./avatars/brad-tiller.png
-
-- name: Mack Mansouri
-  bio: |
-    Written by You. This is where your author bio lives. Share your work, your
-    joys and of course, your Twitter handle.
-  avatar: ./avatars/mack-mansouri.png
