@@ -5,7 +5,7 @@ module.exports = {
         siteUrl: `https://swizec.com/blog`,
         description: `This is where I write thing.`,
         hero: {
-            heading: `Welcome to Novela, the simplest way to start publishing with Gatsby.`,
+            heading: `Want to become a better web engineer? Indie hacker? Entrepreneur? Keep reading.`,
             maxWidth: 652,
         },
         social: [{
