@@ -42,6 +42,7 @@ module.exports = {
                 icon: `src/assets/favicon.png`,
             },
         },
+        'gatsby-plugin-styled-components'
         // {
         //   resolve: `gatsby-plugin-google-analytics`,
         //   options: {
