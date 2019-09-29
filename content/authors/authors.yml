@@ -3,3 +3,6 @@
       Swizec Teller is a geek with a hat. He does stuff and writes things.
   avatar: ./avatars/swizec-teller.jpg
   featured: true
+  social:
+      - url: https://twitter.com/Swizec
+      - url: https://github.com/Swizec
