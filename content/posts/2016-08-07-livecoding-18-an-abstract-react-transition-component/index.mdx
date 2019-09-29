@@ -1,0 +1,94 @@
+---
+layout: post
+title: Livecoding #18: An abstract React transition component
+date: 2016-08-07
+categories: d3js, Front End, Livecoding, react, Technical
+author: Swizec Teller
+hero: ./img/embed
+---
+
+_This is a Livecoding Recap – an almost-weekly post about interesting things discovered while livecoding ?. Always under 500 words and with pictures. You can follow my channel, [here](https://livecoding.tv/swizec). New content almost **every Sunday at 2pm PDT**. There’s live chat, come say hai ?_
+
+This week we made a circle bounce back and forth. ?
+
+Trivial, right? Yes, as trivial as it gets. The bouncing circle wasn’t the point, the point was how it’s made. This: [react-transitionable-component](https://github.com/Swizec/react-transitionable-component). My first not-just-a-cool-experiment open source contribution to the React ecosystem.
+
+It’s an abstract component that makes building transitions easy.
+
+Over the past few weeks, I’ve noticed that making a transition always follows the same pattern: move props to state, render from state instead of props, use `d3.transition` to transition prop values on every `componentWillReceiveProps`. What if we can abstract all that work away? ?
+
+We started with this jumping circle:
+
+> [](//imgur.com/sFBlt)
+
+And ended with this transitioned circle:
+
+> [](//imgur.com/Z256F)
+
+It took me over an hour to realize that zooming-in would have made everyone’s lives easier, but here we are. Tiny little gifs for tiny little screens. Or big screens. The gifs are always tiny.
+
+Making a circle that transitions like that isn’t hard. It takes about twenty minutes to show and explain to a novice in both React and D3. At least that’s how much it takes when I do workshops.
+
+So who cares about making abstraction, right? I care. Doing it from scratch every time gets old, fast. I wanted a way to say _“make this component use transitions for everything.”_ without worrying about implementation every time.
+
+As you can expect from a project that took less than two hours from start to finish, there’s little code to show. [40 lines](https://github.com/Swizec/react-transitionable-component/blob/master/src/TransitionableComponent.js) that look like this:
+
+    class TransitionableComponent extends Component {
+        constructor(props) {
+            // copy all props to state
+            // call _defineEasing and _defineDuration
+        }
+
+        _defineEasing(easing) {
+            // if this.easing undefined, get easing function from d3
+        }
+
+        _defineDuration(duration) {
+            // if this.duration undefined, set it
+        }
+
+        componentWillReceiveProps(newProps) {
+            this._defineEasing(newProps.easing);
+            this._defineDuration(newProps.duration);
+
+            const node = d3.select(this.refs.node);
+
+            let transition = node.transition()
+                                 .ease(this.easing);
+
+            if (this.duration !== undefined) {
+                transition.duration(this.duration);
+            }
+
+            Object.keys(newProps)
+                  .forEach((k) => {
+                      transition.attr(k, newProps[k]);
+                  });
+
+            transition.on('end', () => this.setState(newProps));
+        }
+    }
+
+I cut out the boring bits. You can see them on GitHub, [here](https://github.com/Swizec/react-transitionable-component/blob/master/src/TransitionableComponent.js).
+
+The fun bit is in `componentWillReceiveProps`. We update our easing function and our duration, which should’ve been dynamic getters instead. Then we get the `node` and start a `transition()` with an easing function, and a `duration`, if it’s there. After that, we walk through every prop and add it to the pile of transitioning attributes with `.attr`. When the transition is over, we use the `'end'` callback to update component state and ensure React understands what’s going on.
+
+You’ll notice `TransitionableComponent` doesn’t have a `render()` function. It’s an abstract component meant to be extended by a real component. Something like this:
+
+    class Circle extends TransitionableComponent {
+        render() {
+            return 
+        }
+    }
+
+That’s a transitionable circle now. Any props passed into it are transitioned. You have to be careful to use `this.state` instead of `this.props` when using them though.
+
+Using the `Circle` component looks like this:
+
+        
+
+See, easy. :)
+
+Join me next week when we clean this up to use dynamic getters, avoid importing the entire d3 library, and build some examples.
+
+PS: the edited and improved versions of these videos are becoming a video course. Readers of the engineer package of [React+d3js ES6](http://swizec.com/reactd3js/) get the video course for free when it’s ready.

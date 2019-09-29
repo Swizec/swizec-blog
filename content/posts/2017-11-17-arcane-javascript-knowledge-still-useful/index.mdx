@@ -1,0 +1,46 @@
+---
+layout: post
+title: Arcane JavaScript knowledge still useful
+date: 2017-11-17
+categories: Front End, Technical
+author: Swizec Teller
+hero: ./img/yuploader.gif
+---
+
+ES6 has been with us for 2 years. [ES2016 and ES2017](https://es2017.io) are standard practice. ES2018 is just around the corner. And yet, sometimes you still need JavaScript practices so arcane you've almost forgotten they exist. Such was the case with a production bug we discovered after a performance optimization. https&#x3A;//twitter.com/Swizec/status/928761345750605825 Every once in a while, you would refresh [our webapp](https://www.yup.com) and stare at the loading animation forever. Yes, we have one of those because we're cool. ![](./img/yuploader.gif) We worked hard on it, and it looks great. But we don't want you to be stuck staring at it never getting to the page. We traced the problem down to a JavaScript error during app initialization. Sometimes Webpack would try to execute modules before they were ready. This shows up as a cryptic error 👇
+
+    Uncaught TypeError: Cannot read property 'call' of undefined
+        at __webpack_require__
+
+It happens on this line inside `manifest.js` 👇
+
+    // Execute the module function
+    modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+
+Now `manifest.js` is a generated file, so there isn't much you can do to fix it. In fact, you shouldn't have to fix it. Or even consider modifying it. Ever. Webpack generates this file when you compile your code and uses it to bootstrap your code. It builds a list of modules inside that `modules` dictionary and executes them when you run `import` or `require()`. Usually, this either always works or never works. It always works when your code is correct. It never works when you forget to `export` your module. But it's never supposed to get into such a situation that it _sometimes_ works and sometimes doesn't. That is right out. So I started to dig. And dig. And dig some more. Our bug stymied even grandmaster TheLarkInn. https&#x3A;//twitter.com/TheLarkInn/status/928789785124016128 I dug for an hour. Then two. Then five. I tried everything. I added console logs into manifest.js to track which module exactly was causing a problem. I used [Webpack's official analyze tool](https://webpack.github.io/analyse/) to inspect our builds and associate `moduleId`s with specific code files. At up to 3 minutes per compile, it was slow going. I changed this and that and nothing worked. ![](./img/tired-at-computer.gif) Then I found this old article Jake Archibald published in 2013. [Deep dive into the murky waters of script loading](https://www.html5rocks.com/en/tutorials/speed/script-loading/) In it, he explained that scripts dynamically inserted into the DOM were `async` by default. 💡 Why does that matter? Because our performance optimization made our scripts `preload` then injected them into the DOM when the files were loaded. This meant that _sometimes_ our `main_code.js` would start executing _before_ our `main_code_vendor.js` file was loaded. As a result, core libraries our code depends on weren't loaded yet by the time our code tried to use them. Ha!
+
+## Some background
+
+Let me give you some background. We use [Webpack to split our app into multiple files](https://swizec.com/blog/dirty-hack-took-30percent-off-webpack-size/swizec/7657). Libraries go into an `app_vendor.js` file, and our code goes into an `app.js` file. Most of our apps also have chunks that Webpack loads asynchronously when they're needed. So you need to load at least 3 JavaScript files to make any of our apps work
+
+1.  manifest.js
+2.  app_vendor.js
+3.  app.js
+
+Loading scripts as `async` is an old technique to make webapps faster. You write `<script src="./img/bla" async></script>` and the browser doesn't wait for JavaScript to load before moving on to rendering the rest of your DOM. This is great, but it leads to problems. Scripts might execute in random order. So instead, we used `defer` for a long time. This downloads scripts without waiting for them, then executes all of them in order as they were defined. Wonderful. But preloading is even better 👉 `<link rel="preload" href="bla" onload="loadJsFiles(this.href) />`. With preloading, you're loading scripts without waiting for them, potentially before the user even opens your site, then executing a callback to say _"Ok we got the script, now what?"_ In our case, the _"now what"_ part would create a `script` DOM node and insert it into the page. That makes it execute.
+
+    function loadJsFile(file) {
+        // keep track of what's been loaded
+        if (allScriptsLoaded) {
+            loadedScripts.forEach(function () {
+                var script = document.createElement('script');
+                script.src = '<%= "#{js_file_href}" %>';            document.body.appendChild(script);
+            })
+        }
+    }
+
+Keep track of all scripts that were loaded, insert them into the DOM, and trigger their execution when all are ready.
+
+## The solution
+
+This _"Preload as much as possible, insert into DOM when all is ready"_ works great. Except when it doesn't. _Sometimes_ they would execute in the wrong order. Our business code would start executing before our vendor code and discover that the libraries it needs weren't there. 💩 But why? We wait until all scripts are preloaded before inserting them into the page. Because dynamically inserted scripts are `async` by default. You have explicitly disable that with `script.async = false`. And everything works. 2013-era JavaScript strikes again. Still relevant. ![](./img/cosby-facepalm.gif)

@@ -1,0 +1,22 @@
+---
+layout: post
+title: Do we rely on open APIs too much?
+date: 2009-08-12
+categories: Online Communities, Twitter, Twitulater
+author: Swizec Teller
+hero: ./img/3814748024_b56e8f68f3_m.jpg
+---
+
+-   [![Friends](http://farm3.static.flickr.com/2645/3814699110_1664749b3c_m.jpg "Friends")](http://www.flickr.com/photos/22338039@N04/3814699110/)
+
+    Image by [Kassel](http://www.flickr.com/photos/22338039@N04/3814699110/) via Flickr
+
+Open [API](http://en.wikipedia.org/wiki/Application_programming_interface "Application programming interface")'s have become the staple of the internets. If you have a website and it doesn't offer some kind of API then you're an idiot these days. One of those people stuck in the past. For the purpose of this swapping generalisation let's assume an [RSS](http://en.wikipedia.org/wiki/RSS "RSS") is a sort of basic API. When everything has an API it's very easy to create mashups, connect services and sometimes even create something wonderful - like for example the whole ecosystem [Twitter](http://en.wikipedia.org/wiki/Twitter "Twitter") has become. However, there is a dark side to this intercommingling of everything. There are two actually, but I'll focus on the first for now. What happens when a [service provider](http://en.wikipedia.org/wiki/Service_provider "Service provider") decides to discontinue their API support? Or what happens when somebody begins a lock down procedure to improve their own profitability? Darker still, what when the provider's official API users automagically work and everybody else is in a sea of inexplicable trouble?
+
+-   [![the Machine](./img/3814748024_b56e8f68f3_m.jpg "the Machine")](http://www.flickr.com/photos/34815016@N02/3814748024/)
+
+    Image by [Robb North](http://www.flickr.com/photos/34815016@N02/3814748024/) via Flickr
+
+Something similar happened to me yesterday night as I was readying [Twitulater](http://twitulater.com "Twitulater") for release. I only had a few touch-ups to do here and there. But something dark and brooding came in between. Something drove a wedge right through my plans and slaughtered them whole. I was chatting to my girlfriend and wanted to give her a prank link. What better way to prank someone than first shortening the [URL](http://en.wikipedia.org/wiki/Uniform_Resource_Locator "Uniform Resource Locator") via a shortening service. I opted for my favourite, [tr.im](http://tr.im/ "tr.im URLs"). But alas, the page greeted me with a warning only. It said they were unable to find a revenue stream and were simply shutting down, effective immediately. Luckily they pointed to another good provider, [bit.ly](http://www.bit.ly "bit.ly"), through which I could then shorten my url. But this left Twitulater in a dark spot, our primary and default url shortener didn't work. What now!? Well, I was up until about 4am that night, implementing bit.ly support. This of course wasn't easy, it could be easy, but it wasn't. For some reason bit.ly wants you to provide a username and a key and other strange things before you can use their API - on native Twitter of course it just automagically works. So in the end, because one service shut down and another is a bit silly with authentication, I was left with a very delayed release schedule and a [usability](http://en.wikipedia.org/wiki/Usability "Usability") nightmare hidden inside my application, for anyone to discover when they post a link. Thus I propose a question to everyone, are we becoming too reliant on open API's? PS: it has just come to my attention through the Zemanta plugin that tr.im decided not to die after all.
+
+[![Reblog this post \[with Zemanta\]](http://img.zemanta.com/reblog_e.png?x-id=325dc03f-6c33-4653-9d9f-31feb6a3288b)](http://reblog.zemanta.com/zemified/325dc03f-6c33-4653-9d9f-31feb6a3288b/ "Reblog this post \[with Zemanta]")

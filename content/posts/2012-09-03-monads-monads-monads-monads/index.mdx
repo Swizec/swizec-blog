@@ -1,0 +1,53 @@
+---
+layout: post
+title: Monads, monads, monads, monads
+date: 2012-09-03
+categories: Functor, Haskell, Languages, Monad, Programming, Tutorial
+author: Swizec Teller
+hero: ./img/Monad-tutorials-chart.png
+---
+
+[Monad tutorials](http://www.haskell.org/haskellwiki/Monad_tutorials_timeline) have achieved what many startups crave - hockey stick growth. \[caption id="" align="alignright" width="300" caption="Monad tutorials growth"]![Monad tutorials growth](./img/Monad-tutorials-chart.png "Monad tutorials growth")\[/caption] This isn't a [monad](http://en.wikipedia.org/wiki/Monad_%28functional_programming%29 "Monad (functional programming)") tutorial. It _could_ be a monad tutorial, but I still don't understand monads. I don't think I ever will. Monads were invented to fuck with us developers of lesser minds, the ones who don't want to bend over backwards to maintain [functional purity](http://en.wikipedia.org/wiki/Purely_functional "Purely functional") and would perhaps rather ... you know ... get things done instead. Really, sometimes I just want things to _work_. I don't even care how. You see, monads are just a wrapper around values. Their rhetoric is _Hey, there's this value here, but there's a whole bunch of conditions involved. You don't really need to know about those, just play according to the rules_. And then you're like _Okay ... but just give me the value? I understand all the conditions, but I don't care about them, I just want the value._ Well no, no you can't have the value just like that. That would be silly. You can unwrap the monad, play around with the value, fiddle with all the knobs and dials, but once you're done, you have to put it back into the monad where it's safe. Monads are the ultimate Dad's shiny red corvette that he lets you drive around the parking lot, but you must always put it back in the garage and never drive anywhere with it. I wish my dad had a corvette.
+
+## Monads annoy me
+
+Really, they're just annoying. Annoying little shits. Yesterday I was doing something simple:
+
+-   take some values from mongodb
+-   draw a graph
+
+Simple right? Can't be more than ten or twenty lines of either python or javascript. I spent the entire day in **_Monad Hell_**getting it done in [Haskell](http://haskell.org "Haskell (programming language)"). And that's after the [dependency hell](http://en.wikipedia.org/wiki/Dependency_hell "Dependency hell") of installing _Chart_ on my computer ... _cabal_ isn't very good, but that's a whole different blogpost. You see, when you take some values out of Mongo, the operation might have failed! You know it didn't, you know everything should just crash and burn and alarms should be going off if it did, so it's never going to. Not as far as this piece of code is concerned. But Haskell doesn't know that. It _might have_ failed. So everything you get out is wrapped in the _Maybe_ monad. Except sometimes it isn't.
+
+    known'::[Document] -> (UTCTime, Double)
+    known' docs = (cast' $ (valueAt "time") (docs!!0),
+                   cast' $ (valueAt "amount") (docs!!0))
+
+    -- Couldn't match expected type `Double' with actual type `Maybe a0'
+    --    In the expression: cast' $ (valueAt "amount") (docs !! 0)
+
+Great. Ok so those are maybes, don't really care, moving on. By the way, if the function really _does_ fail it either dies with an index out of bounds error (not enough Documents) or with some sort of _fields weren't there_ error, if you give it the wrong sort of Document. So it's not like it could actually fail in a way that it would still work and those Maybes would be warranted.
+
+    plot.hs:52:7:
+        Couldn't match expected type `Double'
+                    with actual type `Maybe Double'
+        In the first argument of `(+)', namely `money'
+        In the first argument of `(-)', namely `money + p'
+        In the expression: money + p -
+
+Gah! At this point you're (or at least I was) getting frustrated and you suddenly can't remember where that short and sweet description of _instance_ was even though it kept slapping you in the face the whole time you were trying to figure out how to take a value out of some monad or another _and keep it the fuck out._ I don't know what instances are, not completely, but they look like a magic thing that can make [type conversions](http://en.wikipedia.org/wiki/Type_conversion "Type conversion") automatic. And that's awesome so I need to look it up. Anyway, you settle for a simple function
+
+    double'::Maybe Double -> Double
+    double' Nothing = 0.0
+    double' (Just x) = x
+
+Everything works! Yay! At no point in execution does that default value actually happen. Because you've made sure externally that the operation Haskell is unsure of will never fail, but hey, you're happy, haskell is happy, the code is somewhat ugly. But at least it works. \[caption id="attachment_5209" align="alignright" width="640" caption="Money graph"][![Money graph](http://swizec.com/blog/wp-content/uploads/2012/09/graph1.png "Money graph")](./img/graph1.png)\[/caption] Now I just wish the graph wasn't a fluke of currency conversions.
+
+###### Related articles
+
+-   [![](http://i.zemanta.com/noimg_38_80_80.jpg)](http://www.haskellforall.com/2012/06/you-could-have-invented-free-monads.html)[Why free monads matter](http://www.haskellforall.com/2012/06/you-could-have-invented-free-monads.html)
+-   [![](http://i.zemanta.com/107656675_80_80.jpg)](http://scientopia.org/blogs/goodmath/2012/08/19/monads-and-programming/)[Monads and Programming](http://scientopia.org/blogs/goodmath/2012/08/19/monads-and-programming/)
+-   [![](http://i.zemanta.com/noimg_55_80_80.jpg)](http://www.haskell.org/haskellwiki/index.php?title=Monad_tutorials_timeline&diff=49591&oldid=prev)[Monad tutorials timeline](http://www.haskell.org/haskellwiki/index.php?title=Monad_tutorials_timeline&diff=49591&oldid=prev)
+-   [![](http://i.zemanta.com/noimg_89_80_80.jpg)](http://www.haskell.org/haskellwiki/index.php?title=Hask&diff=49966&oldid=prev)[Hask](http://www.haskell.org/haskellwiki/index.php?title=Hask&diff=49966&oldid=prev)
+-   [![](http://i.zemanta.com/noimg_12_80_80.jpg)](http://unfoldthat.com/2011/04/02/python-monads.html)[Python Monads - new approach](http://unfoldthat.com/2011/04/02/python-monads.html)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=bb1fb710-d766-4afc-8466-3a22e2ebd230)](http://www.zemanta.com/?px "Enhanced by Zemanta")

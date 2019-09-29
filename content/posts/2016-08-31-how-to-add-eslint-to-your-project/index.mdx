@@ -1,0 +1,99 @@
+---
+layout: post
+title: How to add ESLint to your project
+date: 2016-08-31
+categories: Front End, linting, Technical
+author: Swizec Teller
+hero: ./img/widgets.js
+---
+
+Yesterday, I wrote about how fun it was to [add linting to a 3 year old project](https://swizec.com/blog/i-added-linting-to-a-3-year-old-project-you-can-totally-guess-what-happened-next/swizec/6986), discover 856 errors, give up immediately, and downgrade all errors to warnings so I can sleep at night.
+
+2% error rate per line of code – 2 lines with problems for every 100 lines of code – is disheartening as hell. But you know what? You can’t fix a problem you don’t know you have.
+
+By the way, here’s how you count them:
+
+    > webpack --config=webpack.config.js | grep problems > problems.txt
+
+This gives you a file full of lines like `✖ 18 problems (0 errors, 18 warnings)`. One line for each file with linter issues. 175 of those in my case.
+
+If your Bash is as bad as mine, you can count the problems with one line of python. Like this:
+
+    // throwaway.py
+    import re
+
+    print sum(int(re.search('\d+', line).group(0)) for line in open('problems.txt'))
+
+Iterate file line-by-line, extract first number of each line, turn it into an integer, sum. Isn’t Python great? This would be hell to do in JavaScript.
+
+In my case, this prints 856. I hope you get less!
+
+So, how do you get that evil mean output that says your code’s no good when running Webpack? There are 3 steps:
+
+1.  Install some npm packages
+2.  Add 5 lines to Webpack
+3.  Get a sensible `.eslintrc` config file
+
+## 1. npm packages
+
+It’s 2016, so I’m going to assume you’re using ES6 to write your code. Even if you aren’t, empowering ESLint to understand modern JavaScript can’t hurt.
+
+The packages you need are: eslint, babel-eslint, eslint-loader.
+
+    > npm install --save-dev eslint babel-eslint eslint-loader
+
+This installs the packages and saves them as `devDependencies` in your `package.json` file. If you’re using Heroku, you have to set them as normal dependencies with `--save`. Otherwise your Webpack build will fail when deploying to Heroku because Heroku doesn’t install dev dependencies.
+
+That’s always fun to re-discover.
+
+## 2. 5 lines of Webpack config
+
+Let’s assume you’re already using Webpack and have a config going. To add ESLint to your build step, add these lines to that config:
+
+    // webpack.config.js
+
+    module: {
+    	loaders: [
+    		// ...
+    		{
+    			test: /\.js$/,
+    			include: [
+    				path.resolve(__dirname, PATH_TO_YOUR_CODE)
+    			],
+    			loader: 'eslint',
+    			exclude: /node_modules/
+    		},
+    		// ...
+    }
+
+For every file in `include` paths that ends with `.js`, use the `eslint` loader. The `exclude` setting might be unnecessary, but I like to add it out of habit.
+
+Yes, the best place to put this is in `loaders`. Not `preLoaders` and not `postLoaders`.
+
+Logically speaking, it fits best in `preLoaders`, doesn’t it? You’d want to run the linter before doing any other transformation. That’s why it can’t go in `postLoaders`.
+
+That caused strange errors for me that took … _cough_ … hours to figure out. When you use the bang syntax to specify loaders in `require()` calls, `eslint` gets confused and constructs file paths that do not exist.
+
+The easiest solution is to use it as a part of normal loaders. Ordering matters.
+
+If I switch places and put `eslint` before `babel-loader`, Webpack spits out 883 errors in 178 files. 27 more errors in 3 more files.
+
+I will pretend I didn’t see that.
+
+## 3. A sensible ESLint config
+
+Now, the fun part -> ESLint config in `.eslintrc`. There are many files out there with varying degrees of annoyingness.
+
+You can use [AirBnB’s ESLint config](https://www.npmjs.com/package/eslint-config-airbnb), which I’ve heard is annoying and makes you feel dirty.
+
+> [@Swizec](https://twitter.com/Swizec) I tried the airbnb ruleset. Threw so many errors I just disabled it. I felt so dirty…
+>
+> — Jonas (@JonasBadalic) [August 28, 2016](https://twitter.com/JonasBadalic/status/769777611434258432)
+
+Then there’s [Google’s ESLint config](https://www.npmjs.com/package/eslint-config-google), which I haven’t heard anything about. It does have a lot of downloads though. ¯\_(ツ)\_/¯
+
+Or the option that would make me feel all warm and fuzzy: [my battle untested base config](https://gist.github.com/Swizec/7fb9ed92b4b56584d74de8dfcfd1c7d0). It’s designed to annoy you, but not too much. It’s based off of [Code Climate’s config](https://github.com/codeclimate/codeclimate/blob/master/config/eslint/.eslintrc) with all errors turned into warnings.
+
+My favorite feature is that it lists all available options, so in theory it’s easy to fine-tune. I can already tell that we’ll have to crank up some of the styling rules and tune down some of the “potential error” rules.
+
+Now… how do I get team buy-in? ?

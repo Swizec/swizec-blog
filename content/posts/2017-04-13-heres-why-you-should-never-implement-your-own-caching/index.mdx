@@ -1,0 +1,104 @@
+---
+layout: post
+title: Here's why you should never implement your own caching
+date: 2017-04-13
+categories: Technical
+author: Swizec Teller
+hero: ./img/PU8kGUrC1dw?ecver=2
+---
+
+Here's an interesting problem for you: build some simple caching. Let's say you have a server and an app. Your server has to do something every time you release a new app. Asking for reviews is a good example[1](#fn1). If you automate this, everyone will be happier. So you keep track of the latest app version and run checks when users ping your API. The list of versions is going to grow fast-ish, and your `SELECT` statement has to run in code because Postgres doesn't know how to compare version strings. In Ruby, finding the latest app version looks like this:
+
+    AppVersion.where(platform: platform)
+              .sort_by{ |v| Gem::Version.new(v.version) }
+              .last
+
+This looks innocent, but it builds an array of all `AppVersion` models, then sorts it in Ruby, then takes the last one and discards the rest. It's kind of okay when the table is small, but it’s _terrible_ when the table grows big. Ruby on Rails's and your database's default caching strategies can't cache this call. You have to run it every time. The result only changes every few days. Sometimes, it goes unchanged for weeks. But you still have to check every time a user logs in because maybe they're the first person with a new app version, and you need to know when it showed up. ?
+
+## A naive caching strategy
+
+You should use caching, obviously. Somewhat expensive thing to calculate that is checked often and changes rarely. Cache! So you implement the simplest approach: memoization.
+
+> In computing, memoization or memoisation is an optimization technique used primarily to speed up computer programs by storing the results of expensive function calls and returning the cached result when the same inputs occur again.
+
+Your code looks something like this:
+
+    class AppVersion < ActiveRecord::Base
+
+      @current = {}
+
+      def self.latest(platform)
+        if @current[platform].nil?
+          @current[platform] = where(platform: platform)
+             .sort_by{ |v| Gem::Version.new(v.version) }
+             .last
+        end
+
+        @current[platform]
+      end
+
+      def self.check_app_version(device)
+        latest = self.latest(device.platform)
+
+        if latest
+          if Gem::Version.new(device.app_version) > Gem::Version.new(latest.version)
+            latest = new_latest(device)
+            @current[device.platform] = latest
+          else
+            AppVersion.find_or_create_by(version: device.app_version,
+                                         platform: device.platform)
+              .update!(last_seen_at: DateTime.now)
+          end
+        else
+          latest = new_latest(device)
+          @current[device.platform] = latest
+        end
+
+        latest
+      end
+
+? Overall, this is the `AppVersion` model. It stores information about each new app version the server encounters. When a user logs in, we call `AppVersion.check_app_version(user.device)`. This function:
+
+1.  Fetches the `latest` app version
+2.  1.1. \`latest\` returns saved value if it exists
+3.  1.2. if not, \`latest\` saves its result in a class instance variable
+4.  If we got a version, we check if the new app is of a newer version
+5.  If user's device is newer, we create a new `AppVersion` entry
+6.  Then we update the class instance variable
+7.  If device is not newer, we update the `last_seen_at` timestamp
+8.  If this is the first time ever that we're checking – there's no `latest` – then we make a new latest and update the class instance variable
+
+Seems reasonable, right? Calculate value, save value, update value when needed. We rely on class instance variables persisting across requests. You do some testing locally, you write some tests. All good. Feature works. Ship it. Feature goes to production, you release a new app, it creates 18 entries in the database ? What went wrong?
+
+## The correct caching strategy
+
+The clue is in that `18` number. Our code thought exactly 18 times that it had encountered a new latest app version. At the time, we had `9` Heroku dynos with `4` threads each running in production. `9*4 = 36`, which is not 18. _But_ it's twice as much as 18 and class instance variables are meant to be shared between threads. Perhaps the way Puma shares memory between threads, or potential race conditions in our code, means that it took 2 tries before every thread on a machine knew about the new version. It's hard to say _why_ it works out that way, but it does. Memoization does not work. Caching is hard. In retrospect, it is obvious that this was never going to work. Our "server" is distributed among multiple virtual machines. They don't share memory. How would they ever have seen each other's class instance variables? The answer is to stop trying to be clever. Rails has built-in caching that's been battle tested and developed by smart people. Fixed code looks like this:
+
+    def self.latest(platform)
+        Rails.cache.fetch("latest_app_version/#{platform}") do
+          where(platform: platform).sort_by{ |v| Gem::Version.new(v.version) }.last
+        end
+      end
+
+      def self.check_app_version(device)
+        latest = self.latest(device.platform)
+
+        if latest
+          if Gem::Version.new(device.app_version) > Gem::Version.new(latest.version)
+            latest = new_latest(device)
+            Rails.cache.delete("latest_app_version/#{device.platform}")
+          else
+            AppVersion.find_or_create_by(version: device.app_version,
+                                         platform: device.platform)
+              .update!(last_seen_at: DateTime.now)
+          end
+        else
+          latest = new_latest(device)
+        end
+
+        latest
+      end
+
+Much better! Logic is same as before, except that we use `Rails.cache` as our caching mechanism. `.fetch` reads from cache and if there's a miss, it runs the provided block and stores its result. `.delete` deletes the cached value so next time we use `latest`, it reads from cache. The fixed code works because `Rails.cache` can be configured to use an external caching server – Memcache or Redis for instance. This creates a memory space shared between all server machines and server threads. Problem solved, crisis averted, lesson learned. Don't be clever. Use the tools your frameworks give you. ?
+
+1.  Apple promotes reviews for the latest app version. It hides previous reviews. If you have frequent updates, like you should, and you have good reviews, like you hope, then all your expensive traffic sees _"This app has not received enough ratings to show an average"_. How encouraging! (By the way, you pay for traffic because this is the real world and if you build it they will come does not work.) [↩](#ffn1)

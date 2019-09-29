@@ -1,0 +1,188 @@
+---
+layout: post
+title: Backbone → React: Handling state with MobX
+date: 2016-09-22
+categories: backbone, backbonejs, Front End, react, reactjs, Technical
+author: Swizec Teller
+hero: ./img/
+---
+
+I did it! ?? I figured out a way to reliably interop between modern unidirectional data flow React components and old Backbone views. It ain’t pretty, but it works.
+
+There are three components in that page:
+
+-   a `CurrentCount` component that shows current counter state; it’s pure React
+-   a `ButtonWrapper` component that shows counter state and does `+1` on click; it’s a wrapped Backbone view
+-   a `ReactButton` component that does `+10` on click; it’s _also_ pure React
+
+I know this is a trivial example, but it shows a powerful concept. That `+1` button is still the same [Backbone view from Tuesday](https://swizec.com/blog/backbone-react-step-1/swizec/7042). It stores state in a local Backbone Model, it uses a Handlebars template, and it remains the same idiomatic Backbone View it’s always been. Yet it interops with the React app, blissfully unaware that something fucky’s going on.
+
+![The Backbone view](./img/ZlUUWAf.gif)
+
+The Backbone view
+
+All three components share the same MobX data store, which has a single observable value called `N`. It looks like this:
+
+    class CounterStore {
+    	@observable N = 0
+    }
+
+In MobX, stores are classes with observable properties. They often have methods and computed values as well, but this example is too simple.
+
+`@observable` is a decorator that compiles into something like `makeObservable(this.N, 0)`, which in turn uses ES6 to add magical getters and setters that fire up the MobX engine whenever you access – dereference – the observable value. Doing it yourself would look like this:
+
+    class CounterStore {
+    	N = 0
+    	
+    	set N (val) {
+    		this.N = val;
+    		
+    		// notify all observers that N has changed
+    	}
+    	
+    	get N () {
+    		// add call site to list of observers
+    		
+    		return N;
+    	}
+    }
+
+MobX saves you from writing that logic yourself, and it adds a bunch of smartness to make it fast and efficient. I don’t really know how the engine works, but after reading the docs and some of Michel Weststrate’s Medium posts, I’m convinced it’s amaze.
+
+> Benchmarked Immutables against Observables in TodoMVC. More details at [@ReactAmsterdam](https://twitter.com/ReactAmsterdam) conf! [#reactjs](https://twitter.com/hashtag/reactjs?src=hash) [#redux](https://twitter.com/hashtag/redux?src=hash) [#mobxjs](https://twitter.com/hashtag/mobxjs?src=hash) [pic.twitter.com/tL536DWR6f](https://t.co/tL536DWR6f)
+>
+> — Michel Weststrate (@mweststrate) [April 8, 2016](https://twitter.com/mweststrate/status/718444275239882753)
+
+So that’s the store - no boilerplate involved. The two pure React components don’t involve much boilerplate either.
+
+    @inject('counterStore')
+    class ReactButton extends Component {
+        buttonClicked() {
+            this.props.counterStore.N += 10;
+        }
+
+        render() {
+            return (
+                
+
+                    
+
+    React Button:
+
+
+                    Jump click count +10
+                
+
+            );
+        }
+    };
+
+    @inject('counterStore') @observer
+    class CurrentCount extends Component {
+        render() {
+            const { N } = this.props.counterStore;
+            return (
+
+    Current count in counterStore: {N}
+
+    )
+        }
+    }
+
+The `@inject` decorator takes props from a React context and adds them to a component. I don’t know how MobX-specific this is, but it reduces our boilerplate. Instead of giving each component a `store={this.props.store}` type of prop, we can wrap the whole thing in a `<Provider>` and give everyone access.
+
+At the end of the day, you _always_ realize that all your components need access to your application state. Global singletons for things everyone needs make life easier. Trust me.
+
+The `@observer` decorator comes from MobX’s React bindings. It automagically makes the `render()` method listen to store changes, but only those changes that it uses.
+
+**This is key**. It’s what makes MobX fast. It’s also what leads to confusion when you’re doing things that are not idiomatic React, like inserting Backbone views into React components.
+
+> This is weird. If I add console.log to the render() method, MobX works as expected. Take it out, and observer isn't updating.[@mweststrate](https://twitter.com/mweststrate)?
+>
+> — Swizec (@Swizec) [September 21, 2016](https://twitter.com/Swizec/status/778666202457440256)
+
+Thanks to Michel Weststrate for helping me out. His tip about using `autorun` saved the day ??
+
+And with that out of the way, I had a Backbone view wrapped in a React component, including full data interop. Change local Backbone state, and the global data store finds out, changes the data store, and the Backbone view updates.
+
+It looks like this:
+
+    @inject('counterStore') @observer
+    class ButtonWrapper extends Component {
+        constructor(props) {
+            super(props);
+
+            this._init();
+
+            autorun(this._render.bind(this));
+        }
+
+        _init() {
+            this.button = new BackboneButton({
+                N: this.props.counterStore.N
+            });
+            this.button.model.on('change:N', action('inc-counter', (_, N) => {
+                this.props.counterStore.N = N;
+            }));
+        }
+
+        componentDidUpdate() { this._render(); }
+        componentDidMount() { this._render(); }
+
+        _render() {
+            this._cleanup();
+            this._init();
+            this.button.setElement(this.refs.anchor).render();
+        }
+
+        componentWillUnmount() { this._cleanup(); }
+
+        _cleanup() {
+            this.button.undelegateEvents();
+        }
+
+        render() {
+            return (
+                
+
+                    
+
+    Backbone Button:
+
+
+                    
+
+                
+
+            );
+        }
+    }
+
+Like I said, it ain’t pretty ?
+
+It works like this:
+
+-   React renders an anchor `div`
+
+-   on component mount or update, it runs Backbone view rendering in `_render`
+
+-   on component unmount, it cleans up Backbone’s DOM event listeners
+
+-   inside `_render` it:
+
+    -   cleans up Backbone DOM event listeners
+    -   instantiates a new Backbone view with `_init`
+    -   tells the view to render inside that anchor `<div>`
+
+-   when initializing the view in `_init` it:
+
+    -   creates a new `BackboneButton` instance and gives it the _value_ of `N` from our store
+    -   listens for changes to `N` on the view’s internal state and communicates them upstream with a MobX action
+
+This approach is a leaky abstraction. The `_init` method has to know intimate details about the Backbone view you’re wrapping. There’s no way to get around that because MobX needs those getters and setters to observe state changes.
+
+As soon as you pass a value, MobX loses track. I tried passing the whole store into a Backbone view and using it directly as a model, but that didn’t work. Backbone Model’s `set()` and `get()` methods circumvent native getters and setters, which means MobX can’t track changes or uses.
+
+Another issue is that because [our Backbone views aren’t pure](https://swizec.com/blog/backbone-%E2%86%92-react-its-a-people-problem-after-all-%F0%9F%98%91/swizec/7049), the UI could sometimes look wrong to the user. It won’t be stale, but it won’t show all side-effects from user actions either.
+
+But we can deal with that later. The important part is that we have a way forward! A way to go from Backbone to React without resorting to a full complete rewrite of everything from scratch. \\o/

@@ -1,0 +1,58 @@
+---
+layout: post
+title: Fade in lazy loaded images with React and CSS – a quick guide
+date: 2018-01-31
+categories: Front End, react, Technical
+author: Swizec Teller
+hero: ./img/gif.gif
+---
+
+Say you want to lazy load some images on your website. You don't want them to just pop into existence and scare the user. A nice fade in effect works much better. ![](./img/gif.gif) Here's the problem: There's no good pre-built React component for this. Or I suck at finding it. There's a [react-lazyload](https://github.com/jasonslyvia/react-lazyload), which does the lazy loading part for you. It keeps components from mounting into the DOM until the user actually sees them. This helps make your website faster to load. No need to load large images until a user can actually see them. But the default experience can be jarring. When images finally load, they just pop into view. `react-lazyload` offers a fade-in example, but it's outdated and doesn't work with modern libraries. And it's cumbersome to use. So I built a general `FadeIn` component. I'll opensource it, but it needs some polish first, and I'd like your opinions on how to make it better.
+
+## 
+
+The component is just 40 lines of code. Pretty simple.
+
+    class FadeIn extends React.Component {
+      state = {
+        loaded: false,
+      };
+      onLoad = () => this.setState({ loaded: true });
+
+      render() {
+        const { height, children } = this.props,
+          { loaded } = this.state;
+
+        return (
+          
+            
+              {state =>
+                
+
+                  {children(this.onLoad)}
+                
+    }
+            
+          
+        );
+      }
+    }
+    FadeIn.propTypes = {
+      height: PropTypes.number,
+      children: PropTypes.func,
+    };
+
+`FadeIn` keeps local `loaded` state to keep track of what to show. `false` means "stay transparent", `true` means "fade to full opacity". It uses react-lazyload's `LazyLoad` component to handle the lazy loading part, and `Transition` from [react-transition-group](https://github.com/reactjs/react-transition-group) to drive the CSS transition for fading in. This is the part that's changed a lot since the [official fadein lazyload example](https://github.com/jasonslyvia/react-lazyload/blob/master/examples/pages/fadein.js). Using the children render function approach, you can ask `FadeIn` to render anything you want. It gets wrapped in a div that handles the fade effect. All you have to do is trigger the `onLoad` callback once your content is ready. When your image is done loading for example.
+
+```
+
+{onLoad =>
+  
+}
+```
+
+You render `<FadeIn>`, give it a height so things don't jump around, and pass a children function that takes an `onLoad` callback. When you're ready to trigger the transition, you call `onLoad` and `FadeIn` does its thing. Did you know `onLoad` was a built-in DOM callback that all browsers support? I had no idea. `onLoad` is important because without it the FadeIn transition might end before the image has even come down the pipe. That's the issue I was facing at first [when I livecoded this](https://www.youtube.com/watch?v=k5DnlFjuf80).
+
+## Recommendations?
+
+I want to opensource this. I know it's simple, but it could save people like an hour of their time. That's worth it, right? What else does it need to do? What should I name it? Would you use it? [Shout at me on Twitter.](https://twitter.com/swizec)

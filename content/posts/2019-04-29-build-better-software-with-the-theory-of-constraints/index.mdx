@@ -1,0 +1,42 @@
+---
+layout: post
+title: Build better software with The Theory of Constraints
+date: 2019-04-29
+categories: Business, Technical
+author: Swizec Teller
+hero: ./img/D5MhX62VUAEIHcb.jpg
+---
+
+I read a magnificent book this weekend. A business graphic novel. It was marvelous. It's called The Goal and here's how it applies to software 👇 [![Click through for source](./img/screenshot-1556559133322.png)](https://twitter.com/Swizec/status/1122277450845569024)
+
+## What \_is\_ The Goal? 🤔
+
+First you gotta know: What is the goal of your software? The goal of your job? _Your_ goal? You can't proceed without answers to these questions. _Why_ are you doing what you're doing? You've got your quotas and your JIRA tickets and your bug reports and your task management. Your job is to move tickets from one pile to the other. From ToBeDone to Done. Correct? Nope. Your job is to help the company make money. Or achieve social good. Or disrupt the taxi industry and replace it with a different taxi industry. Or to make more movies. Usually it's to make money. If you don't know your goal, you should ask your manager. Their manager. Their manager's manager ... and keep going until you find someone who knows. When you know _why_ you're doing what you're doing, you can know if you're productive. [![Click through for source](./img/screenshot-1556559133208.png)](https://twitter.com/Swizec/status/1122289959321231360) Actions that move you and your company and team towards the goal are productive. Actions that don't, aren't. Simple as that. It's not about how busy you are. It's not about how much time you spend at the office. It's not about how many todo items you tick off the list. Are you moving towards the goal?
+
+## Are you efficient? 🤔
+
+The more efficient you are, the faster you move from the ToBeDone pile to the Done pile. You often build automations. That's what software is for. Automating parts of the process. Automation is always good. It's faster and more reliable than a person. Eh ... sort of. [![Click through for source](./img/screenshot-1556559133132.png)](https://twitter.com/Swizec/status/1122284488447250432) Automation almost always improves productivity in one part of the system. But does it always improve _the whole system_? Nope. Just because one part of the system is faster doesn't mean the whole system is faster and more efficient. This is often difficult to realize. You sped up part of the system, but the whole system became slower. Why is that?
+
+## A puzzle
+
+Say you're leading a scout troop on a hike. Who goes in front? Often it's the fastest kid. They race ahead and the group spreads out. When the group gets too spread out, you tell the fast kids to stop. Slow kids catch up and just as they're excited to get some rest you say Okay let's go everyone's here now. That's shitty. You now have a group that's always spread out. You're herding cats and making sure everyone's safe. You barely keep it all under control. Morale is low. The fast kids are annoyed because they keep stopping. They self-moderate with distraction. Making others wait while they're distracted. The slow kids are exhausted. They never get a break. [![Click through for source](./img/screenshot-1556559132819.png)](https://twitter.com/Swizec/status/1122716605568339968) Instead, you should take the slowest kid, the bottleneck, and put them in front. The bottleneck sets the pace for the whole group. Your group stays together. Everyone can keep up with the bottleneck so nobody drags behind. Lighten the bottleneck's load and make them faster. Now the whole group moves faster, more efficiently without distraction, _and_ you spend less time managing it all. 👌
+
+## The bottleneck sets the pace
+
+Your process is never faster than its slowest part. Also known as [Amdahl's law](https://en.wikipedia.org/wiki/Amdahl%27s_law). D'oh that's obvious. Yet we always seem to forget. When you're optimizing your code, or your development process, or your company as a whole, are you focusing on the bottleneck or some random part that strikes your fancy? When you measure productivity and effectiveness, do you focus on _your tiny part_, or the whole system? That's what I thought 😉 _YOU_ can never be more efficient than the whole system. If you are, you're just creating overhead. Overhead is expensive. Stop working and go help the bottleneck. If you're starved for work, you're just idling. Idling is expensive. Stop idling and go help the bottleneck. [![Click through for source](./img/screenshot-1556559133531.png)](https://twitter.com/Swizec/status/1122726011739656192) Remember, time lost on a bottleneck slows _everyone_ down. Your whole company. Do everything you can to make your bottleneck faster. [![Click through for source](./img/screenshot-1556559133055.png)](https://twitter.com/Swizec/status/1122718041358254080)
+
+## How to identify the bottleneck?
+
+Bottlenecks come in many shapes, forms, and sizes. They show up in your development process, they happen in your company, they also lurk in your code. _Especially_ when you move beyond writing code and start designing systems. You're like a plant manager. Managing systems feeding outputs into other systems' inputs. So how do you find a bottleneck? Easy. Where is WorkToBeDone piling up? Where does a process keep waiting for its inputs? The place in between, that's a bottleneck. A bottleneck struggles to keep up with its inputs and inventory piles up. Queue sizes grow. Costs skyrocket. You're paying for too much storage. A bottleneck struggles to deliver fast enough for later processes to stay busy. You're running computers and people when they have nothing to do. That's wasteful.
+
+## Slow down 🖐
+
+The solution is to slow down. Yes that's right. You gotta slow down. Why are processes before the bottleneck working at full capacity? There's no point. You're just filling the queue. Instead, have them slow down. Maybe even stop when the queue ahead is too full. Why are processes _after_ the bottleneck working at full capacity? There's no point. They're throttled by output from the bottleneck. Instead, have them slow down. Maybe even turn off when there's nothing to do. Maybe there's stuff you can move around? [![Click through for source](./img/screenshot-1556559133182.png)](https://twitter.com/Swizec/status/1122727154611941377) Can you do parts of the process before the bottleneck? Anything that might reduce the queue going into a bottleneck? Is there other stuff your speedy processes can do? Something to keep productive while they wait for the bottleneck's queue to clear? Or their own queue to fill up?
+
+## Team productivity over personal productivity
+
+[![Click through for source](./img/screenshot-1556559132996.png)](https://twitter.com/Swizec/status/1122728220351090688) Quickest way to apply The Theory of Constraints to your personal life is to look at your team. Are you the bottleneck? Get help. Are you delivering features super fast? Stop and go do code reviews. Mentor. Are you always waiting for things? While you wait, go help. Write test cases, make QA faster, do code reviews, write documentation, look at the backlog ... There's always something you can do to make your team faster and more efficient. Even if it means sacrificing your personal productivity. A personal hour lost is three team hours gained. ✌️
+
+## 5 steps to make anything faster
+
+[![Click through for source](./img/screenshot-1556559133005.png)](https://twitter.com/Swizec/status/1122733989012226049) Follow these five steps to make anything faster. Your code, your team, your company. Identify the bottleneck, use it fully, slow everything to pace, fix the bottleneck, find the next bottleneck. Happy hacking, 🤓 ~Swizec

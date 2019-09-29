@@ -1,0 +1,89 @@
+---
+layout: post
+title: More messing with time: Deduping messages between iOS and JavaScript
+date: 2017-07-05
+categories: Front End, Ruby, Technical
+author: Swizec Teller
+hero: ./img/2017-07-05-at-3.09-PM.jpeg
+---
+
+I've written about time before: [Days are not 60∙60∙24 seconds](https://swizec.com/blog/a-day-is-not-606024-seconds-long/swizec/6755), [Time is funny in Ruby](https://swizec.com/blog/time-funny-ruby/swizec/7525), and [Distributed clocks are hard to synchronize](https://swizec.com/blog/week-7-time-clocks-and-ordering-of-events-in-a-distributed-system/swizec/6444).Here's another for the Things You Never Thought Could Go Wrong pile: Deduping messages in a chat application. For months now, we've had this elusive bug at [Yup](https://www.yup.com) that nobody could figure out. When a student and a tutor are talking, if the tutor refreshes his or her webapp, student messages are doubled. Not because there's a display issue, oh no, because they're all saved twice. The student only sees the bug if they go back to read their session history later. Tutor messages are never doubled. 🤔 Can you figure it out? Let me give you some background.
+
+## The background
+
+Chat sessions happen between a student and a tutor and our server. The server is there to establish a direct connection between student and tutor via a [Pusher](https://pusher.com/) channel and to store every message in our database. Sometimes it sends system messages. Student talks through an iPhone or Android app, tutor talks through a webapp. Both try to save every message, sent or received, to the server. This 3-way approach ensures the whole session transcript gets saved even if one of the clients loses connection to our server. As long as the two humans can talk to each other and at least one of them can talk to the server, all is well. Sometimes, maybe, the humans can talk and neither of them can talk to the server. If that happens, our service is down. When we get it back, the chat session is hopefully still going and clients can save history. ![](./img/chart.gif) Here's what a typical message looks like:
+
+    {
+        chat_id: ,
+        sent_at: ,
+        sent_from: ,
+        sent_to: ,
+        content_type: ,
+        text: 
+    }
+
+`chat_id` tells you which session a message belongs to, `sent_at` when it was sent, `sent_from` who sent it, `sent_to` who's receiving it (because the system can send messages to either human), `content_type` whether you should render the text or assume it's an image URL, and `text` gives you the content. On the backend, we rely on a [database index](https://en.wikipedia.org/wiki/Database_index) to dedupe messages. Our index uses the combination of chat, timestamp, sender, and text to ensure uniqueness.
+
+    add_index "messages", ["chat_id", "text", "sent_at", "sent_from"], name: "messages_must_be_different", unique: true, using: :btree
+
+You can think of this as: In a chatroom, a person can send the same message at the same time only once.
+
+## The problem
+
+So… what's wrong? ![](./img/giphy.gif) If you guessed _"iOS and JavaScript round timestamps differently which means the same message saved from a different client has a different `sent_at`,”_ you were right! Congratulations, you're a wizard. ![](./img/giphy.gif) It was… not the first thing I thought of. 😅 Here's a dump from a debugging session on my localhost 👇 Student messages are doubled; that's easy to see. The part that's hard to see is that each student message is saved with two different `sent_at` timestamps.
+
+    2.2.0 :001 > puts Session.last.messages.pluck(:sent_from, :sent_at, :text).to_yaml
+    - - student
+      - 2017-07-04 23:00:02.786000000 Z
+      - Bdbr
+    - - student
+      - 2017-07-04 23:00:02.786581000 Z
+      - Bdbr
+    - - tutor
+      - 2017-07-04 23:00:14.032999000 Z
+      - fawefaw
+    - - tutor
+      - 2017-07-04 23:00:14.857000000 Z
+      - afeaw
+    - - student
+      - 2017-07-04 23:00:17.053721000 Z
+      - Hsj
+    - - student
+      - 2017-07-04 23:00:17.052999000 Z
+      - Hsj
+    - - system alert
+      - 2017-07-04 23:00:19.403000000 Z
+      - Student ended session
+
+Who sent a message, when, what it was. Pay attention to the timestamps. `2017-07-04 23:00:02.786000000 Z` vs. `2017-07-04 23:00:02.786581000 Z`, for example. That's `0.000581` seconds apart, half a thousandth of a second. Different enough that our database index relying on timestamps decides these are two different messages. 🤔 I'm not sure how this bug got introduced, but it boils down to this line somewhere in our webapp code.
+
+    message.set({
+        sent_at: moment(message.sent_at)
+    })
+
+Don't believe me? Watch this.
+
+    > moment("2017-07-04 23:00:02.786581000 Z").format('YYYY-MM-DDTHH:mm:ss.SSSSSSS')
+    "2017-07-04T16:00:02.7860000"
+
+😁 In fact, this is not even a momentjs problem. JavaScript is limited to milliseconds and iOS is not. Why, I don't know.
+
+## The solution
+
+Change the index! No, not take out `sent_at`. Heavens no, we still need that. Instead, we can make sure all timestamps have the same precision. We proooooobably don't need to ensure the same message isn't sent twice per nanosecond. Twice per hundredth second should suffice. We introduce a `key` field and index based on that. Added bonus: improve space performance by hashing the text. Makes the index smaller and maybe faster 🤓
+
+    def generate_key_if_needed
+        if key.blank?
+            # round to 1/100s precision
+            timestamp = sent_at.to_f.round(2)
+            hash = Digest::MurmurHash3_x86_32.hexdigest(text)
+     
+            self.key = "#{chat_id}:#{sent_from}:#{timestamp}:#{hash}"
+        end
+    end
+
+[MurmurHash](https://en.wikipedia.org/wiki/MurmurHash) is one of the best algorithms out there for non-cryptographic hashing. That is, one-way hashing that cares about collisions more than guessability.
+
+## Fin
+
+And that's how you fix what looks like a frontend bug by writing writing code on the backend and re-engineering your biggest database table. Score for the fullstack generalists! 💪🏼

@@ -1,0 +1,259 @@
+---
+layout: post
+title: Build an animated pure SVG dynamic height accordion with React and D3
+date: 2018-06-01
+categories: Front End, Technical
+author: Swizec Teller
+hero: ./img/accordionflow-sketch.jpg
+---
+
+ This is a proof of concept I built for a client. They were building an event flow data visualization and weren't happy with how finicky and hard to use their components turned out. So they asked me for help 💪
+
+## Goal
+
+The goal was to have an event flow visualization where icons represent different types of events, are connected with an unbroken line, and show additional information when clicked. The additional information can contain sub-flows, further data visualization, or just text. It’s inspired by how GitHub visualizes the PR process but is intended for richer graphics. Hence why it has to be in SVG. \[caption id="attachment_8417" align="alignnone" width="896"]![GitHub shows the PR process using connected event icons with descriptions](./img/githubscreenshot.jpg) GitHub shows the PR process using connected event icons with descriptions\[/caption]
+
+## Problems to solve / gotchas to catch
+
+The trouble begins when you realize SVG is _terrible_ for layout. You want SVG because it's great for dataviz –fun shapes, vector graphics, full control of element positioning. Great. But also full control of element positioning. 😩 https&#x3A;//twitter.com/Swizec/status/999619898555826176 With great power comes great amounts of work, you see. Where HTML performs basic layouting for you, SVG does not. Want text to flow into a new line? Do it yourself. Want elements to push other elements out of the way? Do it yourself. Want anything to happen? Do it yourself. This is great when you have all the information up front. But it’s terrible when you can't know the size of some elements. Like the height of those dynamic blocks on the right. My client tried several approaches and finally settled on a component structure a little like this 👇 \[caption id="attachment_8415" align="alignnone" width="1078"]![Almost good enough structure](./img/component-structure1.jpg) Almost good enough structure\[/caption] Each row is a `div` that contains an `svg` on the left and a `div` on the right. The SVG renders our icon and the vertical line. The `div` contains potentially expanding descriptions. When the inner `div` becomes bigger, it resizes the container `div`. This pushes the rows below further down. All great 👌 But it's finicky, difficult to align, and you don't even wanna know what happens when someone resizes their browser and elements start breaking into new lines. The objective, therefore, is to build a solution that:
+
+-   is not finicky
+-   has a simple API
+-   works with arbitrary row heights
+-   can handle rows resizing after initial render
+-   allows users to render anything into this structure
+
+## The solution
+
+Render everything inside an SVG, use `foreignObject` to support auto text layouting on the right, and abuse React ref callbacks to deal with dynamic height. In a nutshell 👇 ![](./img/accordionflow-sketch.jpg)
+
+-   `<AccordionFlow>` renders rows
+-   `<AccordionFlow>` holds an array of known or default row heights, used for vertical positioning
+-   `<Row>` gets 2 render props, `icon` and `content`
+-   `icon` renders the left side
+-   `content` renders the right side inside a `<foreignObject>`
+-   a ref callback on `content` triggers a height update callback
+-   the height update callback updates a list of heights in `<AccordionFlow>`
+-   this triggers a re-render and each `<Row>` declaratively transitions itself into its new position
+-   when the `content` updates itself, it calls a callback that tells `<Row>` its height has changed
+-   the same reflow happens as before
+
+Savvy? Here's how it works again  Let's look at the code :)
+
+## index.js
+
+You can think of this as the consumer side. Whomever needs to render our `AccordionFlow`. It starts by creating an array of arrays to represent our data. Each has an `<Icon>` and a `<Content>`.
+
+    // index.js prep data
+
+    const icons = [, , ],
+      flowData = d3range(10).map(i => [
+        icons[i % 3],
+        contentUpdated => (
+          
+            {d3range(10)
+              .slice(0, i)
+              .map(() => faker.lorem.paragraph())}
+          
+        )
+      ]);
+
+Icon is a plain component. We're rendering it as a compound component with no frills. `` is wrapped in a function because it's going to be used as a render prop. It gets the callback function it can call to dynamically update its height after initial rendering. We need this so `AccordionFlow` can know when to push other rows out of the way. Rendering our dataviz is meant to be simple 👇
+
+    // index.js render method
+        
+          
+        
+
+Svg is very tall to make room for expanding. We _could_ wrap `AccordionFlow` in additional callbacks and make svg height dynamic, but this is a proof of concept :)
+
+## 
+
+AccordionFlow is where we render every row, the vertical line on the left, keep a list of known heights for each row, and handle vertical positioning. Using idiomatic but not the most readable code, it comes out to 30 lines. 💁‍♀️
+
+    // AccordionFlow
+
+    class AccordionFlow extends React.Component {
+      defaultHeight = 50;
+      state = {
+        heights: this.props.data.map(_ => this.defaultHeight)
+      };
+      render() {
+        const { data } = this.props,
+          { heights } = this.state;
+
+        return (
+          
+             sum + h, 0)}
+              stroke="lightgrey"
+              strokeWidth="2.5"
+            />
+            {data.map(([icon, content], i) => (
+               sum + h, 0)}
+                width={450}
+                key={i}
+                reportHeight={height => {
+                  let tmp = [...heights];
+                  tmp[i] =
+                    height !== undefined && height > this.defaultHeight
+                      ? height
+                      : this.defaultHeight;
+                  this.setState({ heights: tmp });
+                }}
+              />
+            ))}
+          
+        );
+      }
+    }
+
+We start with default `heights` of `50` pixels, and render a grouping element `<g>` to help with positioning. Inside we render a vertical `<line>` to connect all icons, then go into a loop of rows. Each `<Row>` gets
+
+-   an `icon` render prop
+-   a `content` render prop
+-   vertical position `y` calculated as the sum of all `heights` so far
+-   a `width`, which helps it figure out its height
+-   a `key` just so React doesn't complain
+-   a `reportHeight` callback, which updates a particular height in our `heights` array
+
+We should probably move that callback into a class method, but we need to encapsulate the index. Best we could do is something like `height => this.reportHeight(height, i)`.
+
+## 
+
+The `` component is more beastly. It renders the icon and the content, handles height callbacks, and uses my [declarative D3 transitions with React 16.3+](https://swizec.com/blog/declarative-d3-transitions-react/swizec/8323) approach to animate its vertical positioning. 64 lines of code in total.
+
+    class Row extends React.Component {
+      state = {
+        open: false,
+        y: this.props.y
+      };
+      
+      toggleOpen = () => this.setState({ open: !this.state.open });
+
+        // needed for animation
+      rowRef = React.createRef();
+
+        // magic dynamic height detection
+      contentRefCallback = element => {
+        if (element) {
+          this.contentRef = element;
+          this.props.reportHeight(element.getBoundingClientRect().height);
+        } else {
+          this.props.reportHeight();
+        }
+      };
+
+      contentUpdated = () => {
+        this.props.reportHeight(this.contentRef.getBoundingClientRect().height);
+      };
+
+      componentDidUpdate() {
+        // handle animation
+      }
+
+      render() {
+          // render stuff
+      }
+    }
+
+Our `` component uses `state` to keep track of whether it's `open` and its vertical position `y`. We use `toggleOpen` to flip the `open` switch. Right now, that just means the difference between `content` being rendered or not. The fun stuff happens in `contentRefCallback`. We use this as a [React ref callback](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs), which is a method that React calls when a new element is rendered into the DOM. We use this opportunity to save the ref as a component property for future reference, get its height using `getBoundingClientRect`, and call the `reportHeight` callback to tell `` about our new height. Something similar happens in `contentUpdated`. It's a callback we pass into the `content` render prop so it can tell us when something changes. We then re-check our new height and report it up the hierarchy.
+
+### render
+
+The `render` method puts all of this together.
+
+      render() {
+        const { icon, content, width } = this.props,
+          { y } = this.state;
+
+        return (
+          
+            
+              {icon}
+            
+            {this.state.open ? (
+              
+                
+
+                  {typeof content === "function"
+                    ? content(this.contentUpdated)
+                    : content}
+                
+
+              
+            ) : null}
+          
+        );
+      }
+
+We start with a grouping element `` that handles positioning and sets the `rowRef`. Inside, we render first a grouping element with a click callback and our `icon`. This lets us open and close a row. Followed by a conditional rendering of a `foreignObject` that contains our `content`. Foreign objects are SVG elements that let you render just about anything. HTML, more SVG, .... HTML. Mostly HTML, that's the magic. This `foreignObject` has an `x,y` position to compensate for some funniness, and a `width` that helps your browser's layouting engine decide what to do. It then contains a `div` so we can attach our `contentRefCallback` because putting it on `foreignObject` always reported height as `0`. I don't know why. We then render our `content` as either a functional render prop being passed the `contentUpdated` callback, or a simple component.
+
+### componentDidUpdate
+
+`componentDidUpdate` declaratively handles the vertical transitioning of every row's vertical position. You should read my [Declarative D3 transitions with React 16.3](https://swizec.com/blog/declarative-d3-transitions-react/swizec/8323) article for details.
+
+      componentDidUpdate() {
+        const { y } = this.props;
+        d3
+          .select(this.rowRef.current)
+          .transition()
+          .duration(500)
+          .ease(d3.easeCubicInOut)
+          .attr("transform", `translate(5, ${y})`)
+          .on("end", () => {
+            this.setState({
+              y
+            });
+          });
+      }
+
+The idea is that we take the new `y` prop, transition our DOM node directly using D3, then update our `state` to keep React in sync with reality.
+
+## 
+
+To be honest, `<DynamicContent>` isn't the fun part of this code. I include it here for completeness. It's a component that renders a title and some paragraphs, waits 1.2 seconds, then adds another paragraph. There's also a spinner to make things more interesting.
+
+    lass DynamicContent extends React.Component {
+      state = {
+        paragraphs: this.props.children,
+        spinner: true
+      };
+      componentDidMount() {
+        setTimeout(() => {
+          this.setState({
+            paragraphs: [...this.state.paragraphs, faker.lorem.paragraph()],
+            spinner: false
+          });
+          this.props.contentUpdated();
+        }, 1200);
+      }
+
+      render() {
+        const { title } = this.props,
+          { paragraphs, spinner } = this.state;
+
+        return (
+          
+            
+    {title}
+
+            {paragraphs.map(c => {c}
+
+    )}
+            
+
+
+              {spinner && (
+                
+              )}
+            
+          
+        );
+      }
+    }
+
+See, state holds paragraphs and a spinner flag. `componentDidMount` has a timeout of 1.2 seconds, then adds another paragraph and calls the `contentUpdated` callback. The render method returns a `React.Fragment` containing an `h3` with the `title`, a bunch of paragraphs, and an optional `Spinner` from [react-spinkit](https://github.com/KyleAMathews/react-spinkit). Nothing special, but the dynamic stuff could wreak havoc with our `AccordionFlow` without that callback. Happy hacking 🤓
+
+## Should I open source this?
+
+What do you think, should I open source this? Would anyone find it useful? Ping me on Twitter or Reddit since I'm prob posting this to Reddit 😛 https&#x3A;//twitter.com/Swizec/status/1002602899845738496

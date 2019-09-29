@@ -1,0 +1,100 @@
+---
+layout: post
+title: Discovered a cool javascript property
+date: 2011-04-16
+categories: Argument, Callback, Function (mathematics), JavaScript, Languages, Programming
+author: Swizec Teller
+hero: ./img/loader.js
+---
+
+Yesterday I was playing around with javascript trtying to find the cleanest way to implement [callbacks](http://en.wikipedia.org/wiki/Callback_%28computer_programming%29 "Callback (computer programming)") in [functions](http://en.wikipedia.org/wiki/Function_%28mathematics%29 "Function (mathematics)"). Primarily I wanted a readable way to make certain the last argument passed is a callback, withut having to rely on knowing how many [arguments](http://en.wikipedia.org/wiki/Argument "Argument") there are and so on. Instead I stumbled upon a pretty cool feature of how javascript handles function arguments. But let's look at some code. This is the usual way people use functions, it's nicely standard and works pretty much the same way in most languages
+
+    function example(arg1, arg2, arg3) {
+        return arg1+arg2 == arg3;
+    }
+
+    example(1, 2, 3);
+
+Nothing too spectacular here, but javascript has another way to access function arguments - the magical arguments object; granted, a lot of languages have something like this, but it's always a less than obvious feature people often forget about:
+
+    function example() {
+        console.log(arguments);
+        // prints { '0': 1, '1': 2, '2': 3 }
+    }
+
+    example(1, 2, 3);
+
+Ok, nothing too major, perhaps the biggest surprise is that arguments is an object, not a list or an array and strangely enough that the keys are strings despite being just numbers. Also pretty cool is that you don't have to specify any arguments at all, it just magically works. In python for example you at least have to say \*args or something like that. But things really start to heat up when we mix both ways of using function arguments in javascript:
+
+    function example(arg) {
+        console.log(arguments);
+        // prints { '0': 1, '1': 2, '2': 3 }
+
+        arg = 5;
+        console.log(arguments);
+        // prints { '0': 5, '1': 2, '2': 3 }
+
+        var arg = 'new';
+        console.log(arguments);
+        // prints { '0': 'new', '1': 2, '2': 3 }
+
+        var notArg = arg;
+        notArg = 'old';
+        console.log(arguments);
+        // prints { '0': 'new', '1': 2, '2': 3 }
+
+        arguments[1] = arg;
+        console.log(arguments);
+        // prints { '0': 'new', '1': 'new', '2': 3 }
+
+        arg = 5;
+        console.log(arguments);
+        // prints { '0': 5, '1': 'new', '2': 3 }
+    }
+
+    example(1, 2, 3);
+
+The slightly strange thing here is that arguments the function takes explicitly are only references to the positions in the arguments object rather than variables of their own. Trying to make them a new variable doesn't work unless you give them a different name. However despite these being just pointers, you can't make them cross-reference each other because when you assign them to the arguments object a copy is performed and further changes are not reflected in both arguments properties. But is it a deep or a [shallow copy](http://en.wikipedia.org/wiki/Object_copy "Object copy")? Let's try:
+
+    function isitdeep(arg1, arg2) {
+        console.log(arguments);
+        // prints { '0': { a: { b: 'c' }, d: { e: 'f' } },
+        //          '1': { g: 'h' } }
+
+        arg1.a.b = 'f';
+        console.log(arguments);
+        // prints { '0': { a: { b: 'f' }, d: { e: 'f' } },
+        //          '1': { g: 'h' } }
+
+        arg2 = arg1;
+        console.log(arguments);
+        // prints { '0': { a: { b: 'f' }, d: { e: 'f' } },
+        //          '1': { a: { b: 'f' }, d: { e: 'f' } } }
+
+        arg1.a.b = 'c';
+        console.log(arguments);
+        // prints { '0': { a: { b: 'c' }, d: { e: 'f' } },
+        //          '1': { a: { b: 'c' }, d: { e: 'f' } } }
+
+        arg1 = 'hello world';
+        console.log(arguments);
+        // prints { '0': 'hello world',
+        //          '1': { a: { b: 'c' }, d: { e: 'f' } } }
+    }
+
+    isitdeep({a: {b: 'c'}, d: {e: 'f'}},
+    	 {g: 'h'});
+
+Interesting, turns out it's a shallow copy and you can still poke arguments in strange ways ... but maybe/probably that's just how javascript performs in general, the = operator being a shallow copy mechanism. Anyhow, I'm sure this knowledge will come in handy some day, I'm just nicely tickled by having found it. Actually ... it's kind of horrible, this sort of obscure language features should never be used in [production code](http://en.wikipedia.org/wiki/Motion_Picture_Production_Code "Motion Picture Production Code") :)
+
+###### Related articles
+
+-   [You Don't Know JavaScript](http://www.w2lessons.com/2011/04/you-dont-know-javascript.html) (w2lessons.com)
+-   [Fast JavaScript Max/Min](http://ejohn.org/blog/fast-javascript-maxmin/) (ejohn.org)
+-   [Amb in JavaScript](http://mihai.bazon.net/blog/amb-in-javascript) (mihai.bazon.net)
+-   [Three Routes to Spaghetti-Free Javascript](http://zef.me/3715/three-routes-to-spaghetti-free-javascript) (zef.me)
+-   [JavaScript interview questions and answers](http://venkatb4me.wordpress.com/2011/03/23/javascript-interview-questions-and-answers/) (venkatb4me.wordpress.com)
+-   ["JavaScript: The Good Parts", You Owe Me An Apology](http://sayyouresorryforwhatyouvedone.blogspot.com/2011/04/douglas-crockford-for-javascript-good.html) (sayyouresorryforwhatyouvedone.blogspot.com)
+-   [Will the Rise of Javascript Mean the End of LAMP?](http://www.infoq.com/news/2011/04/javascript-lamp) (infoq.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=1f7fa21d-b33c-4405-9a6f-c5c9e51030ef)](http://www.zemanta.com/ "Enhanced by Zemanta")

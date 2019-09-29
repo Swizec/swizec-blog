@@ -1,0 +1,238 @@
+---
+layout: post
+title: React hooks in a nut shell 🥐
+date: 2018-10-29
+categories: Front End, Technical
+author: Swizec Teller
+hero: ./img/giphy.gif
+---
+
+<!-- wp:html -->
+
+There's no hook emoji… croissants look like hooks, right?
+
+Mmmm… croissants with some sort of nut cream filling. Get it, hooks in a nutshell? Ha
+
+Maybe I'm hungry 🤔
+
+So anyway, React hooks took the React world by storm this weekend. They're not even out yet! And yet here we are.
+
+JavaScript lyfe: New thing comes out, rocks the world, everyone says it's the next best thing since jQuery and will definitely make all your code better and all your knowledge obsolete. Time to learn stuff!
+
+Untrue.
+
+React hooks are neat. They look useful. They don't deprecate anything. Please don't rewrite your apps in hooks. Yet.
+
+I watched [Ryan's talk 90% cleaner with hooks](https://www.youtube.com/watch?v=wXLf18DsV-I) last night, [Dan's and Sophie's talk announcing hooks](https://www.youtube.com/watch?v=V-QO-KO90iQ) this morning, read all the docs, and watched Twitter like a disinterested hawk all weekend.
+
+Hours of research condensed into the next 200 words because I love you. ❤️
+
+## Here's what you need to know about hooks right now 👇
+
+You can try them out.
+
+1.  `create-react-app look-ma-no-classes`
+2.  Open package.json, change `react` and `react-dom` to `next`
+3.  `yarn install`
+
+![Try out hooks](./img/giphy.gif)
+
+Hooks exist to rid your codebase of classes. Because classes are confusing to both people and compilers.
+
+Where you used to class, you can now hook. In your functional components.
+
+Built-in hooks cover the most common uses cases. You can build your own for everything else.
+
+### useState
+
+The `useState` hook replaces pairs of state getters and setters.
+
+      class myComponent extends React.Component {
+        state = {
+          value: 'default'
+        }
+        
+        handleChange = (e) => this.setState({
+          value: e.target.value
+        })
+        
+        render() {
+          const { value } = this.state;
+          
+          return 
+        }
+    }
+
+👇
+
+    const myComponent = () => {
+      const [value, setValue] = useState('default');
+      
+      const handleChange = (e) => setValue(e.target.value)
+      
+      return 
+    }
+
+Less code to write and understand.
+
+In a class component, you:
+
+-   set a default value
+-   create an `onChange` callback that fires `setState`
+-   read value from state before rendering etc.
+
+Without modern fat arrow syntax, you might run into trouble with binds.
+
+The hook approach moves that boilerplate to React's plate. You call `useState`. It takes a default value and returns a getter and a setter.
+
+You call that setter in your change handler.
+
+Behind the scenes, React subscribed your component to that change. Your component re-renders.
+
+### useEffect
+
+`useEffect` replaces the `componentDidMount`, `componentDidUpdate`, `shouldComponentUpdate`, `componentWillUnmount` quadfecta. It's like a trifecta, but four.
+
+Say you want a side-effect when your component updates, like make an API call. Gotta run it on mount and update. Want to subscribe to a DOM event? Gotta unsubscribe on unmount.
+
+Wanna do all this only when certain props change? Gotta check for that.
+
+Class:
+
+    class myComp extends Component {
+      state = {
+          value: 'default'
+        }
+        
+        handleChange = (e) => this.setState({
+          value: e.target.value
+        })
+        
+        saveValue = () => fetch('/my/endpoint', {
+            method: 'POST'
+            body: this.state.value
+        })
+        
+        componentDidMount() {
+            this.saveValue();
+        }
+        
+        componentDidUpdate(prevProps, prevState) {
+            if (prevState.value !== this.state.value) {
+                this.saveValue()
+            }
+        }
+        
+        render() {
+          const { value } = this.state;
+          
+          return 
+        }
+    }
+
+👇
+
+    const myComponent = () => {
+      const [value, setValue] = useState('default');
+      
+      const handleChange = (e) => setValue(e.target.value)
+      const saveValue = () => fetch('/my/endpoint', {
+            method: 'POST'
+            body: this.state.value
+        })
+        
+        useEffect(saveValue, [value]);
+      
+      return 
+    }
+
+So much less code!
+
+`useEffect` runs your function on `componentDidMount` and `componentDidUpdate`. And that second argument, the `[value]` part, tells it to run only when that value changes.
+
+No need to double check with a conditional. If your effect updates the component itself through a state setter, the second argument acts as a `shouldComponentUpdate` of sorts.
+
+When you return a method from `useEffect`, it acts as a `componentWillUnmount`. Listening to, say, your mouse position looks like this:
+
+    const [mouseX, setMouseX] = useState();
+    const handleMouse = (e) => setMouseX(e.screenX);
+
+    useEffect(() => {
+        window.addEventListener('mousemove', handleMouse);
+        return () => window.removeEventListener(handleMouse);
+    })
+
+Neat 👌
+
+Waiting for the day we can use this to do naughty DOM stuff in functional components. Limiting factor right now is that we can't have refs I think.
+
+### useContext
+
+`useContext` cleans up your render prop callbacky hell.
+
+```
+
+  {state => ...}
+```
+
+👇
+
+    const state = useContext(SomeContext)
+
+Context becomes just a value in your function. React auto subscribes you to all updates.
+
+### useReducer
+
+`useReducer` is like React got Redux built in now. Whoa.
+
+You don't really have to know this one. But it comes by default and it's kinda neat. Although I think using it for realz will lead to your components becoming way too big and bloated.
+
+You should [watch Ryan's talk](https://youtu.be/wXLf18DsV-I?t=1457) to learn more about this one. Too long to explain in a nutshell 🥐 post.
+
+https&#x3A;//youtu.be/wXLf18DsV-I?t=1538
+
+<!-- /wp:html -->
+
+<!-- wp:heading -->
+
+## So?
+
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+
+Willhooks change the way you write React forever? We'll see. The internet is excited.
+
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+
+You can write your own hooks. Repositories of hooks are popping up like crazy. I'm sure your internet will be full of them for the next while.
+
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+
+Most importantly 👇
+
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+
+You can write your own hooks and re-use functionality between components. It's just a function.
+
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+
+  
+Dan and Sophie say this is the future of React. All functional. No classes.  
+But right now, it's just a Request For Comments. So comment away.
+
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+
+
+
+<!-- /wp:paragraph -->

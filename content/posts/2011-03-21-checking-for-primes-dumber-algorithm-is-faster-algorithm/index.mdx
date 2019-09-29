@@ -1,0 +1,59 @@
+---
+layout: post
+title: Checking for primes? Dumber algorithm is faster algorithm
+date: 2011-03-21
+categories: Clojure, Computer Science, Math, Prime number, Technical
+author: Swizec Teller
+hero: ./img/loader.js
+---
+
+It's been a busy few weeks since I last posted about my toying around with [project euler](http://projecteuler.net/ "Project Euler"), but never you mind. I did do some progress nontheless! HA! Just so I won't bore you with the details, the most interesting thing I discovered is that the way I was calculating prime numbers was totally wrong. Not in the sense that it didn't work, but in the sense that it was only fast in theory. In practice it turns out that either my implementation was completely and utterly horrible or that I simply don't know enough about performance bottlenecks of clojure and made a boo boo somewhere. Here's my original way of creating prime numbers and checking if a number is prime:
+
+    (defn any? [l]
+      (reduce #(or %1 %2) l))
+
+    (defn prime? [n known]
+      (loop [cnt (dec (count known)) acc []]
+        (if (< cnt 0) (not (any? acc))
+    	(recur (dec cnt) (concat acc [(zero? (mod n (nth known cnt)))])))))
+
+    (defn next-prime [primes]
+      (let [n (inc (count primes))]
+        (let [lk (if (even? (inc (last primes))) (+ 2 (last primes)) (inc (last primes)))]
+          (loop [cnt lk p primes]
+    	(if (>= (count p) n) (last p)
+    	    (recur (+ cnt 2) (if (prime? cnt p) (concat p [cnt]) p)))))))
+
+    (defn n-primes [n]
+      (loop [cnt 1 p [2]]
+        (if (>= cnt n) p
+    	(recur (inc cnt) (concat p [(next-prime p)])))))
+
+Not exactly certain what sieve I was using here, but the idea is that a number is prime if it isn't divisible by any primes smaller than the number you're checking. This works great in theory because you're always dividing with very few numbers. But turns out, there's a much _much_ faster way of doing it:
+
+    (defn any? [l]
+      (reduce #(or %1 %2) l))
+
+    (defn prime? [n]
+      (if (even? n) false
+          (let [root (num (int (Math/sqrt n)))]
+    	(loop [i 3]
+    	  (if (> i root) true
+    	      (if (zero? (mod n i)) false
+    		  (recur (+ i 2))))))))
+
+    (defn n-primes [n]
+      (loop [num 2 p []]
+        (if (>= (count p) n) p
+    	(recur (inc num) (if (prime? num) (concat p [num]) p)))))
+
+This way of checking for primes just loops through all numbers smaller than the square root of the one we're checking by starting off with 3 and jumping by two places. Obviously a very big improvement here is using the square root as the looping boundary, but turns out even adding this trick to the previous method only goes so far. The dumber version is still at least a 100 times faster. In fact the dumb version produced all primes under 2,000,000 in about a minute whereas the first version wasn't even finished after ten minutes. So what's happening here? Considering the sparseness of prime number distribution I'm thinking that the dumber method performed at least ten times more divisions. My theory is that maybe, just maybe, the problem was in copying that huge arse list of known primes around when performing function calls. Or maybe it was the appending of primes to the big list that was the problem ... whatever it was, I learned a valuable lesson: Keep it Stupid Simple For Realz.
+
+###### Related articles
+
+-   [Fast prime numbers](http://www.intermediaware.com/blog/846/hack-of-the-day-fast-prime-numbers) (intermediaware.com)
+-   [A Genetic Algorithm Framework in Clojure](http://blog.ethanjfast.com/2009/09/ga-framework/) (ethanjfast.com)
+-   [Python Prime Number Generator](http://maliciousattacker.blogspot.com/2010/12/python-prime-number-generator.html) (maliciousattacker.blogspot.com)
+-   [Ideals: Numbers But Better](http://thetwomeatmeal.wordpress.com/2011/03/08/ideals-numbers-but-better/) (thetwomeatmeal.wordpress.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=c9491d9b-7861-42c3-b3fc-91e46335a18e)](http://www.zemanta.com/ "Enhanced by Zemanta")

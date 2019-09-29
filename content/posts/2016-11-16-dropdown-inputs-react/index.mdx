@@ -1,0 +1,119 @@
+---
+layout: post
+title: Fast, searchable dropdown inputs with React
+date: 2016-11-16
+categories: Front End, react, Technical
+author: Swizec Teller
+hero: ./img/vanilla-dropdown.gif
+---
+
+Input fields that are limited to one of 6,000 possible values… That’s a usability nightmare, right? ? Dump it in a dropdown, and you overwhelm your users. How many even know vanilla dropdowns support search? And besides, you can't style those. Your designer will throw a shit fit. Default browser crap in his beautiful design? No, no, that won't do. ![](./img/vanilla-dropdown.gif) Looks vanilla, works vanilla. First open is slow, but search is fast if you know it exists. If you don't, you're screwed. You _could_ give users an input field and validate against the list of possible entries… no way _that's_ going to be a nightmare, eh? Is it `stanford`, `Stanford`, `stanford university`, `Stanford university`, or `Stanford University`? Some people will enter `stnraofd`. No, no, the answer is **both**. You need an input field _and_ a dropdown. Input filters dropdown, dropdown guides users.
+
+## Step 1: react-select
+
+Jed Watson's [react-select](https://github.com/JedWatson/react-select) library gives you input fields with dropdowns. Users can use the input field or use the dropdown. Implementation looks like this:
+
+    import Select from 'react-select';
+    import 'react-select/dist/react-select.css';
+
+    const options = [
+        // ...
+        { value: 'Stanford University', label: 'Stanford' },
+        // ...
+    ];
+
+    const field = ({ options }) => (
+         console.log(val)}
+        />
+    );
+
+
+    The <Select> component does everything: input field, styled non-vanilla dropdown, mouse interaction, keyboard shortcuts, filtering. The only gotcha is that options have to be an array of { value, label } objects. Even if both value and label are the same, I tried.
+
+
+
+    A few seconds to render the dropdown. A few seconds to filter. The browser's UI thread blocked, and you can't even see what you're typing.
+
+    5,258 entries is a lot of entries ?
+
+    Step 2: react-virtualized-select
+
+    Brian Vaughn's react-virtualized-select solves the first problem – opening the dropdown. It's a higher order component that does a thing and then your thing works better.
+
+    I think it implements paging and hides it behind scroll events. Only a few elements render at a time, and everyone's life is better.
+
+    Here's how you use it:
+
+
+    import Select from 'react-virtualized-select';
+    import 'react-select/dist/react-select.css';
+    import 'react-virtualized/styles.css'
+    import 'react-virtualized-select/styles.css'
+
+    const options = [
+        // ...
+        { value: 'Stanford University', label: 'Stanford' },
+        // ...
+    ];
+
+    const field = ({ options }) => (
+         console.log(val)}
+        />
+    );
+
+We changed the `import Select from` to use `react-virtualized-select` and… that's all. ? ![](./img/react-virtualized-select.gif) It opens quickly, and I was typing that whole time that nothing was happening. Browser's UI thread still blocking.
+
+## Step 3: react-select-fast-filter-options
+
+Brian Vaughn's [react-select-fast-filter-options](https://github.com/bvaughn/react-select-fast-filter-options) is practically too long to mention in a tweet, and it solves the second problem: fast search. It builds an index of your options and uses advanced computer sciencey algorithms discovered some time in the 60's, probably. We rarely have enough data to worry about actual computer science on the front end, but sometimes we do. Here's how you use it:
+
+    import Select from 'react-virtualized-select';
+    import createFilterOptions from 'react-select-fast-filter-options';
+    import 'react-select/dist/react-select.css';
+    import 'react-virtualized/styles.css'
+    import 'react-virtualized-select/styles.css'
+
+    const options = [
+        // ...
+        { value: 'Stanford University', label: 'Stanford' },
+        // ...
+    ];
+
+    const filterOptions = createFilterOptions({ options });
+
+    const field = ({ options }) => (
+         console.log(val)}
+        />
+    );
+
+
+    We added a filterOptions prop to Select, which specifies a custom filter implementation, and we used createFilterOptions to instantiate that implementation. No need to worry about how it actually works because It Just Works™.
+
+
+
+    Looks good, works good. Faster even than the vanilla browser implementation ?
+
+    The only gotcha is that you have to pass the same options to both Select and createFilterOptions. Dynamically generating { value, label } objects from an array won't work.
+
+    The good news is that the memoization MobX does for @computed values is good enough, so you can do something like this:
+
+
+    class FormData {
+        @observable universities = ['Stanford', 'UVA', ...];
+     
+        @computed get options() {
+            return this.universities.map(name => ({ value: name, label: name }));
+        }
+     
+        @computed get filterOptions() {
+            const options = this.options;
+            return createFilterOptions({ options });
+        }
+    }
+
+
+    I don't know if it would work with Redux. As long as you're careful about the reference thing, you should be fine.
+
+    But is it a good idea?
+
+    Yes. Use this approach for all select fields. Even the small ones! There's no harm, and it's faster. Winning.

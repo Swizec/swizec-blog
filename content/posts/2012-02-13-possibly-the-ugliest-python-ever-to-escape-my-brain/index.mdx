@@ -1,0 +1,89 @@
+---
+layout: post
+title: Possibly the ugliest python ever to escape my brain
+date: 2012-02-13
+author: Swizec Teller
+hero: ./img/Funnel_of_the_Mauretania3.jpg
+---
+
+Lensing [data](http://en.wikipedia.org/wiki/Data "Data") from one format to another always produces the most horrible code ... here's some I wrote last night:
+
+        
+        # some other code here
+
+        def stitch(*iterables):
+            return [(iterables[0][i][0], sum([l[i][1] for l in iterables]))
+                    for i in xrange(len(iterables[0]))]
+
+        def one(z):
+            d = dict(stitch(*[[b for b in zip(a.keys(), a.values()) if b[0] in ['count', 'step_conv_ratio', 'overall_conv_ratio']] for a in z]))
+
+            d['overall_conv_ratio'] = d['overall_conv_ratio']/len(funnel['meta']['dates'])
+            d['step_conv_ratio'] = d['step_conv_ratio']/len(funnel['meta']['dates'])
+            return d
+
+        print map(one,
+                  zip(*[v['steps'][:entry['counts']['p']] for v in funnel['data'].values()]))
+
+\[caption id="" align="alignright" width="185" caption="Also a funnel"][![The funnel of the Mauretania.](./img/Funnel_of_the_Mauretania3.jpg "The funnel of the Mauretania.")](http://en.wikipedia.org/wiki/File:Funnel_of_the_Mauretania.jpg)\[/caption] Can you guess what all of that does? Me neither, let me try to explain.
+
+## WTF!
+
+Firstly, the basic problem I'm trying to solve is fetching some funnel data from [Mixpanel](http://www.mixpanel.com "Mixpanel"), which returns all the data I need, but it is split into different days and I'd really like to have it all mashed together. Due to the design of funnels in their [API](http://en.wikipedia.org/wiki/Application_programming_interface "Application programming interface"), they also return too much data, which spoils what I'm looking for. Their format is something like this:
+
+    {'Signup flow': {'data': {'2010-05-24': {'analysis': {'completion': 0.064679359580052493,
+                                                   'starting_amount': 762,
+                                                   'steps': 3,
+                                                   'worst': 2},
+                                      'steps': [{'count': 762,
+                                                 'goal': 'pages',
+                                                 'overall_conv_ratio': 1.0,
+                                                 'step_conv_ratio': 1.0},
+                                                {'count': 69,
+                                                 'goal': 'View signup',
+                                                 'overall_conv_ratio': 0.09055118110236221,
+                                                 'step_conv_ratio': 0.09055118110236221},
+                                                // etc.},
+                       '2010-05-31': // etc.
+              'meta': {'dates': ['2010-05-24', '2010-05-31']}}}
+
+What I want is something where "Signup flow" would be just a list of steps where count is a sum of all counts for that step and conversion ratios are the average between all days. Yes this discards some useful data, but it's not too relevant for what I'm trying to analyze.
+
+## Justified?
+
+Hopefully I can defend this code, explain why it's ugly.
+
+    map(one,
+        zip(*[v['steps'][:entry['counts']['p']] for v in funnel['data'].values()]))
+
+This code takes the data for each day, iterates over it to take only the _steps_ key, cuts its list at an appropriate length (the funnel's got 60+ steps, I have extra data to tell me how much is actually applicable). Then zips all the steps together. Now we have a list of step [tuples](http://en.wikipedia.org/wiki/Tuple "Tuple") - all the first steps, second steps and so on. Then we apply the one function on each tuple:
+
+    def one(z):
+            d = dict(stitch(*[[b for b in zip(a.keys(), a.values()) if b[0] in ['count', 'step_conv_ratio', 'overall_conv_ratio']] for a in z]))
+
+            d['overall_conv_ratio'] = d['overall_conv_ratio']/len(funnel['meta']['dates'])
+            d['step_conv_ratio'] = d['step_conv_ratio']/len(funnel['meta']['dates'])
+            return d
+
+Right, so the first thing that happens is we turn a dictionary into a list of _(key, value)_ tuples, then this is filtered so only the ones we're actually interested in remain (count and the conversion ratios). These are then stitched together:
+
+    def stitch(*iterables):
+            return [(iterables[0][i][0], sum([l[i][1] for l in iterables]))
+                    for i in xrange(len(iterables[0]))]
+
+Looks pretty bad, but really just turns a list of _(key, value)_ tuples into a list of _(key, sum of corresponding values)_ tuples. Finally, the conversion values are turned into the average by simply dividing with the number of days this funnel was tracked for.
+
+## Better way?
+
+This is the cleanest and most elegant way I could come up with to solve this problem - there's bound to be something cleaner and easier. Actually, _please_ tell me there's a better way! Generally speaking, is there even a good approach to take for converting data returned from somewhere into the kind of data you need somewhere else? Or are we doomed to forever spend most of our time figuring out how to get API's talking to one another?
+
+###### Related articles
+
+-   [A "Quality Assessment" Of US Jobs Reveals The Ugliest Picture Yet](http://usapartisan.com/2012/02/07/a-quality-assessment-of-us-jobs-reveals-the-ugliest-picture-yet/) (usapartisan.com)
+-   [IronPython Lists, Tuples, Dictionaries crash WCF communications](http://stackoverflow.com/questions/8542010/ironpython-lists-tuples-dictionaries-crash-wcf-communications) (stackoverflow.com)
+-   [python entry widget tuple combo](http://stackoverflow.com/questions/8875195/python-entry-widget-tuple-combo) (stackoverflow.com)
+-   [recursively create tuples from lists](http://stackoverflow.com/questions/8658995/recursively-create-tuples-from-lists) (stackoverflow.com)
+-   [Regarding list of tuples and file](http://stackoverflow.com/questions/8107254/regarding-list-of-tuples-and-file) (stackoverflow.com)
+-   [Feeding The Funnel With Facebook](http://socialmediacorporatesolutions.wordpress.com/2012/02/13/feeding-the-funnel-with-facebook/) (socialmediacorporatesolutions.wordpress.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=2991a8b4-c6f1-4e7d-b19f-d376285fcee7)](http://www.zemanta.com/ "Enhanced by Zemanta")

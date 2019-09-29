@@ -1,0 +1,53 @@
+---
+layout: post
+title: Natural Language Generation system architectures
+date: 2012-05-30
+categories: Artificial intelligence, Knowledge Management, Languages, Natural Language Generation, Poetry, Programming, Social Sciences
+author: Swizec Teller
+hero: ./img/trisk.jpg
+---
+
+This post is summarized from Chapter 3 of [Ruli Manurung](http://staf.cs.ui.ac.id/~maruli/)'s _[An evolutionary algorithm approach to poetry generation](https://docs.google.com/viewer?url=http%3A%2F%2Fwww.inf.ed.ac.uk%2Fpublications%2Fthesis%2Fonline%2FIP040022.pdf)_ from 2003 - it is essentially 10 years old research from a fast moving field of science. However, these are core principles and techniques; a casual perusal of wikipedia indicates they are still valid. If you know of something new and spectacular, I'd love to know.
+
+## [Natural Language Generation](http://en.wikipedia.org/wiki/Natural_language_generation "Natural language generation")
+
+So what is natural language generation anyway? The only thing everyone can agree on is that the algorithm should take some manner of input and output a sensible text that a human can read and understand. \[caption id="" align="alignright" width="313" caption="Trisk - a conversational robot"]![Trisk - a conversational robot](./img/trisk.jpg "Trisk - a conversational robot")\[/caption] Formally defined, a NLG system should accept a _&lt;k,c,u,d>_ tuple, where _k_ is the knowledge source, _c_ is the communicative goal, _u_ is the user model and _d_ is the discourse model. Essentially this means that _"You know K and you want to say C to U, using the style of D"_ ... remember back to your high school days - before writing an essay the teacher would tell you exactly this. The output ... well that's easier, it should make sense, fulfill the communicative goal and look like it was written at least by a trained monkey. A NLG system usually involves three processes:
+
+1.  [Content determination](http://en.wikipedia.org/wiki/Content_determination "Content determination") - what you're going to say, based on knowledge, communicative goal and user's expectations
+2.  Sentence planning - how are you going to say it. Remember, semantically sane!
+3.  Surface realisation - the final output, which specific words to use, do sentences follow each other nicely and so on. You could call this _style_or _flow_.
+
+## Traditional architecture
+
+Traditionally this has been approached by discretely implementing the three stages and assembling them into a pipeline of some sort. \[caption id="attachment_4539" align="alignnone" width="567" caption="A search space"][![Three reiter pipeline architecture](http://swizec.com/blog/wp-content/uploads/2012/05/three-reiter-pipeline-architecture.png "Three reiter pipeline architecture")](./img/three-reiter-pipeline-architecture.png) More modernly [Wikipedia suggests a six stage solution](http://en.wikipedia.org/wiki/Natural_language_generation#Stages) divided into: Content determination, [Document structuring](http://en.wikipedia.org/wiki/Document_structuring "Document structuring"), Aggregation, [Lexical choice](http://en.wikipedia.org/wiki/Lexical_choice "Lexical choice"), [Referring expression generation](http://en.wikipedia.org/wiki/Referring_expression_generation "Referring expression generation") and Realisation. However this is still essentially the same approach. But what if you don't have a clear communicative goal and just want to say something interesting about a subject? Or perhaps a later stage might find a better solution that has been disallowed by an earlier stage. A number of different architectures have emerged to combat these problems: [![NLG architectures](http://swizec.com/blog/wp-content/uploads/2012/05/NLG-architectures.png "NLG architectures")](./img/NLG-architectures.png) The **revision approach** combats problems by iteratively fixing each stage in hopes of finding something better, **feedback** simply feeds findings from later stages back into earlier stages, which can open up options that would otherwise be pruned away, **blackboard** is particularly interesting because it uses a common space where results from different stages are posted so every stage has access to what's already out there. But without a clear communicative goal or end user in mind, the **integrated** approach looks most promising.
+
+## NLG as a search problem
+
+One way to approach natural language generation in an integrated manner is by posing it as a search problem - you have a search space of possible solutions, your job is merely to find the best.
+
+-   ![A search space](http://graphvisualizer.org/images/examples/nc_gilbert.png "A search space")\[/caption] This can be done in many ways:
+
+    -   **hillclimbing** - take a random spot on the map. With each step, consider all possible moves and move in the best direction. Hope you don't get trapped in a local maximum
+    -   **systemic search**- go through all possible solutions and find the best one. Problem with this approach is that it can take a while to finish, but you always get the most optimal solutionFour main ways exist to implement this: chart generation (use charts to define the search space and go from there), [truth maintenance systems](http://en.wikipedia.org/wiki/Reason_maintenance "Reason maintenance") (have assumptions, make sure they stay true), "redefining the search problem" (a lot of invalid choices can be pruned out based on linguistic knowledge, which helps with the explosive search space size), constraint logic programming (everyone who's done a prolog course has seen this I think)
+    -   **stochastic search** - this is my favorite approach since it involves a bunch of interesting algorithms. The basic idea is that you can define a set of constraints and then "guess" solutions based on those constraints. But since each constraint is probabilistic, you have a lot of flexibility in coming up with solutions.
+
+    ## Overgeneration and ranking
+
+    This approach is based on the model of an _author_ and a _reviewer_. The author continuously outputs a bunch of plausible solutions that the reviewer then ranks on viability and finally picks one to present to the user. [![Author-reviewer model](http://swizec.com/blog/wp-content/uploads/2012/05/author-reviewer-model.png "Author-reviewer model")](./img/author-reviewer-model.png) The beauty of this approach lies in the fact that each part of the system only has to concern itself with what it does best, while they still collaborate so you aren't trapped in a pipeline architecture.
+
+    ## Opportunistic planning
+
+    Opportunistic planning is an approach that works best when you don't have a clearly defined communicative goal - so how do you know when you've found the solution? \[caption id="" align="alignright" width="300" caption="A jewelry"]![A jewelry](./img/antique-jewelry-antique-jewellery.jpg "A jewelry")\[/caption] This approach was developed for a system that produced description labels for items in a museum. From what I understand users could virtually click around a collection of jewelry, giving the NLG system a simple goal of _tell me something interesting about this._ Without any clear goals and users, even without much advance knowledge of what the system will be talking about, the only viable approach is generating text based on opportunity, like a human guide would. The crowning moment is when it can connect subsequent items into something like _"...and it was work like this which directly inspired work like the Roger Morris brooch on the stand which we looked at earlier”_
+
+    ## Poetry?
+
+    Poetry suffers from a lot of the problems other NLG systems have already had to tackle - a unity of content and form, lack of clearly defined goals etc. Therefore the best approach we can take is some combination of opportunistic planning, which gives us the ability to have lightbulb moments while writing poetry, and stochastic search, which gives us the needed flexibility in the face of many constraints without any goals.
+
+    ###### Related articles
+
+    -   [Science Wednesday: Defining poetry](http://swizec.com/blog/science-wednesday-defining-poetry/swizec/4079) (swizec.com)
+    -   [Making our irc bot talk](http://swizec.com/blog/making-our-irc-bot-talk/swizec/4243) (swizec.com)
+    -   [Natural Language Generation for Spam](http://lingpipe-blog.com/2012/03/31/natural-language-generation-for-spam/) (lingpipe-blog.com)
+    -   [Science Wednesday: Towards a computational model of poetry generation](http://swizec.com/blog/science-wednesday-towards-a-computational-model-of-poetry-generation/swizec/3855) (swizec.com)
+
+    [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=d650edd8-aed4-4c7a-b260-90132b553987)](http://www.zemanta.com/?px "Enhanced by Zemanta")

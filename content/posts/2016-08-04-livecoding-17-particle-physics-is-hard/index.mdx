@@ -1,0 +1,68 @@
+---
+layout: post
+title: Livecoding #17: Particle physics is hard
+date: 2016-08-04
+categories: Front End, Livecoding, react, Technical
+author: Swizec Teller
+hero: ./img/embed
+---
+
+_This is a Livecoding Recap – an almost-weekly post about interesting things discovered while livecoding ?. Shorter than 500 words. With pictures. You can follow my channel, [here](https://livecoding.tv/swizec). New content almost **every Sunday at 2pm PDT**. There’s live chat, come say hai ?_
+
+Did you know particle physics was hard? I had no idea.
+
+I wanted to inject interestingness into the animated particles experiment. Take a random animation of a bunch of particles and turn it into a simulation of the forces between charged particles. It would look so totally cool!
+
+It did not go so well.
+
+> [](//imgur.com/dERre)
+
+Sure, I had _some_ idea that deriving electrostatic force equations from scratch was hard, but it’s 2016, we know this stuff! Teachers show it to us in middle school and high school and college too. How hard can it be?
+
+Pretty hard.
+
+The Wikipedia article on [electric fields](https://en.wikipedia.org/wiki/Electric_field) did not help. It has a bunch of equations, but none that seem useful. Or maybe my reading comprehension is bad when I’m on camera.
+
+The article does link to [Coulomb’s law](https://en.wikipedia.org/wiki/Coulomb%27s_law), which looks a lot like the equation a theoretical physicist explained in the live chatroom. I think his name was zimaguy, but livecoding.tv won’t let me scroll back in the chatroom to check.
+
+How cool is it that we had a real life theoretical physicist on the live stream? Wow.
+
+The formula he gave says that force between a static charge and a particle is equal to `1/r^2`, where `r` is the euclidian distance between two points. We get it using Pythagorus’ formula:
+
+    dx = x1 - x2
+    dy = y1 - y2
+    r^2 = dx^2 + dy^2
+
+Remember middle school maths and asking the professor _“But miiiissss when will I ever need this in real life?”_. When you’re coding cool stuff, that’s when.
+
+The best part of this formula is that we use `r^2` and don’t need a square root. Roots are expensive, multiplication is cheap.
+
+The tricky part is turning this scalar into a vector. The debate with zimaguy went back and forth and I had to settle for a rough approximation. It only understands 4 directions (Up/Down, Left/Right) and misses all of the beauty of vector mathematics, but the end result looks good enough.
+
+We use the calculation for each static charge. Like this:
+
+    // reducer that moves each particle
+
+    p.x += vx*multiplier;
+    p.y += vy*multiplier;
+
+    state.charges.forEach(charge => {
+        let dx = p.x - charge.x,
+              dy = p.y - charge.y,
+                r2 = dx*dx + dy*dy,
+                rX = (dx < 0 ? -(1/r2) : 1/r2)*charge.strength,
+                rY = (dy < 0 ? -(1/r2) : 1/r2)*charge.strength;
+
+        p.x += rX;
+        p.y += rY;
+    });
+
+First we calculate each particle’s new position, then go through the list of charges, and calculate electric force effects. Movement has to happen first, otherwise the charges have a delayed effect that looks weird.
+
+And voila.
+
+> [](//imgur.com/dERre)
+
+This week I want to play with an interesting dataset of some sort. Something that takes a lot of moving parts to showcase … ideas?
+
+PS: the edited and improved versions of these videos are becoming a video course. Readers of the engineer package of [React+d3js ES6](http://swizec.com/reactd3js/) get the video course for free when it’s ready.

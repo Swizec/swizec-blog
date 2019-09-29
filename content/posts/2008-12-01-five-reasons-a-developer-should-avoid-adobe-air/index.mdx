@@ -1,0 +1,46 @@
+---
+layout: post
+title: Five reasons a developer should avoid Adobe AIR
+date: 2008-12-01
+categories: review
+author: Swizec Teller
+hero: undefined
+---
+
+Last week I spoke about [five reasons you should develop in Adobe AIR](http://swizec.com/blog/five-reasons-you-should-develop-in-adobe-air/2/396), which got surprising amount of hits even if there were no comments. I was pleased enough with the response to write the promised second installment of my review - because every coin has three sides.
+
+## It's javascript
+
+Even though I touted this as the biggest advantage of Adobe AIR it also happens to be its biggest handicap. The reason behind this is that javascript is invariably slow, no matter how fast your computer, no matter how fast Adobe's javascript implementation, it's still a scripting language - albeit compiled and will thusly run much slower than native code.
+
+This is of course a criticism geared towards all scripting languages, but fact remains that most desktop applications are **not** written in them. Why do you think things like OpenOffice and other mission critical systems are written in C++? Because it's extremely fast and efficient. There is no way of getting something like that out of javascript.
+
+## Imperfect abstraction
+
+Adobe toutes AIR as a great, almost perfect, abstraction layer between operating systems that enables developers to painlessly develop for all platforms. But as I've recently found in dveloping [Twitulater](http://twitulater.com) this is not so. One problem I've found was that on Mac the javascript implementation automatically translates http&#x3A;//user:pass@domain.com uri's to proper authentication and does all that's needed seamlessly, whereas on Windows (Vista) trying to access such an address produces an error.
+
+That was one _very_ long debugging session before I figure that one out. The solution was telling AIR to ignore authentication and make my custom auth headers - which is dirty if you ask me. AIR should do that seamlessly and without annoying pop-ups.
+
+Oh and on Linux it simply doesn't work yet at all, but Adobe are working on it so I remain hopeful.
+
+## Mitigating window managers isn't easy
+
+Another issue I've found is that there is no simple way to adjust your application for different window managers. You can't count on what size scrollbars will be, resizing the window is based upon outer height and width even though window decorations could be covering your content.
+
+This wouldn't be a problem if styling Adobe AIR appplications was done in a similar way native applications are, where you can just position the elements and the window manager takes care of the rest. Because you're constrained to html you have no access to the window manager's settings. You're as constrained as if you were developing a website.
+
+## Tacky interfaces and flawed integration
+
+Because developing with Adobe AIR is much like creating a website a big issue crops up. You can't make your application look like the rest of what the user is seeing. Whatever you create will invariably stick out of the user's desktop like a pack of wolves amongst three sheep. If users weren't picky this, of course, woudln't be a problem at all, but as we all know users are more and more concerned with how things look and less with how they work.
+
+Or has it been like that all the time? Whatever it is, there are bound to be users out there who will refuse using your application just because it doesn't integrate well with their overall user experience and you, as a developer, will feel dirty for it.
+
+## Only for widgets
+
+Adobe AIR is a powerful widget framework, perhaps the best I've had the pleasure of working with. But that's all it's for and everyone trying to build proper applications should opt for something a bit (or a lot) more powerful.
+
+Lately I've seen different kinds of important applications like [Klok](http://klok.mcgraphix.com/klok/index.htm) for time managment and some lovely thing [De Monsters](http://www.demonsters.com/) are making built and create on Adobe AIR. While this might be nice and lovely for the time being, I don't think it will really survive. They will hit a glass ceiling when trying to improve their product and at some point will be forced to completely remake it. In that light Adobe AIR could be seen as a great prototyping tool for important apps, but I fear many developers aren't realising that.
+
+## Conclusion
+
+Let me conclude by saying that Adobe AIR is a wonderful compromise, but it should never be confused with being anything more than a good compromise between simplicity and speed of development and functionally and user experience. You get a quicker development cycle with a shallow learning curve, but sacrifice integration and efficiency.

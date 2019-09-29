@@ -1,0 +1,76 @@
+---
+layout: post
+title: Webpack lazy loading on Rails with CDN support
+date: 2015-06-04
+categories: CommonJS, ECMAScript, JavaScript, Ruby (programming language), Technical, Web browser
+author: Swizec Teller
+hero: undefined
+---
+
+Webpack is the best module bundler I've ever used. Just this week I used it to reduce the JS footprint of an app from 906KB to 87KB for mobile visitors. An 800KB difference! [Webpack](http://webpack.github.io/)'s core premise is that you can `require('./foo')` your [JavaScripts](http://en.wikipedia.org/wiki/JavaScript "JavaScript"). That sea of `<script>` tags or concatenated code and variables injected into the global namespace is gone. In theory we've had that for a while. RequireJS and its AMD have been out for a while, but it's always felt clunky. Don't think I've used it more than once in the wild. Too clunky. [Browserify](http://browserify.org/) was better. Using [CommonJS](http://en.wikipedia.org/wiki/CommonJS "CommonJS") it brought the same syntax we've had in node.js into the browser. Less clunky and easier to reason about. But to my knowledge, not all that popular in the wild. The problem with Browserify is that, at least in my experience, it takes a lot of setup to work well. And it's kind of slow. Compile times run into the many seconds range. Webpack is fast. Like super fast. Compiling a huge codebase rarely takes more than a second. Every time I change something it's already compiled by the time I refresh the browser. Magic.
+
+## Lazy loading your code
+
+Another great feature of Webpack is that it can perform a sort of minimal bundle coverage for your dependency graph. Instead of making one huge bundle that's got all your code, it makes a few smaller discrete ones. Users no longer have to download all the code for `/admin_panel` when they're looking at `/user_profile`. Not only that, Webpack automagically downloads the required javascripts when needed. This is called lazy loading and it is magic. It's easy in theory, whenever you require a dependency like this:
+
+    require.ensure([], function () {
+       var more_code = require('./more_code');
+    });
+
+Webpack will say _"Oop, that's an optional dependency!"_. It will package everything that might get required by that `require` call into a separate bundle. In this case just `./more_code.js`. If your path includes a variable, Webpack understands that too and puts everything that could match in a bundle. So with `require('./'+module_name+'View.js')`, for instance, it will bundle all JavaScript files that end with `View` into one file. Webpack splits your bundle on every `require.ensure` call. Then when your code needs something, Webpack makes a jsonp call to get it from your server. This is great in development. Not great in production. In my tests on a Heroku Rails app, doing a HEAD call to our app took some 200ms, while the same call to amazon's CloudFlare took only 10ms. Our app is an order of magnitude slower than a proper static file server. Oops.
+
+## Lazy Loading with CDN support
+
+First of all, you have to get Webpack working with Rails. The best guide I've found comes from Justin Gordon, [here](http://www.railsonmaui.com/blog/2014/10/02/integrating-webpack-and-the-es6-transpiler-into-an-existing-rails-project/). He takes you through the whole process in detail. The nutshell version goes like this:
+
+1.  Use npm to install Webpack and its things
+2.  Configure it in `webpack.rails.config.js`
+3.  Add a call to `webpack -w --config=webpack.rails.config.js` to your startup sequence (I like using `grunt start` of some sort)
+4.  Remove all `//= require` in `application.js` and replace with `//= require generated/rails-bundle.js`
+5.  Make an assets.rake task that looks like [this gist](https://gist.github.com/Swizec/fb0905ba078520117c17)
+
+You can find the details in Gordon's long blogpost. It's really good. Although personally I didn't go as far as moving all my JavaScripts out of `app/assets` and I didn't set up hot code loading for local dev. Now, to make Webpack understand that static assets should be loaded from a CloudFlare CDN, you have to change its `output` settings.
+
+    config.output = {
+        filename: in_dev() 
+            ? 'rails-bundle.js'
+            : '[id].[chunkhash].rails-bundle.js',
+        path: 'app/assets/javascripts/generated',
+        publicPath: getCDN()+'/assets/generated/'
+    };
+
+There's two tricks here:
+
+1.  We tell Webpack to fingerprint files with `[chunkhash]` unless we're in local development. This gives us long-term caching because of unique filenames
+2.  We prefix the `publicPath` with a CDN URL. This "tricks" Webpack into loading them from there
+
+The `in_dev` and `getCDN` make the config easier to understand. They look like this:
+
+    function getCDN() {
+        var CDNs = {
+            staging: '.cloudfront.net',
+            production: '.cloudfront.net',
+            preproduction: '.cloudfront.net'
+        };
+
+        if (!in_dev()) {
+            return "//"+CDNs[process.env.RAILS_ENV.toLowerCase()];
+        }
+        
+        return "";
+    };
+
+    function in_dev() {
+        return !process.env.RAILS_ENV || process.env.RAILS_ENV == 'development';
+    }
+
+They both look at the `RAILS_ENV` environment variable to decide which situation Webpack is running under. It works great, but does mean that we have two places to set the config for CDN. Here and the regular Ruby config. Now, because our files are fingerprinted, Rails's asset pipeline no longer knows how to insert them. The filename `0.some_weird_hash.rails-bundle.js` changes every time Webpack compiles our code. The simplest fix I've found is to copy the file in that `assets.rake` task. Like this:
+
+    FileUtils.copy_file(Pathname.glob(path+'0.*.rails-bundle.js').first,
+                            File.join(path, 'rails-bundle.js'))
+
+Now the main bundle file will always have the same name in production and `application.js` will be able to include it so you don't have to hack the asset pipeline. Perfect.
+
+## Benefits
+
+There are many reasons you'd want to use Webpack in your Rails application. My main motivation was that our users were just loading way too much JavaScript. They don't need the desktop homepage app when they're on mobile. And they definitely don't need the whole user dashboard when they're looking at the homepage. For mobile users the change has been significant. From downloading all of **906KB** before, to just **87KB**. Sure, there's still some overhead on top of that for libraries, but we can load those from 3rd party CDNs now so they could already be cached. The other huge benefit is that our code is easier to deal with. Instead of shoving everything into a huge carefully namespaced global object, we can just `require` what we need. Life is better.

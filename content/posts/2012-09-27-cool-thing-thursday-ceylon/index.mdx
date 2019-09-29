@@ -1,0 +1,66 @@
+---
+layout: post
+title: Cool thing Thursday: Ceylon
+date: 2012-09-27
+categories: Ceylon, Functional programming, Java, JavaScript, Object-oriented programming, Red Hat, Scala
+author: Swizec Teller
+hero: ./img/ceylon_homebanner_elephant.png
+---
+
+[Ceylon](http://ceylon-lang.org/) is an exciting new programming language, and by new I mean it appeared in 2011 and I heard about it last week. But it _is_ new enough that no official version has yet been released.
+
+    void hello() {  
+
+        print("Hello, World!");  
+
+    }
+
+The brain child of [Red Hat](http://www.redhat.com "Red Hat"), Ceylon promises to be _"a language for writing large programs in teams",_its striking design goal being code clearly readable even by people who aren't Ceylon programmers. I haven't had a chance to play with it, but all the code samples are very readable. So far so good! In short, Ceylon is a static typed [object oriented language](http://en.wikipedia.org/wiki/Object-oriented_programming "Object-oriented programming") that runs on **Java** and **JavaScript** virtual machines and introduces many interesting features from [functional programming languages](http://en.wikipedia.org/wiki/Functional_programming "Functional programming") such as Scala. That's right kids, it runs in a browser.
+
+## Why's it cool?
+
+\[caption id="" align="alignright" width="370" caption="Ceylon"]![Ceylon](./img/ceylon_homebanner_elephant.png "Ceylon")\[/caption] Leaving aside for a moment it compiles to two different intermediate codes (java bytecode and javascript) and just how astoundingly _awesome_ that is, I also have a soft spot for anything JavaScript. Really, though, the most striking feature is **Ceylon's [type system](http://en.wikipedia.org/wiki/Type_system "Type system")**. First of all, there are no [primitive types](http://en.wikipedia.org/wiki/Primitive_data_type "Primitive data type"), everything is magically pulled out of thin air by something called _principal typing._ Apparently that means it can understand how types work straight from their descriptions, rather than relying on some arcane knowledge.
+
+> For every expression, a unique, most specific type may be determined, without the need to analyze the rest of the expression in which it appears. And all types used internally by the compiler are _denotable_ - that is, they can be expressed within the language itself.
+
+Even better than that, whatever _that_ actually is, are union and intersection types.
+
+    Person|Organization personOrOrganization = ... ;
+
+    Printable&Sized&Persistent printableSizedPersistent = ... ;
+
+You can essentially tell the compiler some value will be either a _string_ or an _integer_ or even both and it won't even bat an eyelid. Add a sprinkling of local type inference and you get something very powerful indeed. A thing can have _two+_ types. Strictly typed. Let that sink in for a bit. Now think how useful this can be when you want to have a list of items that will be of different types. Yep, pretty awesome. There's also **typesafe null and &lt;stuff>**, known to readers of this blog as _[That thing Swizec can't for the life of him understand](http://swizec.com/blog/monads-monads-monads-monads/swizec/5206 "Monads, monads, monads, monads")._
+
+    String? name = ...
+
+    String|Nothing name = ...
+
+This ensures we don't get any strange _NullPointerExceptions_ when we least want them and is essentially the same as Haskell's Maybe monad thingy. Useful stuff :) Another magnificent idea are **polymorphic attributes**. Rather than objects having fields in the traditional sense, they have attributes. Attributes which can be pretty much anything from a simple value, to a getter-setter combination without being forced to manually define these things.
+
+    # simple value
+    String name = firstName + " " + lastName;
+
+    # getter setter pair
+    String name {
+        return fullName;
+    }
+
+    assign name {
+        fullName := name;
+    }
+
+More importantly, the state of the class is completely abstracted away from whomever uses the class. Let it deal with itself.
+
+## Other things
+
+Those are the three features that struck out when I looked through the [Quick Introduction](http://ceylon-lang.org/documentation/current/introduction/). But there's also a bunch of stuff we've come to expect from any modern language like higher order functions, comprehensions, a simple way to define tree-like structures ... The latter most likely being much more powerful than I currently understand. Most importantly, it's not a moving target like Scala! They have milestones and after a milestone is reached they are promising no API's and syntax and whatnot are going to change until the next milestone comes out. Very important if you ever put things in production. Can't wait to find an excuse to play with Ceylon.
+
+###### Related articles
+
+-   [![](http://i.zemanta.com/noimg_2_80_80.jpg)](http://www.javacodegeeks.com/2012/09/is-java-dead-or-invincible.html)[Is Java Dead or Invincible?](http://www.javacodegeeks.com/2012/09/is-java-dead-or-invincible.html)
+-   [![](http://i.zemanta.com/noimg_77_80_80.jpg)](http://architects.dzone.com/articles/should-your-static-go-static)[Should Your Startup Go with Static or Dynamic Languages?](http://architects.dzone.com/articles/should-your-static-go-static)
+-   [![](http://i.zemanta.com/noimg_105_80_80.jpg)](http://blogs.adobe.com/webplatform/2012/08/27/javascript-types/)[JavaScript: Types](http://blogs.adobe.com/webplatform/2012/08/27/javascript-types/)
+-   [![](http://i.zemanta.com/107082342_80_80.jpg)](http://englishtea.us/2012/08/16/ceylon-black-tea/)[Ceylon Black Tea](http://englishtea.us/2012/08/16/ceylon-black-tea/)
+-   [![](http://i.zemanta.com/noimg_54_80_80.jpg)](http://slidetocode.com/2012/09/26/clojures-place-in-the-jvm/)[How Clojure is to the JVM as Bash scripts are to Unix](http://slidetocode.com/2012/09/26/clojures-place-in-the-jvm/)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=5de5fd7f-88ce-4913-a43b-02d4f5a4083e)](http://www.zemanta.com/?px "Enhanced by Zemanta")

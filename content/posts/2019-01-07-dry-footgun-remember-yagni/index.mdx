@@ -1,0 +1,112 @@
+---
+layout: post
+title: DRY is a footgun, remember to YAGNI
+date: 2019-01-07
+categories: Front End, Learning, Technical
+author: Swizec Teller
+hero: ./img/giphy.gif
+---
+
+DRY is the first of the big rules engineers learn. Do not Repeat Yourself. It's a good rule. You'll figure it out on your own even if nobody teaches you. _"Make a button"_ Okay, you can write a component like this:
+
+    const Button = () => (
+        Button
+    );
+
+_"I want to have a button that says Button and a button that says Click Me"_ You got it!
+
+    const Button = () => (
+        Button
+    );
+
+    const ClickMe = () => (
+        ClickMe
+    );
+
+_"Now I want Button to open the shopping cart and I want ClickMe to close the page."_ Okay, we can do that.
+
+    const Button = () => (
+        Button
+    );
+
+    const ClickMe = () => (
+        ClickMe
+    );
+
+_"Wonderful. Beautiful buttons. I want a third button, and this one should close the currently open modal."_ Ah, this is getting tedious. Are you going to want many more buttons? _"Yeah, maybe?"_ Okay. Let me DRY this up.
+
+    const GenericButton = ({ onClick, label }) => (
+        {label}
+    )
+
+    const Button = () => (
+        
+    )
+
+    const ClickMe = () => (
+        
+    )
+
+    const CloseModal = () => (
+        
+    )
+
+_"Wonderful. Can we make all those buttons 20px font?"_ Yes, of course! You've just DRY'd up your code, and here's your first victory. Buttons use a common underlying component. Giving them all a big font is easy. You got dis.
+
+    const GenericButton = ({ onClick, label }) => (
+        
+            {label}
+        
+    )
+
+All your buttons now have a bigger font. DRY Magic. ![](./img/giphy.gif) A true victory for engineering. You pat yourself on the back for an architecture well designed, code cleaned up. You followed some great engineering principles! 👏 **But you just shot yourself in the foot.** Next week, your PM comes back and says, _"Button must be green, ClickMe should be blue, and CloseModal is red"_ Okay, that's annoying, why 3 different buttons, but you can extend `GenericButton` to accept styling. You've still got dis.
+
+    const GenericButton = ({ onClick, label, style }) => (
+        
+            {label}
+        
+    )
+
+    const Button = () => (
+        
+    )
+
+    const ClickMe = () => (
+        
+    )
+
+    const CloseModal = () => (
+        
+    )
+
+You had to add styles to every call of `GenericButton`, but that's okay. At least you have components so you didn't have to find every single invocation of any button and change them. That's the power of DRY. Change once, fix everywhere. Then your PM says _"The font on CloseModal is too big"_ A-ha! You were smart. You wrote `GenericButton` so styles provided through props can overwrite default styles. `{{ fontSize: 20, ...style }}` versus `{{ ... style, fontSize: 20 }}`. ![](./img/giphy.gif) _"CloseModal and Button should be disabled when they're inactive"_ Hmm… 2 of your 3 buttons need new behavior. Best add it to the base implementation.
+
+    const GenericButton = ({ onClick, label, active, style }) => (
+        
+            
+            {label}
+        
+    )
+
+You change `Button` and `ClickMe` to set the `active` prop based on some state. And `ClickMe` became disabled too? That's weird. Guess you have to change that one so it's always passing `active=true`. That's weird. Why would a button always proclaim itself as active? Buttons should be active by default, and this feature should exist only for buttons that use it. You adapt the code.
+
+    const GenericButton = ({ onClick, label, active, style }) => {
+        active = active === undefined ? true : active;
+        
+        return (
+            
+                
+                {label}
+            
+        )
+    }
+
+Now `active` is `true` when undefined, and whatever you set otherwise.
+
+## The DRY footgun
+
+Your `GenericButton` is starting to swell with edge cases. As time passes, it's going to get worse and worse. You'll add a loading state. But only some buttons will use it. You'll add hover/unhover behavior. But not all buttons want that. Eventually, you'll have a button with so many features it's impossible to use. Every render requires so many props that you might as well write a whole button from scratch. Happens a lot. https&#x3A;//twitter.com/Swizec/status/1081328297634459649
+
+## YAGNI to the rescue
+
+[YAGNI](https://en.wikipedia.org/wiki/You_aren't_gonna_need_it), ya ain't gonna need it, is a programming philosophy that engineers learn a little later in life. Because it takes a while for those DRY footguns to appear, perhaps. Or because many projects don't live long enough to see it. Maybe it's just a matter of thinking about why your code is suffering. YAGNI often comes in 2 shapes 👇 **The first** is like the above. You spotted an opportunity to optimize, but you were too early. You should avoid generalizing code until it is absolutely obvious that you should. The more use-cases you have, the easier to know what to generalize. I mean, how can you know which functionality your components share if you don't even have those components yet? You can't. And that brings us to **the other YAGNI**: Building stuff you think you'll need before you need it. You think of a wonderful abstraction. A wonderful little feature that's gonna help oh so much in the future. You build it. Months pass. You tweak the code here and there. Nobody's using it, but you have to maintain otherwise it's gonna break. Whenever you implement a feature, you have to think about how it impacts this code you've got. It's slowing you down. Making you think. And you aren't even using it. But one day! One glorious day, your PM gives you a task. A task from the gods. You are about to use this code you predicted 6 months ago! You are a god of prediction! You knew it all along! ![](./img/giphy.gif) You delete your code and start from scratch. The feature is so different that you can't use any of it.

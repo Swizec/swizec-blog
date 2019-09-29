@@ -1,0 +1,32 @@
+---
+layout: post
+title: Heroku, mongo, node.js - a problem
+date: 2012-01-30
+categories: Heroku, JavaScript, JSON, MongoDB, Node.js, NoSQL, Programming, Ruby
+author: Swizec Teller
+hero: ./img/300px-The_Hunt_of_the_Unicorn_Tapestry_71.jpg
+---
+
+A couple facts about three cool technologies \[caption id="" align="alignright" width="300" caption="Image via Wikipedia"][![The Unicorn Is Penned, Unicorn Tapestries, c. ...](./img/300px-The_Hunt_of_the_Unicorn_Tapestry_71.jpg "The Unicorn Is Penned, Unicorn Tapestries, c. ...")](http://en.wikipedia.org/wiki/File:The_Hunt_of_the_Unicorn_Tapestry_7.jpg)\[/caption]
+
+-   [node.js](http://nodejs.org/ "Node.js") is a powerful way of writing backend code in [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"); why JavaScript? Because you have the kind of problem that benefits from asynchronous code (the average web app) and you like using the same brain for backend and frontend work
+-   [mongoDB](http://www.mongodb.org/ "MongoDB") is an awesome [NoSQL](http://en.wikipedia.org/wiki/NoSQL "NoSQL") data store for objects. It is an especially great companion to JavaScript since its internal storage are [JSON](http://json.org/ "JSON")-objects. JSON has plays particularly well with JavaScript due to certain similarities (some even think the JSON language is a subset of JavaScript, [although it's not](http://timelessrepo.com/json-isnt-a-javascript-subset "JSON: The JavaScript subset that isn't"))
+-   [Heroku](http://www.heroku.com/ "Heroku") is the simplest way to deploy web apps. Originally designed for Ruby, it gained node.js support last spring/summer. There are [alternatives](http://www.joyent.com/), but heroku presents itself as a particularly good pick for various reasons (it _feels_ right)
+
+Combining these three technologies should be a walk in the park. [The best thing since sliced bread](http://en.wikipedia.org/wiki/Sliced_bread "Sliced bread") and unicorn farts should rain down the heavens upon you for even thinking of using node.js, mongo and heroku in unison.
+
+## Not so much.
+
+The culprit - the bleeding edge, baby! Mongo's only been widely-ish popular for a year, node.js still isn't widely and Heroku is traditionally a [RoR](http://rubyonrails.org "Ruby on Rails") hosting environment so there are things that aren't quite smooth yet. Getting mongoDB support on Heroku means using an external party - what heroku calls an add-on - [MongoHQ](https://mongohq.com/home). It's a mongoDB hosting provider that gives you access to a database and lets you loose. But MongoHQ requires authentication. My favourite mongoDB driver for node.js ... doesn't support authentication. At least it doesn't support authentication easily, in fact it doesn't support authentication so much that it isn't officially documented. The only reference to getting this working is [some guy's blogpost from April 2011](http://j-query.blogspot.com/2011/04/mongohq-and-node.html). This is an actively developed library by the way, the last commit to [node-mongodb-native](https://github.com/christkv/node-mongodb-native)'s github was yesterday. Some say I should be using [mongoose](https://github.com/LearnBoost/mongoose) instead, but that would most likely require rewriting the whole application at this point. Not to mention I don't like mongoose's [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational mapping")-like approach because that's just a little too [SQL](http://www.iso.org/iso/catalogue_detail.htm?csnumber=45498 "SQL") for my liking. Why would you force a traditional data store way of doing things onto something as refreshing as Mongo? To make things worse, a while ago (about a year it seems), mongo introduced a new [mongo:// url schema](http://www.mongodb.org/display/DOCS/Connections) for connecting to their database ... not even all the official drivers support it yet. Don't you just love the bleeding edge? Competing libraries, standards shifting under your feet and things never quite working out!
+
+###### Related articles
+
+-   [Node.js inventor extends JavaScript programming beyond browsers](http://r.zemanta.com/?u=http%3A//www.infoworld.com/d/application-development/nodejs-inventor-extends-javascript-programming-beyond-browsers-184963&a=72148407&rid=0ba152c5-e257-4f06-a4aa-d8c62e2e08c5&e=0cb31b66c2e367c75b2971631959db44) (infoworld.com)
+-   [The Four Horsemen of JavaScript](http://www.lukew.com/ff/entry.asp?1482) (lukew.com)
+-   [A community-driven manual for Node.js](http://nodemanual.org/latest/) (nodemanual.org)
+-   [Attacking NoSQL and Node.js: Server-Side JavaScript Injection (SSJS)](http://nosql.mypopescu.com/post/14453905385/attacking-nosql-and-node-js-server-side-javascript) (nosql.mypopescu.com)
+-   [Running node.js on a port other than port 80](http://stackoverflow.com/questions/8904409/running-node-js-on-a-port-other-than-port-80) (stackoverflow.com)
+-   [Cloud9′s Plans for Node.js Community](http://joyeur.com/2012/01/23/cloud9s-plans-for-node-js-community/) (joyeur.com)
+-   [JavaScript on the server: Growing the Node.js Community](http://hacks.mozilla.org/2012/01/javascript-on-the-server-growing-the-node-js-community/) (hacks.mozilla.org)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=0ba152c5-e257-4f06-a4aa-d8c62e2e08c5)](http://www.zemanta.com/ "Enhanced by Zemanta")

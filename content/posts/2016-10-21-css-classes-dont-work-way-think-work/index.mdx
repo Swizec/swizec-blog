@@ -1,0 +1,44 @@
+---
+layout: post
+title: CSS classes don't work the way you think they work
+date: 2016-10-21
+categories: Front End, Technical
+author: Swizec Teller
+hero: ./img/ei.js
+---
+
+    <p class="blue green red">This is some text</p>
+
+Which color is this text going to be?
+
+
+
+No cheating, give it a think ?? . . . . Blue. The answer is blue. ? Look. I’m not lying. It’s really blue.
+
+See the Pen [BLvpER](http://codepen.io/swizec/pen/BLvpER/) by Swizec Teller ([@swizec](http://codepen.io/swizec)) on [CodePen](http://codepen.io).
+
+You can use any permutation of `blue green red` – the text is still blue. Try it! Edit the codepen. Play around :) Did you find the pattern? CSS classes apply in the order in which they are defined, not the order in which they are invoked. This is _not_ intuitive. Look: if you switch around the CSS rules, the text becomes red.
+
+See the Pen [EgGWNY](http://codepen.io/swizec/pen/EgGWNY/) by Swizec Teller ([@swizec](http://codepen.io/swizec)) on [CodePen](http://codepen.io).
+
+Same HTML, same CSS classes, different order of definitions. Try it; change the code. Maybe this is obvious to everyone but me, but I spent an embarrassing amount of time yesterday and today debugging some React components. It hits you when common components have default styling, and you want to override it in a specific instance.
+
+    const P = ({ className, children }) => (
+        
+
+    {children}
+
+
+    ); // default P
+
+    // ...
+
+    const Error = ({ errorText }) => (
+        
+
+    Red error!
+
+
+    ); // doesn't become red
+
+The generic `P` component returns a `<p>` element with an `italic` and a `blue` class. You can expect text to be italic and blue by default. Please don’t do that in real life. This is just an example. It takes a `className` prop so you can extend classes used. But when you use the `Error` component, which produces `<p class="italic blue red">Red error!</p>`, it’s not red. It’s blue because your CSS defines `.red` first and `.blue` second. ? There is no workaround. This is expected behavior. The [relevant part](https://www.w3.org/TR/selectors/#specificity) of W3C spec makes no mention of HTML attribute ordering. How did I go 15 years without ever noticing? ?

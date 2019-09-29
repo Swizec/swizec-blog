@@ -1,0 +1,80 @@
+---
+layout: post
+title: Don't Worry; It's a Compiler Bug
+date: 2015-12-29
+categories: ECMAScript, Front End, JavaScript, Source-to-source compiler, Technical
+author: Swizec Teller
+hero: undefined
+---
+
+When I was a kid writing DOS games in Pascal, I would often get stuck on a problem. After I had exhausted all my knowledge and all the help files, I would conclude, without a doubt, that something was wrong with my machine. There wasn't. When I was a teenager making subpar websites in PHP, I would often get stuck on a problem. After I had exhausted all my knowledge and all the help files and all the internet I could find, I would conclude, again without a doubt, that PHP was being shitty and running my code wrong. It wasn't.
+
+> "It's never the compiler's fault." ~ Smart People
+
+This is hyperbole, of course. System bugs _do_ happen. But not often. A programmer can go his or her entire career without hitting a compiler, operating system, or hardware bug. In fact, studies in the late 1970's showed that 95% of bugs are caused by programmers. Of the rest, 2% fall on system software, 2% on other software, and 1% on hardware. [\[1\]](http://blog.codinghorror.com/the-first-rule-of-programming-its-always-your-fault/) Usually, it's your fault. These days though, compilers are built by people who aren't exactly Ritchie, Stroustrup, Knuth, Wirth and the like. Don't get me wrong, compiler developers are still great guys. It just feels like modern core-tech code is missing the discipline of days gone by. After being a mess for a **long** time, PHP only recently started getting good. Ruby didn't even have a well-defined grammar until 2013 [\[2\]](http://programmingisterrible.com/post/42432568185/how-to-parse-ruby). There are so many different JavaScript compilers and interpreters (called browsers) that you're supposed to test your code in all of them. It's a mess. It's an even bigger mess now that everyone is [transpiling](http://en.wikipedia.org/wiki/Source-to-source_compiler "Source-to-source compiler") code from ES5 to ES6. In theory, this shouldn't be a big deal. You take code from one version of the language, and you turn it into another version. Just a bit of back-porting and some syntax sugar converting. In practice, it means there's another compiler in your stack; two, if you're using a dependency management system like Webpack as well.
+
+## So I got hit by a compiler bug ...
+
+Three weeks ago, I realized _why_ Our App(tm) didn't work on Safari. Some of my code was using ES6's `Map`, which Chrome supports, but Safari does not. I thought [Babel](https://babeljs.io/) would deal with that out of the box, but I was wrong. Something to do with `Map` being a semantic feature and Babel needing to use polyfills that implement `Map` in pure ES5. This should be a simple configuration tweak. Well, we were still on Babel 5 and Babel 6 had come out a month prior. In this brave new world of open-source JavaScript, where shiny toys are king and long-term-support is even rarer than developers making a living from donations, that meant all documentation for Babel 5 was gone. Wiped clean. Nowhere to be found. What do you mean you're still using technology that's outdated by a whole entire month!? Get with the times, daddy-o! You see, in theory, you'd want to avoid updating your build system for as long as possible. A lot of unknown unknowns can rear their ugly heads and bite you in the ass. But I had a bug to fix and a system in production. Ho boy. The upgrade path is simple: remove old packages, install new packages, tweak some configs. In the new system, you need 6 packages to do syntax transpiling _and_ semantic polyfills; like this:
+
+    // dependencies in package.json
+        "babel-core": "^6.3.15",
+        "babel-loader": "^6.2.0",
+        "babel-plugin-transform-runtime": "^6.3.13",
+        "babel-polyfill": "^6.3.14",
+        "babel-preset-es2015": "^6.3.13",
+        "babel-runtime": "^6.3.13",
+
+That's a lot of packages to install for one piece of Stuff, but hey, I'm sure that won't be painful to update in two months at all … You also need to add a `babel-polyfill` entry to your Webpack config and enable the `transform-runtime` and `es2015` plugins. That's how Webpack knows to include the polyfills and to transpile ES6 syntax into ES5.
+
+    entry: {
+                // ...
+                babel_polyfill: 'babel-polyfill'
+    },
+    loaders: [
+                {
+                    test: /\.js$/,
+                    include: [
+                        path.resolve(__dirname, "app/assets/javascripts")
+                    ],
+                    exclude: /node_modules/,
+                    loader: 'babel-loader',
+                    query: {
+                        plugins: ['transform-runtime'],
+                        presets: ['es2015']
+                    }
+                },            
+
+Easy enough. The code transpiled without error, the app loaded fine, and it even worked in Safari. Yass! _"Yo, when you check my PR, make sure you click around a bit,"_ I said to my coworker as I submitted a pull request. _"It should be fine really. The only way something broke is if there was a bug in Babel 5 that we were unknowingly relying on to make our code work. I don't foresee any issues, really. Compilers usually don't have bugs."_ He didn't click around. It wasn't fine. An hour after he closed my pull request, the intern started complaining on Slack: _"Hey, my code doesn't work anymore. I don't know what happened. I try to test this thing and it just doesn't load."_ That's … odd. That really shouldn't be broken. _"Did you update from latest master?"_ He did. The error was short and cryptic:
+
+    TypeError: (0 , _typeof3.default) is not a function
+
+After jumping through the stack trace, we found the error deep inside the bowels of some sort of polyfill for `typeof`. You know something weird is going on when `typeof` throws a type error. In this case, the error was caused by `typeof` circularly trying to use itself in every instance our code used it in. Awesome.
+
+## Great. Now what?
+
+So what do you do when you have to deploy tonight, the compiler is messing up your code, and [a ticket for the bug](https://phabricator.babeljs.io/T6644) has been open for three weeks? Rolling back your change brings back the old bug. Fixing it yourself would take too long because it's a hairy problem, and getting it released upstream is a pain-in-the-ass. Luckily, this is JavaScript. Not everything has to go through your build stack. There's this magical thing called "an external dependency". We were already using [Lodash](https://lodash.com/) as an external dependency. That means we were adding a `<script></script>` tag to load Lodash from public content delivery networks (CDN). This improves load times because users might already have it cached, and it improves our build times because Webpack and Babel have less code to process. In this case, it also saved the day. Lodash has a ton of type helpers. All it took to make the codebase ready for deploy was to change all instances of `typeof` into Lodash's type helpers — things like `_.isObject` and `_.isFunction`. As luck would have it, we'd only used `typeof` in five places. My change only caused one bug that got through code review and into production! Great success! \\o/ Babel's `typeof` bug has since been fixed, by the way. Although the last comment on its discussion thread says _"Uhh ... I still get this when using babel-plugin-transform-runtime"_. Guess we're waiting for the version dependency to propagate through the world.
+
+## So what went wrong, actually?
+
+Uh, I got hit by a compiler bug in Babel 6. Weren't you reading? That's more of a symptom than a root cause, though. Here's the real sequence of events that lead to the only time I found a compiler bug in 19 years of programming.
+
+1.  Failure to test code in multiple browsers
+
+    -   I thought we had polyfills; we didn't.
+
+2.  Lack of automated tests
+
+    -   I relied on coworkers to "click around" to find problems.
+
+3.  Merging bad things to master branch and not having a good rollback strategy
+
+    -   If you break the master, you block the production deploy
+
+4.  Haphazardly updating core parts of the build stack
+
+5.  Babel throwing old versions out the window on upgrades
+
+6.  Using bleeding-edge technologies
+
+All in all, this was a very avoidable problem. But now I know, when you're on the bleeding edge, it totally _can_ be a compiler bug.

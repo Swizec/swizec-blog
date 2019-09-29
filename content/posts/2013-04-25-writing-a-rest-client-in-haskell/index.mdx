@@ -1,0 +1,75 @@
+---
+layout: post
+title: Writing a REST client in Haskell
+date: 2013-04-25
+categories: Aeson, Haskell, JSON, Languages, Monads, Parsing
+author: Swizec Teller
+hero: undefined
+---
+
+A few days ago I decided to buy some bitcoin. Then I noticed it fluctuates a lot despite a general upwards trend. Hmmm ... if I just bought at the right moment and sold at a different right moment, I could make money fall out of the void! I have since lost $5 by playing and gained $30 by leaving it alone. Obviously I suck at this ... I know! Let's make a bot that does this! A low frequency trading bot, that sounds like fun. And let's write it in [Haskell](http://haskell.org "Haskell (programming language)"), just to keep things interesting. Marrying the strictest of languages with the messiest of resources - the internet ... what could possibly go wrong? First order of business - a REST client.
+
+## REST client
+
+Before my bot can do any trading and intricate [algorithmic trading](http://en.wikipedia.org/wiki/Algorithmic_trading "Algorithmic trading"), it needs to talk to the marketplace of choice. I picked Bitstamp because they're the only ones that let me do this without a US bank account. Writing a REST client in most languages is simple. Reading Bitstamp's ticker in Python looks like this:
+
+    import requests, json
+
+    r = requests.get("https://www.bitstamp.net/api/ticker")
+    print json.loads(r.content)
+    # prints: {u'volume': u'17179.28558844', u'last': u'159.49', u'bid': u'159.49', u'high': u'161.00', u'low': u'139.00', u'ask': u'159.64'}
+
+That's it. Everything you need for a set of values nicely accessible as a dictionary. In Haskell, well in Haskell figuring out how to do that took me all night, then a bit of the morning and finally a helpful tweet from a stranger to tell me just how I was misusing monads. First of all, we are going to need a bunch of imports. The ones we _really_ care about are the _http-conduit_ library and the _Aeson_ parser of [JSON](http://json.org/ "JSON") strings. Everything else is there because ... well I'm not sure actually, but it seems to be necessary, otherwise things don't work.
+
+    {-# LANGUAGE OverloadedStrings #-}
+
+    import Network.HTTP.Conduit
+    import Control.Monad.IO.Class
+    import Data.ByteString.Lazy
+    import Data.Aeson
+    import Data.Attoparsec.Number
+    import Control.Applicative
+    import Control.Monad.Trans
+
+I am not perfectly certain what the OverloadedStrings bit at the top does. It's some sort of compiler directive and most haskell libraries I find in the wild tell me I will be a much happier man if I turn it on. Shrug. All it takes now is making an [HTTP request](http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol "Hypertext Transfer Protocol") and parsing the response as JSON. Simple, right? Well, Haskell is strict and you can't just parse things all willy nilly. We need to tell the parser what we expect, what we want to do with the result and what _type_ it's going to be. Can't just have a bag of stuff! Nope, needs to be a well defined bag of things.
+
+    data Ticker = Ticker
+                  { high :: Number,
+                    last :: Number,
+                    bid :: Number,
+                    volume :: Number,
+                    low :: Number,
+                    ask :: Number
+                  } deriving Show
+
+Great. We have a _Ticker_ type that has a bunch of numbers and some names. That _Show_part seems to say that we'll be able to print this out to the console. Smashing! That's not enough though, it is time for some strange hieroglyphics that tell _Aeson_ how exactly parsing works.
+
+    instance FromJSON Ticker where
+      parseJSON (Object v) = Ticker 
+                             v .: "high" 
+                             v .: "last" 
+                             v .: "bid" 
+                             v .: "volume" 
+                             v .: "low" 
+                             v .: "ask"
+
+If I understand this correctly, those strange symbols are applicatives. The _.:_does ... something ... and the _&lt;$>_and _&lt;\*>_do something else. The whole bit is about defining how to convert a key in the JSON string into a value in the _Ticker_ type. I think. Right, let's make a function that will talk to the server and return a _Ticker_object. Maybe. If all goes well.
+
+> @[swizec](https://twitter.com/swizec) yes, you actually need to do something like this:ticker = get "ticker" >>= return . decode :: MonadIO m => m (Maybe Ticker) — 蓮 (@k0001) [April 24, 2013](https://twitter.com/k0001/status/326972349196926977)
+
+    ticker::(MonadIO m) => m (Maybe Ticker)
+    ticker = get "ticker" >>= return . decode
+
+Fairly simple stuff. Take something from the internet carefully wrapped in _MonadIO_, unwrap it for a bit, feed it into _decode_, which magically uses all the stuff we defined earlier, and wrap it back into both a _MonadIO_ and a _Maybe._ Parsing can fail you know.
+
+    get::(MonadIO m) => String -> m ByteString
+    get url = simpleHttp $ "https://www.bitstamp.net/api/"++url
+
+This is the generalized _get_ function that talks to Bitstamp using the _simpleHttp_ function from _http-conduit_. It looks simple, but I'm sure a lot of hairy stuff is going on behind the scenes. To make sure everything works, we run it.
+
+    main = do
+      ticker >>= print
+
+Nothing. Yup, the output we get is Nothing. It is at this point you realize _someone_ isn't using JSON correctly and all those numbers are actually strings. Strings. Now how the hell do you tell Haskell to automagically transform those into Numbers before putting them in the Ticker object? Messy messy internet. But hey! Got Haskell to talk to a [REST API](http://en.wikipedia.org/wiki/Representational_state_transfer "Representational state transfer"). How cool is that!?
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=5492ac2c-3abf-45a3-9680-dd8c31c07973)](http://www.zemanta.com/?px "Enhanced by Zemanta")

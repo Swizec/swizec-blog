@@ -1,0 +1,34 @@
+---
+layout: post
+title: Hard work is a total waste of time
+date: 2010-09-22
+categories: AppEngine, Google App Engine, Java, JavaScript, Node.js, Programming
+author: Swizec Teller
+hero: ./img/300px-SteacieLibrary.jpg
+---
+
+-   [![Steacie Science and Engineering Library at Yor...](./img/300px-SteacieLibrary.jpg "Steacie Science and Engineering Library at Yor...")](http://commons.wikipedia.org/wiki/File:SteacieLibrary.jpg)
+
+    Image via [Wikipedia](http://commons.wikipedia.org/wiki/File:SteacieLibrary.jpg)
+
+Sometimes a series of great decisions can lead to a place where the best decision is a horrendously bad decision. And you just don't realise. Boole algebra taught us early in school that a chain of good implications means the next implication will be pretty good too. Then again, not really. It might be bette to take a step back, look at the bigger bigger picture and make a totally new decision. Very recently, hell, yesterday, this happened to me. Something nudged me from CEO mode into developer mode. To fully analyze this we have to go back to the beginning of this summer when we embarked on The Mission with [Preona](http://preona.net/) and finally started building [LazyReadr](http://lazyreadr.com/)after months of promises and figuring out if anyone's interested.
+
+### What happen?
+
+One of the first decisions we made was to run everything on Google's [App Engine](http://code.google.com/appengine/ "Google App Engine"). Mostly because we saw what a pain it was keeping a [web service](http://en.wikipedia.org/wiki/Web_service "Web service") running realiably and we are expecting there to be quite a heavy load when we have to parse a lot of articles and stuff. Then somewhere in the middle of August it was time to start performing proper article [scraping](http://en.wikipedia.org/wiki/Web_scraping "Web scraping") - taking a link and returning the main text without all the ads and navigation and other crap. After a few attempts with different services ranging from AlchemyAPI to a few different homebrew solutions we decided on Boilerpipe. Boilerpipe is a Java library that does one thing and does it well - it extracts text from links. Great, java, so it runs on AppEngine and does what we need. Fast forward two weeks and we realise that maybe this Boilerpipe thing isn't that great after all. Everything it does is return text. But we need to know when an article has 5 pictures in it, or subtitles, links ... stuff like that.
+
+-   [![The logo of the Node.js Project from the offic...](./img/300px-NodeJS.png "The logo of the Node.js Project from the offic...")](http://commons.wikipedia.org/wiki/File:NodeJS.png)
+
+    Image via [Wikipedia](http://commons.wikipedia.org/wiki/File:NodeJS.png)
+
+Since Boilerpipe can't do that and none of our homebrew solutions are good enough at finding content the only place left for us to go was Readability, an [Arc90](http://www.arc90.com/ "Arc90") "experiment", which just happens to be the best content extraction bookmarklet I have ever seen. There's a catch though. It runs on javascript and rewriting all the code into python or java so we can run it server-side just isn't an option. Especially not when it's apparently under active development and we'd have to go to great lengths to keep up. Welcome [Rhino](http://www.mozilla.org/rhino/ "Rhino (JavaScript engine)"). A javasript engine that runs on Java. Welcome Env.js. A fake browser implemented in [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"). Combine the two and voila, we can load up a [website](http://en.wikipedia.org/wiki/Website "Website") into a fake browser running within a fake javascript environment and run readability just like it was in a browser! yay! Well ... no. Stuff didn't work. Env.js was too big for Java. There were bugs. Problems. Lots of stuff. I toiled heavily for three weeks or so until I finally got it working. But by god I got it working! Sure it took me understanding stuff about Env.js internals I never cared about. But I got it working! Exhausted, I deployed the final code onto App Engine. it died The whole website in browser in javascript in java was just too slow. App Engine's 30s restriction was too much and everything just plain old died. Dead end. Effort wasted. But then I started getting an idea. What about [node.js](http://nodejs.org/ "Node.js")? That's javascript. On the server. And it's fast! Surely I can run env.js in there and get everything working right? Not exactly, but there is a project called [jsdom](http://github.com/tmpvar/jsdom). Three hours later. Working web scraper. Except now it scrapes huge complex websites in a few seconds! Hoorah! Then a day of patching up jsdom since it's a youngish project and everything doesn't work yet and we have a very sturdy scraper. Whoaw!
+
+### The lesson learned
+
+expecting high load -> AppEngine -> Java -> Rhino -> Env.js -> not-working-project-and-several-weeks-wasted alternative: node.js -> jsdom -> stuff-works-in-a-day-of-work So I guess what I'm trying to say besides the fact I'm sooper happy I got stuff working, is that I learned my lesson and that I shouldn't base my decisions solely on the previous decisions I've made. Even if all of them were good decisions by themselves. PS: I'm contemplating whether we should make this service public and am leaning heavily on the Yes option. What do you guys think? Need an efficient and good web scraping API?
+
+###### Related articles by Zemanta
+
+-   [Using jQuery and node.js to scrape html pages in 5 lines](http://blog.nodejitsu.com/jsdom-jquery-in-5-lines-on-nodejs) (nodejitsu.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=4671db4b-1c09-4cc2-9c53-825c17a80c65)](http://www.zemanta.com/ "Enhanced by Zemanta")

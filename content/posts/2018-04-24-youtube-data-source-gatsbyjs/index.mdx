@@ -1,0 +1,168 @@
+---
+layout: post
+title: Using YouTube as a data source in Gatsbyjs
+date: 2018-04-24
+categories: Front End, Livecoding, Technical
+author: Swizec Teller
+hero: ./img/using-youtube-as-data-source-gatsby.png
+---
+
+_This is a Livecoding Recap – an almost-weekly post about interesting things discovered while livecoding. Usually shorter than 500 words. Often with pictures. Livecoding happens almost **every Sunday at 2pm PDT** on multiple channels. You should subscribe to [My Youtube](https://www.youtube.com/TheSwizec) channel to catch me live._ https&#x3A;//www.youtube.com/watch?v=o_sXQ4fWHac [Gatsby](https://www.gatsbyjs.org/) is hands down the best static site generator out there. Builds sites so fast it looks like a bug. The magic trick Gatsby uses to make sites so fast is binding data build time. Most modern server-side-rendered (ssr) sites build an HTML page of your initial view, load data into the browser, and build the rest of the page live. Or they render a skeleton and fill it with dynamic data. https&#x3A;//twitter.com/kylemathews/status/988484209697210368 Gatsby does all that at build time. Run `gatsby build`, and it loads your dynamic data and builds static HTML pages with data-dependent parts already baked in.
+
+## How you use it
+
+At a high level, Gatsby uses various source plugins to read data and make it available via a GraphQL interface. You write GraphQL queries to load this data and render React components. Gatsby handles the rest. I'm not really sure how, but smart people assure me it works, and I've never seen it not work. 🤷‍♀️ Let's say you want to build pages with markdown files. I do that for my workshop materials. I use a bunch of markdown files published as a website, and it works great. You have to enable the `gatsby-source-filesystem` plugin. It lets you read local files as a data source. Then you enable the `gatsby-transformer-remark` plugin, which lets you parse markdown files. When that's set up, you can get a list of page titles with a query like this:
+
+    // anywhere in your JS
+    export const query = graphql`
+        allMarkdownRemark {
+            edges {
+                node {
+                    frontmatter {
+                        title
+                    }
+                    fields {
+                        slug
+                    }
+                }
+            }
+        }
+    `;
+
+You're looking for all nodes of the `markdownRemark` type, collecting their `edges` and `nodes`, and plucking the `title` and `slug` value of each. This shows up in your page component as a `data` prop. So to list all those page titles, you'd do something like this 👇
+
+    const allPages = _.sortBy(
+                data.allMarkdownRemark.edges,
+                ({ node }) => node.fields.slug
+            );
+
+
+
+        {allPages.map(({ node: { frontmatter: { title }}}) => {title})}
+
+There's a lot of looping and destructuring because our data comes in the shape of a graph, and I'm bad at writing GraphQL queries. I'm sure this looks terrible to someone who knows what they're doing.
+
+## Adding a custom data source – YouTube
+
+The fun part is building your own data sources, which you can do, and it's easier than I thought. Your basic approach goes like this:
+
+1.  Search far and wide for an existing plugin
+2.  Give up and realize you'll have to build it yourself
+3.  Strongly consider building a releasable plugin
+4.  Decide you're better off building a one-off integration
+5.  Spend the next hour fiddling inside `gatsby-node.js`
+
+Your goal is to read your data source and create Gatsby data nodes for each object you want to make available. The general template goes like this:
+
+    // gatsby-node.js
+    exports.sourceNodes = async ({ boundActionCreators }) => {
+        const { createNode } = boundActionCreators;
+     
+        // get data
+        // call createNode for each entry
+    }
+
+You can see [my full code on GitHub](https://github.com/Swizec/learnwhileyoupoop.com/blob/2749ed3654e8f9a222fa6df77cb20e7ead91c174/gatsby-node.js). My goal was a list of videos from a YouTube playlist. I used [youtube-playlist-info](https://github.com/benkaiser/youtube-playlist-info) to fetch a list of videos from a public playlist. Google's official node.js library is too hard to use.
+
+    // gatsby-node.js
+
+    // require library
+    const ypi = require('youtube-playlist-info')
+    // read my API key
+    const YT_KEY = require('./client_secrets.json')['yt_key']
+    // hardcode ID of my playlist for now
+    const LWyP = 'PLF8WgaD4xmjWuh7FTYTealxehOuNor_2S'
+
+    exports.sourceNodes = async ({ boundActionCreators }) => {
+      const { createNode } = boundActionCreators
+      const items = await ypi(YT_KEY, LWyP)
+      
+      // build Gatsby nodes
+    }
+
+When Gatsby builds my site, it goes into `gatsby-nodes` and calls my node builder function. This uses `ypi` to fetch a list of videos from the hardcoded [Learn While You Poop playlist](https://www.youtube.com/playlist?list=PLF8WgaD4xmjWuh7FTYTealxehOuNor_2S). Yes, that means building the site is now slow. It has to talk to YouTube's API every time, but it’s worth it. Your next step is to build Gatsby nodes for each video in the playlist. Nodes require a `contentDigest` so Gatsby can tell whether they've changed. To make that easier, I built a helper function 👇
+
+    // gatsby-node.js
+
+      const makeNode = node => {
+        node.internal.contentDigest = crypto
+          .createHash('md5')
+          .update(JSON.stringify(node))
+          .digest('hex')
+
+        createNode(node)
+      }
+
+`makeNode` is a thin wrapper on Gatsby's built-in `createNode` function that automatically generates an `md5` hash of the whole node and saves it in `contentDigest`. Not sure why this isn't default behavior. With that set up, you can build your nodes in a loop like this:
+
+    // gatsby-node
+
+      let lwypNode = {
+        id: 'lwypPlaylist',
+        parent: 'ytPlaylists',
+        children: [],
+        internal: {
+          type: 'ytPlaylist',
+        },
+      }
+
+      lwypNode.children = items.map(
+        ({ title, description, resourceId, thumbnails, position }) => {
+          const id = `ytVideo-${resourceId.videoId}`
+          makeNode({
+            id,
+            title,
+            description,
+            thumbnails,
+            position,
+            resourceId,
+            internal: {
+              type: 'ytVideo',
+            },
+            parent: 'lwypPlaylist',
+            children: [],
+          })
+          return id
+        }
+      )
+
+      makeNode(lwypNode)
+
+Set up an empty node for the `lwypPlaylist` of type `ytPlaylist`. Fill its children with nodes that contain important data from the YouTube API. When all those nodes are created, _then_ create the main `lwypNode`. This reverse order is important. You have to build your data graph from the bottom up otherwise you'll get strange errors. You can see me struggling with that in the video above. Lots of head scratching.
+
+## Read your YouTube data source
+
+When your nodes are created, you can read them anywhere inside Gatsby with a GraphQL query like this 👇
+
+    export const query = graphql`
+      query LwypPlaylist {
+        ytPlaylist(id: { eq: "lwypPlaylist" }) {
+          childrenYtVideo {
+            id
+            title
+            description
+          }
+        }
+      }
+    `
+
+Fetch a node of type `ytPlaylist` with `id` equal to `lwypPlaylist`. Inside that node, get all children `ytVideo` nodes and their `id`, `title`, and `description`. You can then render them in a loop.
+
+    Component = ({ data }) => {
+        const videos = data.ytPlaylist.childrenYtVideo;
+     
+        return 
+    {videos.map(video => 
+            
+
+            
+    {video.title}
+
+            {video.description}
+          
+
+      )}
+
+    }
+
+Full page coming soon. ![](./img/giphy.gif) Should I make a real YouTube source plugin for Gatsby? [Ping me on Twitter](https://twitter.com/Swizec).

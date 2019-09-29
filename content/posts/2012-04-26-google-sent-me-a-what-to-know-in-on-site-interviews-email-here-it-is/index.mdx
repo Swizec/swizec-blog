@@ -1,0 +1,66 @@
+---
+layout: post
+title: Google sent me a "what to know in on-site interviews" email. Here it is.
+date: 2012-04-26
+author: Swizec Teller
+hero: ./img/Sorting_quicksort_anim.gif
+---
+
+After two phone interviews Google asked me to visit London and have a whole day of chatting about technology and solving intricate coding puzzles. Just to see how good I am on a scale of 1 to Google. \[caption id="" align="alignright" width="280" caption="An animation of the quicksort algorithm sorting an array of randomized values. (Photo credit: Wikipedia)"][![An animation of the quicksort algorithm sortin...](./img/Sorting_quicksort_anim.gif "An animation of the quicksort algorithm sortin...")](http://commons.wikipedia.org/wiki/File:Sorting_quicksort_anim.gif)\[/caption] They aldo sent me an email with advice. It can be summed up as _"You should know everything. If it's to do with computers, you should know it. Here are 5 books and 4 fancy algorithms you should read. You must also be intimately familiar with all these basic-ish algorithms. This is your two week notice. Good luck. Oh and take a look at these videos too!"_ Technical interviews have always been fun for me, I just love talking shop with anyone who would listen and how often do you get the chance to talk shop with some of the \[provenly] best engineers out there? Somehow, instead of being super solid advice, the email did nothing but cement my idea that it's impossible to study up on all this and I should just hope I've got what it takes anyway. Here's the email, copied verbatim. **Guide to getting an engineering job with Google** Software engineers work in small, rapid teams, each handling the full development cycle without need for hierarchy; product design, system architecture, coding, testing & product launching at global scale. They don't tend to make prototypes; but rather work in realtime, with live feedback from real people across the globe. Engineers don't always get it right first time, but iterate fast in an agile, unit test environment. Google takes an academic approach to the interviewing process. This means that we’re interested in your thought process, your approach to problem solving as well as your coding abilities. **Technical Interviews** You can expect questions that evaluate your skills in three primary areas: 1. Coding
+
+-   Fluency in at least one programming language is prerequisite, preferably be an object-oriented language, ideally C++ or Java (C# is OK, although engineers don't use it and Python can be useful).
+-   You should be able to produce fully compilable code in your chosen language, to justify why it's your preferred language and be fully up-to-date with its latest editions.
+-   Sample topics: construct / traverse data structures, implement system routines, distill large data sets to single values, transform one data set to another.
+-   Google engineers don't tend to need pre-coded solutions or architectures (so would not utilise MFC, .NET or J2EE).
+-   Engineers develop in a globally open, unit test environment, so you should be familiar with this methodology and able to write your own tests.
+-   Coding styleguides can be found [here](http://code.google.com/p/google-styleguide/).
+
+2\. Algorithms
+
+-   You need to know [Big-O](http://en.wikipedia.org/wiki/Big_O_notation) complexity analysis really well → it’s OK to quickly come up with a brute force solution, but that’s never going to be the answer → always look for an O(n\*logn) solution or ideally a linear one.
+-   Searching and sorting algorithms (Quicksort, Mergesort, etc) → know more than one O(n\*logn) sorting algorithm → know how they work and how to optimise for time and space.
+-   Hash tables → be able to implement one using only arrays.
+-   Trees → know tree construction, traversal, and manipulation algorithms. Familiarise yourself with binary trees, n-ary trees and trie-trees, and at least one type of balanced binary tree.
+-   Know the classic computer science problems (Shortest Path, Traveling Salesman, Knapsack, etc).
+
+3\. System design
+
+-   You need to know powers of 2, and be good at back-of-the-envelope calculations e.g. to estimate the required number of machines for a given design.
+-   Know Google’s products, and think about how you would design the back-end (or front-end).
+-   System design questions are a test of your problem solving skills. Ask qualifying questions → make sure you explain your thought process → explain and justify your assumptions → think of the bigger picture and don’t get bogged down in the detail.
+-   Sample topics: features sets, interfaces, class hierarchies, designing a system under certain constraints, simplicity and robustness, tradeoffs.
+-   Checkout [this link](http://code.google.com/edu/parallel/dsd-tutorial.html) for basic systems design as used at Google.
+
+**Interview Hints**
+
+-   Talk through your thought processes. Our engineers are evaluating not only your technical abilities but how you approach & solve problems.
+-   Ask clarifying questions if you do not understand the problem or need more information. Many of the questions asked in Google interviews are deliberately underspecified because our engineers are looking to see how you engage the problem. In particular, they are looking to see which areas leap to your mind as the most important piece of the technological puzzle you've been presented.
+-   Think about ways to improve the solution you'll present. In many cases, the first answer that springs to mind isn't the most elegant solution & may need some refining. It's definitely worthwhile to talk about your initial thoughts to a question, but jumping immediately into presenting a brute force solution will be received less well than taking time to compose a more efficient solution.
+-   Show an interest in Google products. What is your favourite product, and how would you improve it?
+
+**Videos** - [Interviewing at Google](http://www.youtube.com/watch?v=w887NIa_V9w) - [An inside look at Google](https://www.youtube.com/watch?v=aOZhbOhEunY&feature=player_embedded) - [Google Youtube Channel](http://www.youtube.com/user/Google?blend=1&ob=4) - [Underneath the covers at Google](http://www.youtube.com/watch?v=qsan-GQaeyk) - [Google i/O 2011](http://www.youtube.com/results?search_query=%22Google+i%2Fo%22+2011&aq=f) **Recommended books**
+
+-   Programming Pearls, 2nd Edition - Jon Bentley
+-   Introduction to Algorithms, 2nd Edition - Cormen, Leiserson, Rivest, Stein
+-   Programming Interviews Exposed: Secrets to Landing your next job, 2nd Edition - Mongan, Suojanen, Giguere
+-   Effective C++ - Scott Myers
+-   How Google Tests Software - James Whittaker
+
+**Background knowledge:** Background knowledge: The Google infrastructure Google has the world’s most formidable large-scale computing and storage infrastructure. Clusters of Linux-based machines with custom job and storage management systems allows us to build applications that access petabytes of data or process millions of requests a day. We can build such systems because, amongst other things, we have full control over the software stack. Four of the key elements include:
+
+-   **[GFS](http://en.wikipedia.org/wiki/Google_File_System)** - the Google File System
+-   **[MapReduce](http://en.wikipedia.org/wiki/MapReduce)** - to crunch large data sets
+-   **[BigTable](http://en.wikipedia.org/wiki/BigTable)** - a distributed storage system
+-   **[Chubby](http://research.google.com/archive/chubby.html)** - a distributed lock service
+
+**I asked an experienced Google engineer how/why Google uses Big O notation and they gave me this information:** Google-scale problems fall into two categories: those that span across machines, across very large amounts of data, and those that supply a large number of users with very quick access to data, such as search. When we design a solution for either sort of problem, we are deal with large numbers of items, for example a large number of web pages to search, or customer reports to aggregate up. This means that any algorithm that is not at least as good as linear (O(n)) in time is likely to be too slow. User-facing products such as search require even better: that means aiming for constant time operation (O(1)), no matter how large our index, we need to show results in a fixed amount of time. Sometimes that means we scale the system up to cope with the number of Web pages we have to search. Any example of where your understanding of performance profiling would be applicable is now that we have a constant-time solution, we need to minimise the overhead of just one user performing a search; it's no good if one user's query causes 100MB to be allocated on 1000 computers. Another example would be when we index the Web. This means taking billions of Web pages, computing metrics on each of them to extract the search terms that might trigger them, and then putting them in a searchable index. Adding each page means we might need to compare it with every other page to find the best result for a query, but in fact we can perform the index in linear time with respect to the whole internet by performing the entire computation in parallel. What engineers have done is distilled the problem to an 'embarrassingly parallel' one where as much computation as possible is done on each single page before the more expensive step of comparing it with other pages. This reduces the overall time to index the Web to the extent where we can keep much of the internet searchable even if the page is only 15 minutes old. Here, we have used algorithms and Big O analysis to both decrease latency and increase throughput; performance profiling plays a part but but only once a truly scalable solution has been found.
+
+###### Related articles
+
+-   [New Google Search Algorithm Update Targets Web Spam](http://searchenginewatch.com/article/2170391/New-Google-Search-Algorithm-Update-Targets-Web-Spam) (searchenginewatch.com)
+-   [Google helps create algorithm to target shill reviews](http://www.electronista.com/articles/12/04/25/google.funds.user.review.algorithm.research/) (electronista.com)
+-   [Why is my sites not ranking after google algorithm changes on April 2012](http://www.aaronchua.com/2012/04/why-is-my-sites-not-ranking-after.html) (aaronchua.com)
+-   [My Problem With Your Interviews](http://www.javacodegeeks.com/2012/03/my-problem-with-your-interviews.html) (javacodegeeks.com)
+-   [Pinterest Algorithm Mystery Explained: Must-See Photo](http://blog.hudsonhorizons.com/Article/Pinterest-Algorithm-Must-See-Photo-Explains-All.htm) (hudsonhorizons.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=f2e30d39-c798-4903-9421-69b1874e49e5)](http://www.zemanta.com/ "Enhanced by Zemanta")

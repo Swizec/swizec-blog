@@ -1,0 +1,73 @@
+---
+layout: post
+title: Javascript debugging [slightly] beyond console.log
+date: 2015-01-14
+categories: Apache Hadoop, Cascading Style Sheets, Debugging, HTML, JavaScript, Technical
+author: Swizec Teller
+hero: ./img/25871?token=9nSMQZvgu-5zU5W2miB9UWdX_YwtIbwJKnZsRV2TEhoLcr8QFJi-teuGfw-InXMn6GT4ZKyi5d703eUas3OqMQ8
+---
+
+\[caption id="" align="alignnone" width="680"]![debugger;](./img/25871?token=9nSMQZvgu-5zU5W2miB9UWdX_YwtIbwJKnZsRV2TEhoLcr8QFJi-teuGfw-InXMn6GT4ZKyi5d703eUas3OqMQ8 "debugger;") debugger;\[/caption] My favourite tool for javascript debugging is `console.log`. I mean, I _love_ `console.log`. If I ever get a programming tattoo, it's going to be `console.log` or some variation thereof. Simple to use, works every time, and every programming language I've used since I was 9 has had some variation of it. [Pascal](http://en.wikipedia.org/wiki/Pascal_%28programming_language%29 "Pascal (programming language)") acting up? Not sure what's going on? `writeln` [Python](http://www.python.org/ "Python (programming language)") being silly? `print` C acting funny? `printf` [CSS](http://en.wikipedia.org/wiki/Cascading_Style_Sheets "Cascading Style Sheets") weird? `border: 1px solid red` [HTML](http://en.wikipedia.org/wiki/HTML "HTML") messing with you? Nah, [Chrome](http://www.google.com/chrome "Google Chrome")'s element inspector. But as much as I love `console.log`, sometimes it just does not do. Sure, if you have a proper test suite `console.log` is always enough. But you don't always have a proper test suite. Let me explain. When you want to understand what's going on and where exactly a piece of code goes wrong, you do something like this.
+
+    var do_something = function (arg1) {
+        console.log("got into function", arg1);
+        var foo = get_my_foo(arg1);
+        do_another_thing();
+        console.log("foo changed?", foo);
+        return foo;
+    }
+
+Not the prettiest. But it works. You can tell what's going on. You know for certain the function was called, what the argument value was, and you know the value of `foo` when it returns. Perfect for calling the code once. But what if it's part of a list building mechanism?
+
+    a_lot_of_things.map(function (thing) {
+        var label = do_something(thing);
+        $("ul").append(
+            $("").html(label) 
+        ); 
+    });
+
+Wellp, now you've got a bunch of console output to look through. Annoying, but manageable. You can still tell which argument produces which output. But we're stretching the limits of `console.log` here. Now what if somebody does this?
+
+    async.map(a_lot_of_things,
+        function (thing) {
+            var label = do_something(thing);
+            $("ul").append(
+                $("").html(label) 
+        ); 
+    });
+
+Wow, that's annoying. Your `do_something` function is called asynchronously. The output is all jumbled up! Very annoying. But you can map input to output in your mind. They're both printed right next to each other. It's just harder because you have to read the whole output every time and can't jump to the line you're interested in. The problem is ALWAYS with just one of the elements. Obviously. Wow, we're really stretching that `console.log`. Let's break it.
+
+    var do_something = function (arg1, callback) {
+        console.log("got into function", arg1);
+        var foo = get_my_foo(arg1);
+        setTimeout(function () {
+            do_another_thing();
+            console.log("foo changed?", foo);
+            callback(foo);
+        }, 100);
+    }
+
+    async.map(a_lot_of_things,
+        function (thing) {
+            do_something(thing, function (label) {
+                $("ul").append(
+                    $("").html(label) 
+            );
+        });
+    });
+
+You wouldn't just spray `setTimeout`s in your code like that. But now you have an asynchronous function. Maybe it's an Angular watch, you're responding to a promise, or something. Point is, all of your `console.log` outputs are now jumbled up and useless. Something like this:
+
+    got into function, foo1
+    got into function, foo3
+    foo changed?, yes
+    got into function, foo2
+    foo changed?, no
+    got into function, foo4
+    got into function, foo5
+    foo changed?, yes
+    foo changed?, no
+    foo changed?, yes
+
+Wow, talk about useless! When faced with a situation like this, I would start adding `alert()`s to my code. It stops execution and lets you look at the output in a particular moment. But it blocks the entire browser, you can't look around much, and clicking all those pop ups is annoying as hell. Especially once you've found the culprit, but can't just refresh the page. `alert()` disables Cmd+R because it steals focus from the window. You _have to_ get to the end of the loop before you can stop it. :( A few weeks ago I stumbled onto a better way through someone's throwaway comment. `debugger;` It. Is. Magic. Instead of that second print statement, `console.log("foo changed?", foo)`, we'd put `debugger;`. When Chrome, and other modern browsers?, sees that statement, it stops. But it doesn't just stop. It gives you a debugger. \[caption id="" align="alignnone" width="680"]![The debugger, initial view](./img/25868?token=1zEmDAU3OVJSlTeoV_-MlIhKGCCCgfoUC7N8hUoeHm3DAL0_05-t4wJRfWUEey60ee6oKaloiX4jQmWzTTe9L0E "The debugger, initial view") The debugger, initial view\[/caption] You can't see it in the screenshot, but even [GIFs](http://en.wikipedia.org/wiki/Graphics_Interchange_Format "Graphics Interchange Format") are stopped. A moment ago that Santa was dancing, now everything is in _"Holy shit, he's debugging!"_ mode. The code that triggered `debugger;` is in the middle. A bunch of inspection tools are on the right. On top of the screen is an _"I'm done now, please continue"_ button. But more importantly, the console is in current scope! You can do whatever you want. \[caption id="" align="alignnone" width="650"]![Console is in current scope](./img/25870?token=9bSZRyT_hfsRlr-vW233TKP2Xmaw6Gi4G8YS9OifD0uKIdgskr0lEQCmbprxw9zNar_PJrUrKAMc-PCKJDgDszs "Console is in current scope") Console is in current scope\[/caption] And once you've found the culprit, you can just refresh the page. No waiting for all the `alert()`s to show up. Now, I'm not going to stop using `console.log` any time soon. But knowing about `debugger` has made my life easier many times. I only wish I'd known about it sooner.

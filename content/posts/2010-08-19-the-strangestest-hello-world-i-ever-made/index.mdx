@@ -1,0 +1,72 @@
+---
+layout: post
+title: The strangestest Hello World I ever made
+date: 2010-08-19
+categories: Compiler, Languages, Lisp, Murray, Open source, Programming, Programming language, python, Turing completeness
+author: Swizec Teller
+hero: ./img/4906662333_7139b3e5cf_m.jpg
+---
+
+-   [![Le Belem](./img/4906662333_7139b3e5cf_m.jpg "Le Belem")](http://www.flickr.com/photos/48298733@N07/4906662333)
+
+    Image by [0k1n](http://www.flickr.com/photos/48298733@N07/4906662333) via Flickr
+
+Earlier this week while under the influence of being stressed out of my mind being CEO of a startup and watching way too much Sherlock (there are only three episodes, watched every one at least four times) I decided that it was time for a new hobby. The only requirements for said hobby were:
+
+-   mentally very bloody stimulating
+-   doable in polynomic time (rules out things like 'invent cold fusion')
+-   learn something new
+
+Obviously the only real solution to this problem is designing a new [programming language](http://en.wikipedia.org/wiki/Programming_language "Programming language") and making a [compiler](http://en.wikipedia.org/wiki/Compiler "Compiler") or [interpreter](http://en.wikipedia.org/wiki/Interpreter_%28computing%29 "Interpreter (computing)") for it. Sure, the other obvious solution is to find a cool opensource project and become an Important Contributor (tm). But I'm gonna do that anyway, contribute code I'm developing at Preona to opensource projects that is. No I needed something completely different. Totally unrelated to my daily work and so on. Making a language it was! Because @skatey reminded me of Monkey Island earlier that day the language is called [Murray](http://github.com/Swizec/Murray). Murray is a talking demonic skull in Monkey Island. This led to some interesting design ideas. Since obviously the language needs to be inspired by the demonic talking skull ... so let's make the whole thing behave like you're talking to the computer rather than programming. Oh also I wanted it to run on Python and be inspired by [Lisp](http://en.wikipedia.org/wiki/Lisp_%28programming_language%29 "Lisp (programming language)"), but without parentheses. No parentheses if at all avoidable! Another big design goal is to eventually write a Murray-to-Python compiler in [Murray](http://github.com/Swizec/Murray). Right now I'm writing it in Python. So let's recap the primary design goals
+
+-   functional
+-   no parentheses
+-   as akin to talking as possible
+-   can compile itself
+-   [Turing complete](http://en.wikipedia.org/wiki/Turing_completeness "Turing completeness")
+
+### The hello world
+
+The hello world turns out to be pretty simple.
+
+    say "Hello World"
+
+Compiles to python and works. And no, no I'm not just using a regex to replace 'say' with 'print'. I actually wrote a parser for this thing. Everything that sticks together is considered a paragraph of code and will essentially evaluate to a big [function composition](http://en.wikipedia.org/wiki/Function_composition "Function composition") like so f(g(h(x))). Ok? ok. So when I write this:
+
+    say "hello world" say "meow" say "hai"
+
+It compiles into something a bit like so: say( "hello world", say("meow", say("hai"))) So the output becomes:
+
+    hai
+    None meow
+    None hello world
+
+Which doesn't seem too logical, the None should go on the other side ... I should fix this. But anyway, the None is there because 'say' doesn't return anything, we can fix the wonky output like this:
+
+    say "hello world". say "meow". say "hai"
+
+What magic buffonery is this!? Well the dot is another function again and [Murray](http://github.com/Swizec/Murray) can understand one-char functions even when they are attached to something else. The dot is a simple function anyway, it sort of 'destroys' output by returning an empty string so it doesn't get in the way later on in the execution stack. But what about them code paragraphs I mentioned earlier? Well their intended use eventually is to define 'functions', but I haven't figured this out too much yet. Right now they just do this:
+
+    say "meow1"
+
+    say "meow2"
+
+This compiles into two distinct function calls so the output is like this:
+
+    meow1
+    meow2
+
+Anyway, that's all I've got figured out so far. It's only been a few days since I started working on this and there's a long way still to go. Suggestions very welcome, contributors appreciated, everything is [open source](http://www.wikinvest.com/concept/Open_Source "Open Source") and living on [github](http://github.com/Swizec/Murray). Just fork and ping me about it if you're interested :) Oh yeah, this Hello World is strange because it took me writing a compiler and making up a lot of stuff.
+
+###### Related articles by Zemanta
+
+-   [I Want A New Programming Language](http://kirkwylie.blogspot.com/2010/08/i-want-new-programming-language.html) (kirkwylie.blogspot.com)
+-   [Is Lisp secretly the world's most popular programming language? : programming](http://www.reddit.com/r/programming/comments/280is/is_lisp_secretly_the_worlds_most_popular/) (reddit.com)
+-   [Re: Revenge of the Nerds](http://www.paulgraham.com/icadmore.html) (paulgraham.com)
+-   [Lisp sans (((paren-theses ((hell))))) | Lambda the Ultimate](http://lambda-the-ultimate.org/node/1646) (lambda-the-ultimate.org)
+-   [lice! : On Parentheses](http://blog.licenser.net/2010/07/08/on-parentheses) (licenser.net)
+-   [The Clean Coder: Why Clojure?](http://thecleancoder.blogspot.com/2010/08/why-clojure.html) (thecleancoder.blogspot.com)
+-   [Why Lisp Still Hasn't Won - O'Reilly ONLamp Blog](http://www.oreillynet.com/onlamp/blog/2005/12/why_lisp_still_hasnt_won.html) (oreillynet.com)
+-   [Help me find something new to do with my time](http://ask.metafilter.com/162577/Help-me-find-something-new-to-do-with-my-time) (ask.metafilter.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=0f444050-7748-4c28-8a4c-b172081bb171)](http://www.zemanta.com/ "Enhanced by Zemanta")

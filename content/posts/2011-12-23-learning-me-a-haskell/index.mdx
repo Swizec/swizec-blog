@@ -1,0 +1,62 @@
+---
+layout: post
+title: Learning me a Haskell
+date: 2011-12-23
+categories: Clojure, Functional programming, Haskell, JavaScript, Languages, Learning, Programming, python
+author: Swizec Teller
+hero: ./img/300px-Haskell-Logo.svg_4.png
+---
+
+\[caption id="" align="alignright" width="300" caption="Image via Wikipedia"][![English: The Haskell Logo, a stylized >λ= . Th...](./img/300px-Haskell-Logo.svg_4.png "English: The Haskell Logo, a stylized >λ= . Th...")](http://commons.wikipedia.org/wiki/File:Haskell-Logo.svg)\[/caption] A couple of days ago I decided that doing my graduation thesis on a topic that, when suggested, brought a sparkle to my mentor's eye and made him suggest I might want to think about picking a co-mentor just wasn't hard enough - so I decided to do the whole thing in [Haskell](http://haskell.org "Haskell (programming language)"). I want to show you what I've learned of Haskell in just a few hours, you can skip the next five-ish paragraphs to get to the juicy code examples :) Now I've never done Haskell before, I've heard about how awesome it is and that it's super fast and super awesome and utterly and strictly functional and did I mention I've heard it's awesome? Until a couple of days ago I didn't even really know what Haskell looked like! The graduation thesis really seemed like the perfect excuse to get into Haskell - and I've been looking for one for a while. Somehow when I started out learning [functional programming](http://en.wikipedia.org/wiki/Functional_programming "Functional programming") with [Clojure](http://clojure.org "Clojure") it didn't really reel me in, Haskell so far looks like it might capture my heart. Maybe it's just the cool writing of Miran Lipovaca who published _[Learn you a Haskell](http://learnyouahaskell.com/)_ in April this year (and made it available for free on the great wide interwebs), that's making the learning curve slightly easier to digest than it was when I was doing Clojure. (he was also my classmate in high school and is my sort-of classmate now in college, which makes the whole thing that much awesomer) The first thing I noticed is just how bloody expressive Haskell is, it feels like I'm writing much less code than I'm used to in both [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") and [Python](http://www.python.org/ "Python (programming language)") to achieve cool stuff. Definitely less than when I was trying to learn Clojure by just perusing the docs. After 3 hours of learning Haskell, here's how it compares to my Python and Javascript - I had originally wanted to compare to Clojure, but that was just embarrasing :)
+
+## Sum multiples of 3 and 5 under 1000
+
+Haskell:
+
+    sum [x | x <- [1..999], mod x 5 == 0 || mod x 3 == 0]
+
+Python:
+
+    sum([x for x in range(1000) if x%3 == 0 or x%5 == 0])
+
+Javascript:
+
+    for (var x=0,s=0; x < 1000; x++, (x%3==0 || x%5==0) ? s+=x : s) {}
+    s
+
+## Sum of even fibonacci terms under 4,000,000
+
+Haskell:
+
+    fib :: [Int] -> [Int]
+    fib terms
+      | head terms < max' = fib ((sum (take 2 terms)):terms)
+      | otherwise = terms
+      where max' = 4000000
+
+    sum [x | x <- fib [1], mod x 2 == 0]
+
+Python:
+
+    def fib(terms):
+         return terms if terms[0] >= 4000000 else fib([terms[0]+terms[1]]+terms)
+    sum(filter(lambda x: x%2 == 0, fib([1,1])))
+
+Javascript:
+
+    function fib(l) { return (l[0] >= 4000000) ? l : fib([l[0]+l[1]].concat(l)) }
+    fib([1,1]).filter(function (a) { return a%2 == 0}).reduce(function (a,b) { return a+b })
+
+I was writing the python and javascript examples directly in the console, hence less new lines. But the point is, even after just very little time, haskell is proving to be pretty much as expressive as my two primary languages where I know ~~all~~ a lot of the tricks. This looks like the beginning of a long relationship.
+
+###### Related articles
+
+-   [Crowdsourcing elegance](http://swizec.com/blog/crowdsourcing-elegance/swizec/2608) (swizec.com)
+-   [Is Haskell the Cure?](http://mathias-biilmann.net/posts/2011/10/is-haskell-the-cure) (mathias-biilmann.net)
+-   [Solving Problems Using Clojure Sequences](http://drknucklehead.wordpress.com/2011/10/11/solving-problems-using-clojure-sequences/) (drknucklehead.wordpress.com)
+-   [The Clojure Community and Me](http://blog.raynes.me/blog/2011/11/27/the-clojure-community-and-me/) (raynes.me)
+-   [haskell inefficient fibonacci implementation](http://stackoverflow.com/questions/7854040/haskell-inefficient-fibonacci-implementation) (stackoverflow.com)
+-   [Haskell for the Evil Genius](http://www.yellosoft.us/evilgenius/) (yellosoft.us)
+-   [Heading a file one line at a time in Haskell](http://stackoverflow.com/questions/8366093/heading-a-file-one-line-at-a-time-in-haskell) (stackoverflow.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=9436ee3b-db83-41f4-bece-a7b4eb989080)](http://www.zemanta.com/ "Enhanced by Zemanta")

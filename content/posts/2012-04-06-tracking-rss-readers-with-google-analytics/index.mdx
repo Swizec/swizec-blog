@@ -1,0 +1,35 @@
+---
+layout: post
+title: Tracking RSS readers with Google Analytics
+date: 2012-04-06
+categories: Feedburner, Google, Google Analytics, HTML element, JavaScript, RSS, Slashdot, Uniform Resource Locator
+author: Swizec Teller
+hero: ./img/nerd_sniping.png
+---
+
+[![XKCD nerd sniping](./img/nerd_sniping.png "XKCD nerd sniping")](http://xkcd.com) The problem with [RSS](http://en.wikipedia.org/wiki/RSS "RSS") (aside from only being used by nerds) is that it is almost untrackable. Sure there's [Feedburner](http://www.feedburner.com/ "FeedBurner") and [Google Analytics](http://www.google.com/analytics "Google Analytics") can tell you how many people came to your blog specifically through clickthroughs. But when you've got the whole post right there in your reader, why would you ever want to clickthrough to the actual website? You wouldn't. Feedburner tells me there are 925 people subscribed to my blog. Hooray! Do they ever read a post? No idea. Well, about 400 a month do clickthrough to the website ... but who cares about that. I'm not an advertiser, all I want are readers! On Tuesday I nerdsniped myself and spent the whole day trying to figure out how to do this - long story short, I didn't find a single way. But I tried several things:
+
+## \_\_utm.gif
+
+If you didn't know, Google Analytics uses a so called [tracking pixel](http://en.wikipedia.org/wiki/Web_bug "Web bug")that a javascript snippet injects into a site so it can then be downloaded by the browser. Because the gif is dynamically served by a server and there are a bunch of parameters in the request - they know who you are, what the site was, and voila - tracking! \[caption id="" align="alignright" width="300" caption="Wikibooks-javascript (Photo credit: Wikipedia)"][![Wikibooks-javascript](./img/300px-Wikibooks-javascript.png "Wikibooks-javascript")](http://commons.wikipedia.org/wiki/File:Wikibooks-javascript.png)\[/caption] Add it to the feed with the right parameters and voila. You suddenly know how many people _read_ your [RSS feed](http://en.wikipedia.org/wiki/RSS "RSS")! Hooray \\o/ Well ... no. Apparently Google Analytics ignore such requests. The referrer is probably wrong since it isn't your domain, just some sort of reader url or something.
+
+## [Javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript")
+
+Maybe the parameters I added to the \_\_utm.gif request weren't dynamic enough. The cookie stuff was certainly missing ... Okay, let's use [Google's](http://google.com "Google") own javacript snippet. Surely _that_ will work! I mean, what could possibly go wrong, a reader loads your article as html anyway, so javascript should definitely work. And I'm fairly sure I've seen javascript in certain feeds ... how else would those ads get in there? Nope. Readers scrape away all traces of javascript, probably worried about hacking and silly stuff.
+
+## Iframes
+
+Right, [iframes](http://en.wikipedia.org/wiki/HTML_element "HTML element") then! Everything should work perfectly - the tracking pixel is inserted with javascript, the iframe actually loads your website so surely all the other parameters are correct as well. Better yet, [Slashdot](http://slashdot.org/ "Slashdot")'s got an iframe in their feed and _that_ works! Youtube embeds and others are also a combination of iframes and javascript. Surely we're on to a winner here. I even went so far as to make a special iframe-only look for my blog:  That's right, add a _?track_page=1_ to a [URL](http://en.wikipedia.org/wiki/Uniform_Resource_Locator "Uniform Resource Locator") and you get a bunch of sharing widgets and google analytics. Let's make the iframe useful why not ... Didn't work. Readers allow iframes on a per-case basis and apparently I'm not cool enough for them.
+
+## Well, poo
+
+I'm very open to ideas for things to try here ... all I want is to look at google analytics and have people reading the RSS counted amonst the normal reader population. Sure, Feedburner does have some sort of hack to look at "reach", but it bugs me that I have no idea what that actually means. And that it's not included where I normally look for stats.
+
+###### Related articles
+
+-   [You should be using Google Analytics to log your startup's client-side errors](http://www.thetaboard.com/blog/client-side-error-logging-with-google-analytics?r=378) (thetaboard.com)
+-   [What is Google Analytics and what can it do?](http://marketing.yell.com/web-design/what-is-google-analytics-and-what-can-it-do/) (marketing.yell.com)
+-   [Getting the Most out of Google+ with Google Analytics](http://socialfresh.com/google-plus-google-analytics/) (socialfresh.com)
+-   [Combining the HTML5 History API and the Canonical Tag for Improved Tracking](http://www.distilled.net/blog/seo/combining-the-html5-history-api-and-the-canonical-tag-for-improved-tracking/) (distilled.net)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=d8d70dfa-fcc1-441e-9c80-25b7125a9323)](http://www.zemanta.com/ "Enhanced by Zemanta")

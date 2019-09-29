@@ -1,0 +1,85 @@
+---
+layout: post
+title: Bring Ruby VCR to Javascript testing with Capybara and puffing-billy
+date: 2013-03-14
+categories: JavaScript, RSpec, Ruby, testing
+author: Swizec Teller
+hero: undefined
+---
+
+Let's say you are writing an application in [Ruby](http://www.ruby-lang.org/ "Ruby (programming language)"). You are probably talking to every API under the sun and are happily writing tests to make sure your code isn't failing. Because you don't want to rely on 3rd parties or an internet connection to make your tests pass or fail you mock everything with let's say, [Webmock](https://github.com/bblimke/webmock). This also makes your tests much _much_ faster. After all even the fastest internet is much slower than the processor talking to its memory. If you're too lazy to mock out every API under the sun, you might use [VCR](https://www.relishapp.com/vcr/vcr/docs) to record requests and play them back later. The main advantage being, you don't have to worry about meticulously reimplementing _everything,_and you can nuke the recordings at any time to make sure your code still works against the real API. Life is good.
+
+## Enter [Javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"), stage left
+
+Then Javascript becomes more and more prominent. Suddenly your application's logic is shifting from backend to browser and before you know it, most of your tests are pretty irrelevant. You're fine for a while with Capybara or Cucumber. Launch a headless browser, click around the site from the comfort of [RSpec](http://rspec.info/ "RSpec"), make sure users see what they're supposed to. Balance restored. Then you add a payment form. Or something. Suddenly your _frontend_ is talking to an API. In case of Stripe or Balanced it's even a feature. A great benefit for the user.
+
+    jQuery(function($) {
+      $('#payment-form').submit(function(event) {
+        var $form = $(this);
+
+        // Disable the submit button to prevent repeated clicks
+        $form.find('button').prop('disabled', true);
+
+        Stripe.createToken($form, stripeResponseHandler);
+
+        // Prevent the form from submitting with the default action
+        return false;
+      });
+    });
+
+Well that sucks, you're suddenly back to square one. Your tests take minutes to execute. Your tests fail without an internet connection. Your tests rely on some 3rd party service being up. Your tests suck. Who wants to code when running ~5 tests takes 3 minutes? Nobody.
+
+## Enter puffing-billy, stage right
+
+The problem is that neither Webmock nor VCR can handle requests originating in a browser because they happen in a different thread and they can't mess around with those. Luckily, a year ago [Olly Smith](https://github.com/oesmith), created [puffing-billy](https://github.com/oesmith/puffing-billy). The idea was great - spin up a web proxy, tell your headless browser to use it, when your code makes a request it will go through the proxy, which will try to use a Webmock to handle it, otherwise pass it on to the vast internet. But who wants to mock everything out manually? Over the past few weeks I set upon the task of fixing this problem and restoring sanity to my life. Good tests are transparent to the application and I'll be damned if I use any of the suggested solutions on the internet like _"Well you just put a switch in your code that knows if you're in a test and then doesn't talk to Stripe"_ Screw that. This morning I submitted [a pull request to puffing-billy](https://github.com/oesmith/puffing-billy/pull/7). I added the ability for puffing-billy to behave like it was VCR, but for your browser. When a request is made, it gets cached. The cache is then persisted between sessions, and requests are played back to the browser as needed. It's not as sophisticated as VCR just yet, but it gets the job done and my test runtime has gone from 3 minutes to just under a minute. That's a big deal in my book! The caching even understands that some URL's are needlessly different on every request (social buttons, analytics etc.) so you can configure it to normalize those requests to a single recording that is played back every time. Your tests don't really rely on gAnalytics working right? And the best thing is, you don't even have to change your tests. You add something like this in your _spec_helper.rb_:
+
+    Billy.configure do |c|
+      c.cache = true
+      c.ignore_params = ["http://www.google-analytics.com/__utm.gif",
+                         "http://b.siftscience.com/i.gif",
+                         "https://r.twimg.com/jot",
+                         "http://p.twitter.com/t.gif",
+                         "http://p.twitter.com/f.gif",
+                         "http://www.facebook.com/plugins/like.php",
+                         "https://www.facebook.com/dialog/oauth",
+                         "http://cdn.api.twitter.com/1/urls/count.json"]
+      c.persist_cache = true
+      c.cache_path = 'spec/req_cache/'
+    end
+
+    # need to call this because of a race condition between persist_cache
+    # being set and the proxy being loaded for the first time
+    Billy.proxy.restore_cache
+
+    Capybara.javascript_driver = :poltergeist_billy
+
+A test for the payment form looks the same as usual:
+
+        scenario "physical product" do
+          product = start_buying build(:product, :physical, user: @seller, active: true)
+
+          VCR.use_cassette('Balanced/purchase_with_cc') do
+            within '#new_order' do
+              fill_in 'order_email', with: Faker::Internet.safe_email
+              fill_in_address
+              fill_in_card
+
+              click_on 'Buy Now'
+            end
+
+            page.should have_css('#receipt', :visible => true)
+          end
+
+          validate_receipt product, @seller
+        end
+
+Puffing-billy will transparently cache every requests the browser makes and VCR records any requests made by your backend logic. It's pretty sweet. What do you guys think? I only have 20 days of Ruby experience and the internet has told me it really wants something like this, but I couldn't find anyone who's already made it.
+
+###### Related articles
+
+-   [![](http://i.zemanta.com/144898901_80_80.jpg)](http://blog.codeship.io/2013/02/11/Using-PhantomJS-for-backend-tests.html)[How to make your testing awesome with PhantomJS](http://blog.codeship.io/2013/02/11/Using-PhantomJS-for-backend-tests.html)
+-   [![](http://i.zemanta.com/noimg_26_80_80.jpg)](http://highscalability.com/blog/2013/1/30/better-browser-caching-is-more-important-than-no-javascript.html)[Better Browser Caching is More Important than No Javascript or Fast Networks for HTTP Performance](http://highscalability.com/blog/2013/1/30/better-browser-caching-is-more-important-than-no-javascript.html)
+-   [![](http://i.zemanta.com/145879258_80_80.jpg)](http://www.slideshare.net/jo_liss/testing-ember-apps)[Testing Ember Apps](http://www.slideshare.net/jo_liss/testing-ember-apps)
+-   [![](http://i.zemanta.com/152051710_80_80.jpg)](http://www.slideshare.net/SmartBear_Software/safe-sex-with-thirdparty-apis)[Safe Sex with Third-Party APIs](http://www.slideshare.net/SmartBear_Software/safe-sex-with-thirdparty-apis)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=e69c073b-038f-4dc0-8a7f-21131f8ce412)](http://www.zemanta.com/?px "Enhanced by Zemanta")

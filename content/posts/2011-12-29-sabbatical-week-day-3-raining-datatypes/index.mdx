@@ -1,0 +1,28 @@
+---
+layout: post
+title: Sabbatical week day 3: Raining datatypes
+date: 2011-12-29
+categories: Artificial intelligence, Data type, Functional programming, Haskell, Languages, Machine learning, Neural Networks, Programming
+author: Swizec Teller
+hero: ./img/5479666205_e74e748bf0_m3.jpg
+---
+
+_I’m taking a sabbatical week over the holidays. This week’s posts will serve as a sort of report of what I got up to the previous day instead of the usual schedule – wish me luck that I achieve even half of what I’d like to._ \[caption id="" align="alignright" width="232" caption="Image by Voxphoto via Flickr"][![Data Points](./img/5479666205_e74e748bf0_m3.jpg "Data Points")](http://www.flickr.com/photos/13757887@N00/5479666205)\[/caption] As I sit here slowly sipping on my tea I realize it may have been an incredibly bad idea to stay up until 8am trying to convince [Haskell](http://haskell.org "Haskell (programming language)")that I really honestly don't care about types as much as it seems to. It's really quite funny how weird a [statically typed language](http://en.wikipedia.org/wiki/Type_system "Type system") feels after many years of dynamic languages. _Yes, I know, this is a [Numerical](http://en.wikipedia.org/wiki/Number "Number") and that is a [Double](http://en.wikipedia.org/wiki/Floating_point), figure it the fuck out man! It's not that difficult!_ You'd think the hardest part about Haskell would be that it is incredibly strict about the [functional programming](http://en.wikipedia.org/wiki/Functional_programming "Functional programming") thing, but no, here I am, having trouble with the most basic of concepts. But! I prevailed! I had in my hands [a lovely algorithm](https://github.com/Swizec/Personal-Runway/blob/master/implementation/window.hs) that can in theory perform rudimentary predictions of how my spending is going to behave in the next few days. During my morning exercise I realized the implementation doesn't actually do what I think it does, but hey, at least I have the algorithm figured out :) The idea is really quite simple:
+
+1.  Smoothen data with a [rolling average](http://en.wikipedia.org/wiki/Moving_average "Moving average") (a 7 day window seems to produce the nicest curve)
+2.  The first unknown [data point](http://en.wikipedia.org/wiki/Data_point "Data point") is simply the [expected value](http://en.wikipedia.org/wiki/Expected_value "Expected value") (weighed average) of the last few points
+3.  Expand weighed average window to include the new data point
+4.  Calculate next one
+5.  Repeat for as long as it makes sense - the more into the future you go, the more wrong you are
+
+After reading a bunch of papers on data mining time series yesterday I realized that I'm thinking way too much into this. Sure [SVM](http://en.wikipedia.org/wiki/Support_vector_machine "Support vector machine")'s are the best at predicting financial time series and people have extremely good results with backpropagation neural networks - somehow - but I honestly don't need this complexity. I'm just making a simple tool for myself and it's more important to have _some_ result than the _optimal_ result. And either way, according to the papers a neural network is only marginally better than the [sliding window](http://en.wikipedia.org/wiki/Sliding_window_protocol "Sliding window protocol") approach, and even then only when you're dealing with data when far-away points have a lot of impact on the future and/or there is a lot of repetition - none of which happens here.
+
+###### Related articles
+
+-   [Type-System Criteria](http://www.tbray.org/ongoing/When/201x/2011/12/27/Type-Systems) (tbray.org)
+-   [Sabbatical week day 2: I fail at Octave](http://swizec.com/blog/sabbatical-week-day-2-i-fail-at-octave/swizec/3282) (swizec.com)
+-   [Learning me a Haskell](http://swizec.com/blog/learning-me-a-haskell/swizec/3272) (swizec.com)
+-   [Non-Sabbatical](http://ringingtrue.net/2011/12/27/non-sabbatical/) (ringingtrue.net)
+-   [How to insert a file to an Image datatype in sql2005](http://stackoverflow.com/questions/8178445/how-to-insert-a-file-to-an-image-datatype-in-sql-server-2005) (stackoverflow.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=ce282cd2-9d04-4814-b93d-219c7e073a5d)](http://www.zemanta.com/ "Enhanced by Zemanta")

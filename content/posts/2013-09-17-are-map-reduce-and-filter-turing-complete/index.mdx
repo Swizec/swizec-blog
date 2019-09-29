@@ -1,0 +1,71 @@
+---
+layout: post
+title: Are map, reduce, and filter turing complete?
+date: 2013-09-17
+categories: Functional programming, Haskell, JavaScript, Lisp, Recursion, Turing completeness
+author: Swizec Teller
+hero: undefined
+---
+
+Yes. You can implement any algorithm with map, reduce, and filter when taken in the context of modern languages that implement these constructs. The predicate functions they rely on are turing complete, which makes them turing complete by extension. But that's smartass answer isn't it? Implementing your whole algorithm in a predicate function and wrapping it in a map call feels like cheating. Can you implement an algorithm _just_ with map, reduce, and filter? No. Those three functions on their own can't do squat. Writing something like `map(reduce(reduce(map(reduce(filter(4))))))` will not make anything happen. We first have to decide what we're trying to ask. I've been losing sleep over this whole thing ever since a technical editor nerdsniped me last week. _"A smart man once told me you can write any program as a sequence of map and reduce calls. I like to add filter for a more comprehensive toolset."_, I wrote in [Data Visualization with d3.js](http://www.packtpub.com/data-visualization-with-d3js/book). The editor's only comment was _"This is wrong. For instance, you can't implement sorting like this."_ And well, yes, he's right. But he also isn't. What did Smart Guy (tm) try to tell me all those years ago when he introduced me to functional programming? Back to basics. To have a [turing complete language](http://en.wikipedia.org/wiki/Turing_completeness "Turing completeness") you need:
+
+1.  Write cell
+2.  Read cell
+3.  Move left
+4.  Move right
+5.  Branching (based on cell value)
+
+We assume our memory is practically infinite. Meaning it's not infinite per se, but we can add more when we run out. In his [LISP-creating paper, McCarthy wrote](http://swizec.com/blog/the-birth-of-lisp-a-summary-of-john-mccarthys-original-paper/swizec/5075) that a recursive alternative to an iterative turing machine needs the following constructs:
+
+1.  `atom` - is this symbol an atom (one of the basic characters)
+2.  `eq` - are both these symbols atoms
+3.  `car` - returns the first part of a two-element list
+4.  `cdr` - returns the second part of a two-element list
+5.  `cons` - constructs a list from two elements
+6.  recursive definitions using these five constructs
+
+Where does this leave us in regards to our original question? _Can_ we construct anything out of a sequence of map, reduce, and filter? It depends. In the context of a strict [functional language](http://en.wikipedia.org/wiki/Functional_programming "Functional programming"), with the addition of recursion, yes we probably can. After all, implementing a naive [quicksort](http://en.wikipedia.org/wiki/Quicksort "Quicksort") in [Haskell](http://haskell.org "Haskell (programming language)") takes nothing more than recursion, `car`, `cdr`, `cons` and filter.
+
+    quicksort [] = []
+    quicksort (x:xs) =
+              let smaller = quicksort (filter (<=x) xs)
+                  bigger = quicksort (filter (>x) xs)
+              in smaller ++ [x] ++ bigger
+
+Basically, if `quicksort` gets an empty list, return an empty list. Otherwise make a new list and put elements smaller than `x` on left, bigger on right. `++` is essentially cons and that `(x:xs)` bit splits the list so the first item becomes `x` and the other items become `xs`. One of the tersest sorting implementations I've ever seen. And we didn't _really_ go out of our map, reduce, filter framework did we? The ability to append to and split lists is usually assumed. But can we go a step further? Can we implement `filter` with map and reduce? Let's try.
+
+    function filter (predicate, list) {
+        return list.map(function (a) {
+            return predicate(a) ? [a] : null;
+        }).reduce(function (prev, current) {
+            return current ? prev.concat(current) : prev;
+        }, []);
+    }
+
+Yes we can. Even in Javascript, which the original question was about. It's rather simple - mark unwanted entries with `map`, then use `reduce` to create a new list sans unwanted entries. We could go a step further and use only `reduce`.
+
+    function filter2 (predicate, list) {
+        return list.reduce(function (prev, current) {
+            return predicate(current) ? prev.concat(current) : prev;
+        }, []);
+    }
+
+Turns out `reduce` and `filter` are the same function once you assume branching and comparison are a given. `.concat` is Javascript's version of cons by the way. We can implement that Haskell example in [Javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") as well. Proving that even with Javascript recursion, map, and reduce are enough to do anything.
+
+    function quicksort (list) {
+        if (list.length == 0) {
+            return [];
+        }
+
+        var x = list[0],
+            xs = list.slice(1);
+
+        return quicksort(filter2(function (a) { return a <= x; }, xs))
+            .concat(x)
+            .concat(
+                quicksort(filter2(function (a) { return a > x; }, xs)));
+    }
+
+Exact same code as before, just wordier because Javascript is fluffier than Haskell. But are we any closer to discovering our question? Not really no. We've just shown that given conditionals, a way to slice and append lists, recursion, map, and reduce we can do anything. Even in Javascript.
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=5af887dc-447d-4f5a-98dc-08047cfee16f)](http://www.zemanta.com/?px "Enhanced by Zemanta")

@@ -1,0 +1,28 @@
+---
+layout: post
+title: jQuery imageless buttons a la Google get an update
+date: 2009-07-12
+categories: Adobe AIR, JavaScript, jQuery, Usability
+author: Swizec Teller
+hero: ./img/loader.js
+---
+
+That's right, after my [jQuery plugin for imageless buttons](http://swizec.com/code/styledButton/) much akin to those [Google](http://en.wikipedia.org/wiki/Google "Google") use in their online apps has been out in the wild for almost six months, an update is now here, making them version ... uhm ... 1.0.3. During this time [jQuery](http://en.wikipedia.org/wiki/JQuery "JQuery").com claims the code to have been downloaded ... well darn, doesn't say anything since I apparently didn't add an actual release. Silly of me. But google analytics claims the page to have been viewed 6222 times, which makes it the single most popular page on this site. Yay. [![styledButton screenshot](http://swizec.com/blog/wp-content/uploads/2009/07/Picture-1.png "styledButton screenshot")](http://swizec.com/code/styledButton) Nothing much has actually changed except that I fixed a horrible bug, which prevented you from having tagged captions in buttons with dropdowns - this surprisingly took all night to fix, since what you'd normally expect jQuery to do simply melted down and refused to work, yes, even with the latest versions. Aside from that I've also dropped support for [Safari](http://en.wikipedia.org/wiki/Safari_%28web_browser%29 "Safari (web browser)") 2 because updating jQuery to 1.3.x killed everything. It was a surprise to me, but the latest jQuery simply refused to load, _nothing_ worked. However, if you wish to support the old jQuery this imageless buttons plugin should still work as well as ever, except you won't be able to use tagged captions for dropdowns. That makes the list of supported browsers as follows:
+
+-   [Opera](http://www.opera.com "Opera Software") 10 beta
+-   Opera 9.6x
+-   [Firefox](http://en.wikipedia.org/wiki/Mozilla_Firefox "Mozilla Firefox") 3
+-   Firefox 2
+-   Safari 4
+-   Safari 3
+-   Internet Explorer 8 beta
+-   [Internet Explorer 7](http://en.wikipedia.org/wiki/Internet_Explorer_7 "Internet Explorer 7")
+-   Internet Explorer 6
+-   Chrome
+-   Adobe [AIR](http://en.wikipedia.org/wiki/Adobe_Integrated_Runtime "Adobe Integrated Runtime") 1.5+
+
+Which means it should display pixel perfect and the same in all of those, except of course for any differences in parsing fonts.
+
+
+
+[![Reblog this post \[with Zemanta\]](http://img.zemanta.com/reblog_e.png?x-id=5253e1f6-7bed-401a-894a-32b6f23f2734)](http://reblog.zemanta.com/zemified/5253e1f6-7bed-401a-894a-32b6f23f2734/ "Reblog this post \[with Zemanta]")

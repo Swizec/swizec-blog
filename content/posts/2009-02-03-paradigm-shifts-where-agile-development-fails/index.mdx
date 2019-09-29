@@ -1,0 +1,21 @@
+---
+layout: post
+title: Paradigm shifts - where agile development fails
+date: 2009-02-03
+author: Swizec Teller
+hero: undefined
+---
+
+As some of you perhaps know, I'm developing a twitter client and have been for a while. Because I've always been extremely eager to get something useful out quickly as possible and because an important factor in development has always been to accomodate user requests there was really only one development process that could work for me - agile development.
+
+Because I need to be able to respond to requirement changes quickly and because it has to be developed fast I can't make a design very far in advance and consider it a static robust structure that I have to adhere to. Doing it like that I still wouldn't have anything developed and would most probably still be planning like a maniac. However, there were two very painful times in the process, both would be completely averted with a rigid design structure and both are a direct result of being agile.
+
+Paradigm shifts - where agile development completely fails. See because of being agile I made a product, a working product that worked lovably well. Then I decided I wanted it to support having more than one user logged in at a time. Yay, paradigm shift. This is the point where I had to rework most of the code to send user id's around, store them in objects etc. Overall, a great deal of work making sure everything now works for more than one user at a time, because the previous version was made to work for just one user and was built around the idea that at any point in code the user is globally known and the code can count on that.
+
+Well that changed. A lot of work to change it.
+
+Next such large paradigm shift was two weeks ago when I decided it was time to make a protocol abstraction layer and support koornk as well as twitter. Easier said than done! At first I thought I could get away with just putting an abstraction layer object that behaves as a thin wrapper around protocol specific objects that deal with calling the API and converting results into a common form.
+
+But then, you can't guarantee user id's will be unique across different APIs. Large change. Then, you can't guarantee message id's will be unique across API's. Another large change. Then you can't call everything tweeting, because sometimes the more appropriate status report is clucking and so a bunch of little things need to be changed to fully abstractify an application from an API it was tightly coupled with.
+
+So to conclude, paradigm shifts are a very difficult and painful process and they only occur when you're staying agile.

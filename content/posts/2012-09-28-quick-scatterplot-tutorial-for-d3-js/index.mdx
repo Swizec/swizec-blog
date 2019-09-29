@@ -1,0 +1,189 @@
+---
+layout: post
+title: Quick scatterplot tutorial for d3.js
+date: 2012-09-28
+categories: d3.js, Github, Graphics, HTML, Scatter plot, Vector
+author: Swizec Teller
+hero: ./img/scatterplot-finished.png
+---
+
+\[caption id="attachment_5341" align="alignnone" width="591" caption="When I code"][![When I code](http://swizec.com/blog/wp-content/uploads/2012/09/scatterplot-finished.png "When I code")](./img/scatterplot-finished.png)\[/caption] One of the many interesting things [Github](http://github.com "GitHub") does are punchcards for repositories that can tell you when people work on their code. Unfortunately, they're only per-repository and I was interested in [per-user Github punchcards](http://nightowls.swizec.com). So I made my own. Collecting the data was fairly straightforward, finding a simple tutorial/example of a [scatterplot](http://en.wikipedia.org/wiki/Scatter_plot "Scatter plot") in [d3.js](http://d3js.org/) proved to be less than trivial.
+
+## Scatterplotting
+
+Drawing a scatterplot is nothing more than distributing data into buckets in a two dimensional space, then drawing a circle based on how many entities ended up in a particular bucket. Adding some colour gives us an extra dimension. For starters, we're going to need some simple HTML and a bit of CSS to make things prettier.
+
+```
+
+```
+
+The _div_ is where our scatterplot will end up. It doesn't need any styling since we'll do that with d3 directly, but splashing some CSS on stuff in the graph is going to make things look much better. Going into _script.js_ we start off by defining the width, height and padding for our graph. Due to d3's magic we'll later be able to change these and have the graph scale itself properly without further intervention.
+
+    var w = 940,
+        h = 300,
+        pad = 20,
+        left_pad = 100,
+        Data_url = '/data.json';
+
+Next we define our scatterplot
+
+    var svg = d3.select("#punchcard")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+
+This tells d3 that we want to put some svg in the _punchcard_ div and how big we want it. The next step is defining our _x_and _y_ scales. They're helpful for translating data into x,y positions on the graph since they're usually not the same.
+
+    var x = d3.scale.linear().domain([0, 23]).range([left_pad, w-pad]),
+        y = d3.scale.linear().domain([0, 6]).range([pad, h-pad*2]);
+
+We specified that _x_coordinates map from values between 0 and 23 to coordinates between the left padding and however big the graph is. Similarly for _y_ coordinates. D3 will handle everything else for us. Next we should define our axes since graphs without labeled axes are rather useless.
+
+    var xAxis = d3.svg.axis().scale(x).orient("bottom"),
+        yAxis = d3.svg.axis().scale(y).orient("left");
+
+Essentially we've told the axes to use their corresponding scales and where we want the labels to end up. Now it's finally time to draw something!
+
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(0, "+(h-pad)+")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate("+(left_pad-pad)+", 0)")
+        .call(yAxis);
+
+[![Scatterplot simple axes](http://swizec.com/blog/wp-content/uploads/2012/09/scatterplot-simple-axes.png "Scatterplot simple axes")](./img/scatterplot-simple-axes.png) As you can see, d3 was nice enough to figure out on its own how many ticks to draw and where to put them. This usually makes graphs more readable, but in our case we do want all the ticks. All it takes is telling the axes how many ticks we want and while we're at it let's improve the labels as well.
+
+    var xAxis = d3.svg.axis().scale(x).orient("bottom")
+            .ticks(24)
+            .tickFormat(function (d, i) {
+                var m = (d > 12) ? "p" : "a";
+                return (d%12 == 0) ? 12+m :  d%12+m;
+            }),
+        yAxis = d3.svg.axis().scale(y).orient("left")
+            .ticks(7)
+            .tickFormat(function (d, i) {
+                return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d];
+            });
+
+The _.tickFormat_ method allows us to give d3 a function that calculates what a label should look like and we used _.ticks_ to specify how many ticks we want. [![Nicely  labeled scatterplot](http://swizec.com/blog/wp-content/uploads/2012/09/scatterplot-labeled-axes.png "Nicely  labeled scatterplot")](./img/scatterplot-labeled-axes.png) Much better, but since we'll be loading the data asynchronously, let's tell the user what's going on by placing _"Loading ..."_ roughly in the middle of the plot.
+
+    svg.append("text")
+        .attr("class", "loading")
+        .text("Loading ...")
+        .attr("x", function () { return w/2; })
+        .attr("y", function () { return h/2-5; });
+
+[![Scatterplot loading ...](http://swizec.com/blog/wp-content/uploads/2012/09/scatterplot-loading.png "Scatterplot loading ...")](./img/scatterplot-loading.png) Loading the data can be done with one of d3's many data loading functions.
+
+    d3.json(Data_url, function (punchcard_data) {
+
+Within that function we are now going to draw the actual scatterplot. The data I loaded is organized into triplets _\[day, hour, N]_ where the combination of _day_ and _hour_ tells us where to draw a circle and _N_ tells us how big it should be. We should define another scale for the radius of the circles.
+
+    var max_r = d3.max(punchcard_data.map(
+                           function (d) { return d[2]; })),
+            r = d3.scale.linear()
+                .domain([0, d3.max(punchcard_data, function (d) { return d[2]; })])
+                .range([0, 12]);
+
+Everything from _zero_ to _max_r_ will be mapped to radiuses between _0_ and _12_ pixels. To make d3 put some data on our graph we need to tell it to load up our data into the graph and give a transformation that results in circles.
+
+        svg.selectAll(".loading").remove();
+
+        svg.selectAll("circle")
+            .data(punchcard_data)
+            .enter()
+            .append("circle")
+            .attr("class", "circle")
+            .attr("cx", function (d) { return x(d[1]); })
+            .attr("cy", function (d) { return y(d[0]); })
+            .attr("r", function (d) { return r(d[2]); });
+
+After removing the _"Loading ..."_we gave d3 our data, then said that for each datum a _circle_ should be appended to the graph and given attributes _cx, cy_ and _r_ that determine where this circle will be displayed and how big it's going to be. Notice we're using functions to compute these values, but because we're lazy we just rely on d3 doing all of the actual calculations with the _x, y_ and _r_ scales we defined earlier. [![The final scatterplot](http://swizec.com/blog/wp-content/uploads/2012/09/scatterplot-finished1.png "The final scatterplot")](./img/scatterplot-finished1.png) On pictures everything looks great now, but the circles appear very suddenly. Wouldn't it be nice if there was a sexy transition going on? To do that we shove a ._transition()_ and a _.delay(800)_ before defining the radius.
+
+        svg.selectAll("circle")
+            .data(punchcard_data)
+            .enter()
+            .append("circle")
+            .attr("class", "circle")
+            .attr("cx", function (d) { return x(d[1]); })
+            .attr("cy", function (d) { return y(d[0]); })
+            .transition()
+            .duration(800)
+            .attr("r", function (d) { return r(d[2]); });
+
+Now the circles appear in a lovely 800 millisecond transition. Here's the full javascript code:
+
+    var w = 940,
+        h = 300,
+        pad = 20,
+        left_pad = 100,
+        Data_url = '/data.json';
+
+    var svg = d3.select("#punchcard")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+
+    var x = d3.scale.linear().domain([0, 23]).range([left_pad, w-pad]),
+        y = d3.scale.linear().domain([0, 6]).range([pad, h-pad*2]);
+
+    var xAxis = d3.svg.axis().scale(x).orient("bottom")
+            .ticks(24)
+            .tickFormat(function (d, i) {
+                var m = (d > 12) ? "p" : "a";
+                return (d%12 == 0) ? 12+m :  d%12+m;
+            }),
+        yAxis = d3.svg.axis().scale(y).orient("left")
+            .ticks(7)
+            .tickFormat(function (d, i) {
+                return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d];
+            });
+
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(0, "+(h-pad)+")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate("+(left_pad-pad)+", 0)")
+        .call(yAxis);
+
+    svg.append("text")
+        .attr("class", "loading")
+        .text("Loading ...")
+        .attr("x", function () { return w/2; })
+        .attr("y", function () { return h/2-5; });
+
+    d3.json(Data_url, function (punchcard_data) {
+        var max_r = d3.max(punchcard_data.map(
+                           function (d) { return d[2]; })),
+            r = d3.scale.linear()
+                .domain([0, d3.max(punchcard_data, function (d) { return d[2]; })])
+                .range([0, 12]);
+
+        svg.selectAll(".loading").remove();
+
+        svg.selectAll("circle")
+            .data(punchcard_data)
+            .enter()
+            .append("circle")
+            .attr("class", "circle")
+            .attr("cx", function (d) { return x(d[1]); })
+            .attr("cy", function (d) { return y(d[0]); })
+            .transition()
+            .duration(800)
+            .attr("r", function (d) { return r(d[2]); });
+    });
+
+###### Related articles
+
+-   [![](http://i.zemanta.com/109208243_80_80.jpg)](http://www.r-bloggers.com/more-on-exploring-correlations-in-r/)[More on Exploring Correlations in R](http://www.r-bloggers.com/more-on-exploring-correlations-in-r/)
+-   [![](http://i.zemanta.com/noimg_2_80_80.jpg)](http://css.dzone.com/articles/html5-render-urban-population)[HTML5: Render Urban Population Growth on a 3D World Globe With Three.js and Canvas](http://css.dzone.com/articles/html5-render-urban-population)
+-   [![](http://i.zemanta.com/noimg_52_80_80.jpg)](http://economistsview.typepad.com/economistsview/2011/03/striking-scatterplot-unemployment-and-investment.html)[Striking Scatterplot: Unemployment and Investment](http://economistsview.typepad.com/economistsview/2011/03/striking-scatterplot-unemployment-and-investment.html)
+-   [![](http://i.zemanta.com/109034267_80_80.jpg)](http://net.tutsplus.com/tutorials/javascript-ajax/building-and-testing-a-backbone-app/)[Building and Testing a Backbone App](http://net.tutsplus.com/tutorials/javascript-ajax/building-and-testing-a-backbone-app/)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=8f16ed4f-3c27-43f6-9df9-c5797a6b4fb8)](http://www.zemanta.com/?px "Enhanced by Zemanta")

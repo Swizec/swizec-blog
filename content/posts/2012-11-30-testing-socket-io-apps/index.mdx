@@ -1,0 +1,104 @@
+---
+layout: post
+title: Testing socket.io apps
+date: 2012-11-30
+categories: Client, JavaScript, Programming, Server, WebSocket
+author: Swizec Teller
+hero: ./img/nyan-cat-testing2.png
+---
+
+[![Nyan cat testing](http://swizec.com/blog/wp-content/uploads/2012/11/nyan-cat-testing2.png "Nyan cat testing")](./img/nyan-cat-testing2.png) Socket.io is probably one of the coolest things to come out of the [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") world in recent years. Finally! Something that lets [web developers](http://en.wikipedia.org/wiki/Web_developer "Web developer") create real-time apps without the fuss of thinking about websockets and [long polling](http://en.wikipedia.org/wiki/Push_technology "Push technology") and all the other hacks that need to be used. The idea is pretty simple, the server can emit an event and the [client](http://en.wikipedia.org/wiki/Client_%28computing%29 "Client (computing)") will pick it up. The converse also happens. [Callbacks](http://en.wikipedia.org/wiki/Callback_%28computer_programming%29 "Callback (computer programming)") through the server-client barrier works as well. Socket.io takes care of deciding which of the real-time hacks should be used to make the magic happen. Thing is, the interplay of client and server makes socket.io apps a bit difficult to test. A good way I've found is the combination of [Mocha](http://visionmedia.github.com/mocha/), [Chai](http://chaijs.com/) and [socket.io-client](https://github.com/LearnBoost/socket.io-client).
+
+## First, something to test
+
+Let's take for example a very simple echo server. I used [Express](http://expressjs.com/) to make things easier to play with in the Chrome console. Here's the relevant part of _app.js_.
+
+    var server = exports.server = http.createServer(app).listen(app.get('port'), function(){
+      console.log("Express server listening on port " + app.get('port'));
+    });
+
+    var io = require('socket.io').listen(server);
+    io.set("log level", 0);
+
+    // the important parts of echo server
+    io.sockets.on("connection", function (socket) {
+        socket.on("echo", function (msg, callback) {
+            callback = callback || function () {};
+
+            socket.emit("echo", msg);
+
+            callback(null, "Done.");
+        });
+    });
+
+After not forgetting to load _/socket.io/socket.io.js_ into the index page, I can now run the server, point my browser to _http&#x3A;//localhost:3000_ and play around in the console like this:
+
+    > var socket = io.connect("http://localhost:3000")
+    undefined
+    > socket.on("echo", function (msg) { console.log(msg); })
+    SocketNamespace
+    > socket.emit("echo", "Hello World")
+    SocketNamespace
+    Hello World
+
+## Automating the test
+
+Typing commands into a console, even clicking around a webpage is a rather arduous and boring process. The easiest way I've found to automate this is using Mocha and socket.io-client. First thing we're going to need is requiring everything and making sure the socket.io server is running.
+
+    var chai = require('chai'),
+        mocha = require('mocha'),
+        should = chai.should();
+
+    var io = require('socket.io-client');
+
+    describe("echo", function () {
+
+        var server,
+            options ={
+                transports: ['websocket'],
+                'force new connection': true
+            };
+
+        beforeEach(function (done) {
+            // start the server
+            server = require('../app').server;
+
+            done();
+        });
+
+See, simple :) Now comes the interesting part, the actual test making sure our server does in fact echo what we ask it to.
+
+        it("echos message", function (done) {
+            var client = io.connect("http://localhost:3000", options);
+
+            client.once("connect", function () {
+                client.once("echo", function (message) {
+                    message.should.equal("Hello World");
+
+                    client.disconnect();
+                    done();
+                });
+
+                client.emit("echo", "Hello World");
+            });
+        });
+
+The idea behind this test is simple:
+
+1.  Connect client to server
+2.  Once there's a connection, listen for _echo_ event from the server
+3.  Emit _echo_event to the server
+4.  Server responds and triggers our listener
+5.  Listener checks correctness of response
+6.  Disconnects client
+
+Disconnecting clients after tests is **_very important_**. As I've discovered, not disconnecting can lead to the socket accumulating [event listeners](http://en.wikipedia.org/wiki/Observer_pattern "Observer pattern"), which in turn can fire completely different tests than what you expect. It also leads to tests that pass 70% of the time, but fail in random ways. In the end, our efforts are rewarded by a happy nyan cat. [![Nyan cat testing](http://swizec.com/blog/wp-content/uploads/2012/11/nyan-cat-testing.png "Nyan cat testing")](./img/nyan-cat-testing.png) PS: you can see all the code [on github](https://github.com/Swizec/random-coding/tree/master/socket.io-testing). Maria Ramos from [Webhostinghub.com/support/edu](http://www.webhostinghub.com/support/edu) has translated this post into [Spanish](http://www.webhostinghub.com/support/es/misc/probando-aplicaciones-de-socketio).
+
+###### Related articles
+
+-   [![](http://i.zemanta.com/noimg_119_80_80.jpg)](http://stackoverflow.com/questions/12977719/how-much-data-can-i-send-through-a-socket-emit)[How much data can I send through a socket.emit?](http://stackoverflow.com/questions/12977719/how-much-data-can-i-send-through-a-socket-emit)
+-   [![](http://i.zemanta.com/125930383_80_80.jpg)](http://www.joezimjs.com/javascript/plugging-into-socket-io-the-basics/)[Plugging Into Socket.IO: The Basics](http://www.joezimjs.com/javascript/plugging-into-socket-io-the-basics/)
+-   [![](http://i.zemanta.com/noimg_94_80_80.jpg)](http://stackoverflow.com/questions/13571376/strange-issue-with-socket-io)[Strange Issue with Socket.IO](http://stackoverflow.com/questions/13571376/strange-issue-with-socket-io)
+-   [![](http://i.zemanta.com/118864313_80_80.jpg)](http://www.daniweb.com/software-development/java/threads/437028/single-threaded-client-server-lotto-system)[Single-Threaded Client-Server - Lotto System](http://www.daniweb.com/software-development/java/threads/437028/single-threaded-client-server-lotto-system)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=268bdc8c-5461-496f-9bff-f71042d50894)](http://www.zemanta.com/?px "Enhanced by Zemanta")

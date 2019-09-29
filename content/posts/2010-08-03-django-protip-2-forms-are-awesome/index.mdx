@@ -1,0 +1,150 @@
+---
+layout: post
+title: Django protip #2: Forms are awesome
+date: 2010-08-03
+categories: Application programming interface, django, Login, RSS, SQL, Website
+author: Swizec Teller
+hero: ./img/2686845422_d924cc453e_m.jpg
+---
+
+-   [![Moss](./img/2686845422_d924cc453e_m.jpg "Moss")](http://www.flickr.com/photos/50811886@N00/2686845422)
+
+    Image by [warrenski](http://www.flickr.com/photos/50811886@N00/2686845422) via Flickr
+
+Welcome to another installment of Swizec's [Django](http://www.djangoproject.com "Django (web framework)") protip. Previously we discussed a better way to [structure your django apps](http://swizec.com/blog/django-protip-1-a-better-app-structure/swizec/1386), but nobody cared about that because everybody is rather silly. This time we'll be talking about how awesome forms are and why you should be using them for pretty much everything. At the end, I'll show you some neat [tips and tricks](http://en.wikipedia.org/wiki/Tips_%26_Tricks "Tips & Tricks") I discovered during my Django Epiphany.
+
+### Why forms
+
+When you look at code a lot of web developers produce (and yes, even I did it plenty of times back in the day) you will notice a lot of work goes into retrieving data from GET and POST parameters. Now despite most developers simply ignoring GET parameters as anything really special or dangerous and just handling them as if they were regular variables, because hey, what could go wrong about retrieving a page number right? At best you'll see code having a bunch of lines sort of like this:
+
+    $page = (isset($_GET['page'])) ? intval($_GET['page']) : 0;
+
+Anyone notice a security flaw? Then think of this, what happens if the page is set to -1? Sure, if errors aren't being displayed right to the user nothing too important. But if they get shown an [SQL](http://en.wikipedia.org/wiki/SQL "SQL") error ... or worse ... However people are usually at least a little bit more careful about POST data because they realise that hey, this is something a person filled in a [web form](http://en.wikipedia.org/wiki/Form_%28web%29 "Form (web)") and perhaps the data should go through a series of a little bit more stringent tests before it gets chucked into the [database](http://en.wikipedia.org/wiki/Database "Database"). Hell, maybe we could even tell the user where they screwed up and if the planets are in constelation, why not also make sure those required fields are actually filled out ... you know, so we don't get any weird inconsistencies in our database. But still, it's a lot of work to do all of that by hand every god damn time. If only there were something easier, more transparent and plain old automagical ...
+
+### Cue Django Forms
+
+In django, all of this comes automagically. There is this thing called a "form", which basically lets you define what parameters a request needs, be it GET or POST based, what they should validate against and most importantly, what's required and what is not. If you're into that sort of stuff you even get building the form in a html, so the users can use it, completely for free and magically with all the required "Hey bozo, you filled so and so field wrong. Fix it!". For every field! Magic. But since most of my time is spent on developing [API](http://en.wikipedia.org/wiki/Application_programming_interface "Application programming interface")'s rather than user-facing [websites](http://en.wikipedia.org/wiki/Website "Website") let me show you how to use forms effectively in that sort of environment. For the html stuff just go check out the [django form docs](http://docs.djangoproject.com/en/dev/topics/forms/). The basic use of forms goes a little bit like this (hopefully your forms are in a separate file from your views, this is just an example :P)
+
+    from django import forms
+
+    class ListForm(forms.Form):
+        feed = forms.IntegerField(required=False)
+        category = forms.IntegerField(required=False)
+        since = forms.DateTimeField(required=False)
+        count = forms.IntegerField(required=False)
+        page = forms.IntegerField(required=False)
+        include_content = forms.BooleanField(required=False)
+
+    def list(request, format='json'):
+        form = ListForm(request.user, request.GET)
+
+        if form.is_valid():
+           articles = Article.objects.filter(feed__in=form.cleaned_data['feeds']
+                                                      ).order_by('-time')[page*count:page*count+count]
+           return HttpResponse(json.dumps({'status': 'OK',
+                                            'count': len(articles),
+                                            'articles': articles}))
+        else:
+    	return HttpResponseBadRequest(json.dumps({'status': 'ERROR'}))
+
+Well something along those lines anyhow. What you can see is that I basically define a form and check that it's valid. Once I know it's valid I can go on using its cleaned_data without much regard for anything.
+
+### Some tips&tricks
+
+And now let's get onto some tips&tricks :) First thing you'll notice once you start using forms like you properly should is that all of your views follow this pattern: get form; validate form; do something; or do something else; So I wrote up a descriptor for that, now I can be certain that when I'm in my view the form is valid and I can use the data.
+
+    def form_valid(form_type, data_type):
+        def inner(view_func):
+            def wrapper(request, *args, **kwargs):
+                form = form_type(request.__getattribute__(data_type))
+
+                if form.is_valid():
+                    request.form = form
+                    return view_func(request, *args, **kwargs)
+                else:
+                    return HttpResponseBadRequest(json.dumps({'status': 'ERROR'}))
+            return wraps(view_func)(wrapper)
+        return inner
+
+    ## the usage goes like so
+    @form_valid(ImageForm, 'GET')
+    def image(request):
+        blob = BlobInfo.gql("WHERE filename='%s' LIMIT 1" % request.form.cleaned_data['id'])[0]
+
+        return HttpResponse(BlobReader(blob.key()).read(),
+                            content_type=blob.content_type)
+
+Using the decorator thus makes for much much cleaner code. Now let's look at some magic done with custom clean functions inside forms :P
+
+    ## this enables us to handle comma separated values seamlessly
+        def clean_feed(self):
+            try:
+                feed = [int(id) for id in str(self.cleaned_data['feed']).split(',')]
+            except (AttributeError, ValueError, KeyError):
+                feed = None
+            return feed
+
+    ## automagically parsing json parameters can be done too
+        def clean_feeds(self):
+            feeds = json.loads(self.cleaned_data['feeds'])
+            if type(feeds) != list:
+                raise forms.ValidationError("list of feeds expected")
+            return feeds
+
+    ## or how about logging in the user while we're checking the user/pass is correct
+    ## don't manually log in users unless you know at least somewhat what you're doing, usually django handles this
+        def clean(self):
+            cleaned_data = self.cleaned_data
+
+            if len(self.errors) != 0:
+                return cleaned_data
+
+            user = authenticate(username=cleaned_data['email'],
+                                password=cleaned_data['password'])
+            if user is None:
+                del cleaned_data['email']
+                del cleaned_data['password']
+                raise forms.ValidationError('Bad login')
+            else:
+                cleaned_data['user'] = user
+
+            return cleaned_data
+
+    ## now the strangest thing, when you have to handle grabbing data by different parameters
+    ##(like being given a set of feed ids, or a feed category id, you can do this by returning
+    ## a QuerySet in the form's cleaned_data
+    def clean(self):
+            cleaned_data = self.cleaned_data
+
+            if not (cleaned_data.get('feed', None) != None or cleaned_data.get('category', None) != None):
+                raise forms.ValidationError("feed or category required")
+
+            if cleaned_data['feed'] != None:
+                user_feeds = UserFeed.objects.filter(user=self.user,
+                                                     id__in=cleaned_data['feed'])
+            else:
+                user_feeds = UserFeed.objects.filter(user=self.user,
+                                                     categories__contains="'%d'" % cleaned_data['category'])
+
+            cleaned_data['feeds'] = map(lambda f: f.id,
+                                        Feed.objects.filter(id__in=map(lambda f: f.feed, user_feeds)))
+
+            reverse_feeds = {}
+            for feed in user_feeds:
+                reverse_feeds[feed.feed] = feed.id
+            cleaned_data['reverse_feeds'] = reverse_feeds
+
+            return cleaned_data
+
+### Conclusion
+
+Anyhow, that's it as far as forms are concerned. Do sound off in the comments or on twitter if I fucked up somewhere. I know geeks like to argue. Come back next week when I'll be talking about different magical things you can do with decorators and why they are uber awesome to use in django (or well any other type of python development really)
+
+###### Related articles by Zemanta
+
+-   [Django protip #1: A better App structure](http://swizec.com/blog/django-protip-1-a-better-app-structure/swizec/1386) (swizec.com)
+-   [Small trick for seamless base64 password storage in django](http://swizec.com/blog/small-trick-for-seamless-base64-password-storage-in-django/swizec/1378) (swizec.com)
+-   [Django and SaaS](http://tidbids.posterous.com/saas-with-django-and-postgresql) (tidbids.posterous.com)
+-   [Things i hate in django](http://almirkaric.com/2010/5/2/things-i-hate-in-django/) (almirkaric.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=c1b237d5-fb11-4a02-a61d-ebecc9071b07)](http://www.zemanta.com/ "Enhanced by Zemanta")

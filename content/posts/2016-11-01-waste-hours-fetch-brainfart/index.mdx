@@ -1,0 +1,103 @@
+---
+layout: post
+title: How to waste hours of life with fetch() and a bit of brainfart
+date: 2016-11-01
+categories: Technical
+author: Swizec Teller
+hero: ./img/giphy.gif
+---
+
+Today, I had a dumb idea: _"Nested superagent calls sure look messy… maybe I should use fetch() instead…”_ What happened next was a little bit of this: ![](./img/giphy.gif) Followed by a lot of this: ![](./img/giphy.gif) In case you don't know, [superagent](https://github.com/visionmedia/superagent) is a popular library for executing AJAX requests in JavaScript. Clean API, works well, makes life easy. I've been a fan for years. [fetch()](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) is a new JavaScript API for the same. Clean API, Promise-based interface, solves a problem you thought was solved. Not yet an official standard, but supported in all modern browsers. You can use it in production code, if you're compiling with Babel and enable `babel-polyfill`. Both superagent and fetch() enable you to talk to a server. The first produces clean code that gets nesty if you need many things. The second produces clean code that is Promis-y and sometimes cumbersome. For example, to get a JSON object with superagent, you'd do this:
+
+    superagent.get('/api/some.json')
+                        .set('Accept, 'application/json')
+                        .end((err, res) => {
+                            // res.body contains parsed JSON
+                        });
+
+The same call with fetch() looks like this:
+
+    fetch('/api/some.json', {headers: {Accept: 'application/json'}})
+        .then((res) => res.json())
+        .then((json) => {
+            // json contains parsed JSON
+        });
+
+Both just 5 lines of code. It’s debatable which is cleaner. They look the same to me. ¯\_(ツ)\_/¯ Where it gets interesting is when you have two calls that rely on each other. Observe:
+
+    superagent.get('/api/some.json')
+                        .set('Accept, 'application/json')
+                        .end((err, res) => {
+                            const url = `/api/details/${res.body.details_id}.json`;
+                            superagent.get(url)
+                                                .set('Accept', 'application/json')
+                                                .end((err, res) => {
+                                                    // res.body contains parsed details
+                                                });
+                        });
+
+Vs.
+
+    fetch('/api/some.json', {headers: {Accept: 'application/json'}})
+        .then((res) => res.json())
+        .then((json) => {
+            const url = `/api/details/${json.details_id}.json`;
+            return fetch(url, {headers: {Accept: 'application/json'}});
+        })
+        .then((res) => res.json())
+        .then((json) => {
+            // json contains parsed details
+        });
+
+The promises approach _does_ look cleaner ?
+
+## But there's a catch with fetch()
+
+See the `Accept` header? Superagent sends it as an `Accept` header. Fetch sends it as `accept`. Your clean code stops working. You're doing everything right: you send the `Accept` header, you send the `Authorization` header for your API's token-based authentication, and yet…
+
+> TIL: Rails doesn't think HTTP headers are case-insensitive.  
+>   
+> fetch() knows they are and forces lowercase [pic.twitter.com/3DyMz7mgc6](https://t.co/3DyMz7mgc6)
+>
+> — Swizec (@Swizec) [October 31, 2016](https://twitter.com/Swizec/status/793197010664824832)
+
+You fall into a rabbit hole…
+
+> Rails can still get the token out of Authentication header, but returns 401 anyway.  
+>   
+> This is what I get for trying to uses Promises.
+>
+> — Swizec (@Swizec) [October 31, 2016](https://twitter.com/Swizec/status/793200932485894144)
+
+You read through all of the relevant questions and answers on StackOverflow. You google and google. You spelunk through Rails's code on Github. You abandon all hope…
+
+> Oh great, looks like it's actually Warden bug deep inside the bowels of Devise.  
+>   
+> All I wanted was to use fetch() ?
+>
+> — Swizec (@Swizec) [October 31, 2016](https://twitter.com/Swizec/status/793210701175148544)
+
+You're about ready to start throwing things. Nothing makes sense, this is dumb, everything sucks, all you wanted was to Do The Right Thing™ and now you're stuck debugging huge frameworks. ? By the way, Devise is a library for user authentication, and Warden is the core authentication library it wraps. No, I don't know why this happens in two libraries. Maybe historical reasons. And then it hits you. You're being an idiot. The difference between superagent and fetch() isn't that one sends your headers as-given and the other lowercases their names. The difference is that superagent sends a cookie and fetch() doesn't!
+
+> Oh god ... the REAL issue is that fetch() doesn't automatically send Cookies and I didn't notice.  
+>   
+> Fuck my life. [pic.twitter.com/hWbxA8bvzV](https://t.co/hWbxA8bvzV)
+>
+> — Swizec (@Swizec) [October 31, 2016](https://twitter.com/Swizec/status/793215715939463168)
+
+Your API relies on tokens to authenticate the client, _and on session cookies to identify users_. ? It makes total sense, super common design. But **_ugh!!_** You have to add `credentials: 'same-origin'` to your fetch() settings object. Then it works. The API talks to you, the JavaScript client does its thing, users are happy. Code looks like this:
+
+    fetch('/api/some.json', {headers: {Accept: 'application/json'},
+                                                     credentials: 'same-origin'})
+        .then((res) => res.json())
+        .then((json) => {
+            const url = `/api/details/${json.details_id}.json`;
+            return fetch(url, {headers: {Accept: 'application/json'},
+                                                 credentials: 'same-origin'});
+        })
+        .then((res) => res.json())
+        .then((json) => {
+            // json contains parsed details
+        });
+
+In real code, I suggest wrapping fetch() in a helper function that always adds API-specific options like `Accept` and `Authorization` headers and `credentials`. Your future self will thank you. No, I don't know why fetch() breaks the 20-year old convention that cookies are automatically included in requests.

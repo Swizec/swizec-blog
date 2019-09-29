@@ -1,0 +1,14 @@
+---
+layout: post
+title: Fighting Twitter spam with bayes
+date: 2009-08-31
+categories: intrigues, Spam, Twitter
+author: Swizec Teller
+hero: ./img/3874225648_6b2766c4a1_m.jpg
+---
+
+-   [![August Sky.](./img/3874225648_6b2766c4a1_m.jpg "August Sky.")](http://www.flickr.com/photos/27518426@N03/3874225648/)
+
+    Image by [pdeee454](http://www.flickr.com/photos/27518426@N03/3874225648/) via Flickr
+
+For a few days now I've been researching the nature of [spam](http://en.wikipedia.org/wiki/Spam_%28electronic%29 "Spam (electronic)") on [Twitter](http://en.wikipedia.org/wiki/Twitter "Twitter") and finding the best way of combating it for a tool I'm making. It's been an extremely interesting ride that has, surprise surprise, proven my initial assumptions made several months ago in the process of creating a different tool. When I started looking into [spambayes](http://en.wikipedia.org/wiki/SpamBayes "SpamBayes") last week I realised a set of verified spam and [ham](http://en.wikipedia.org/wiki/Ham "Ham") was needed to train the filters so they could do their work. So I made myself a tool that would present everything from the public timeline (20 tweets) and set out to clicking

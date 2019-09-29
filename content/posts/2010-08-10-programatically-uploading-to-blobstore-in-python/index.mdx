@@ -1,0 +1,158 @@
+---
+layout: post
+title: Programatically uploading to blobstore in python
+date: 2010-08-10
+categories: Application programming interface, django, Form (web), Google AppEngine, python, Uploading and downloading
+author: Swizec Teller
+hero: ./img/loader.js
+---
+
+Officially this is something that cannot be done. Or rather that shouldn't be done. When you look at the [google appengine](http://code.google.com/appengine/ "Google App Engine") docs on "[uploading](http://en.wikipedia.org/wiki/Uploading_and_downloading "Uploading and downloading") to blobstore" this is what they have to say:
+
+> Blobs are useful for serving large files, such as video or image files, and for allowing users to upload large data files. To prompt a user to upload a Blobstore value, your app presents a [web form](http://en.wikipedia.org/wiki/Form_%28web%29 "Form (web)") with a file upload field.
+
+So ok, obviously the official documentation isn't of much use here since it only talks about letting users upload files. But I needed something different. I needed to fetch an image from an url (gotten by intricate means, different story) and store it in the blobstore so it could later be served to many users. Obviously since [file access](http://en.wikipedia.org/wiki/File_system "File system") isn't permitted on appengine the only choice left was storing the file in the blobstore. Naturally someone else has had this problem before right? No. There are no solutions I could find online. None. Nada. Zilch. Niente. After a few hours of hacking a week or so ago, however, I got it working. Essentially the solution is to fake a form post to the blobstore url the [API](http://en.wikipedia.org/wiki/Application_programming_interface "Application programming interface") creates. An interesting gotcha is that a redirect happens. Initially I thought I was making the form post right back to my application, but apparently you're first posting to the blobstore, then the blobstore posts back to you. For some reason I couldn't keep the associated meta-data to go through with the request so there's an ugly-ish workaround that happens. Another thing that's important to note for this tutorial/howto is that I am using django-nonrel and that the initial event that starts the process is triggered by appengine's task queue.
+
+#### The howto
+
+First, these are all the imports I'm using, there's quite a few, so heh :)
+
+    from django.http import HttpResponse, HttpResponseBadRequest, HttpRequest
+    from django.views.decorators.csrf import csrf_exempt
+    from django.conf import settings
+    from django.core.urlresolvers import reverse
+    import simplejson as json
+    import urllib2, urllib
+    from cStringIO import StringIO
+
+    from google.appengine.api.urlfetch import ResponseTooLargeError, DownloadError
+    from google.appengine.ext import blobstore
+    from google.appengine.api import urlfetch
+
+    from forms import ArticleProcForm
+    from models import Article
+    from lib import ImageExtractor
+    from lib import urllib2_file
+    from lib.urllib2_file import UploadFile
+    from lib.decorators import form_valid
+
+First thing that you're going to need is the function that starts the whole process (in my case this is a django view)
+
+    class ArticleProcForm(forms.Form):
+        article = forms.IntegerField(required=True)
+
+    @csrf_exempt
+    @form_valid(ArticleProcForm, 'POST')
+    def article(request):
+        try:
+            article = Article.objects.get(id=request.form.cleaned_data['article'])
+        except Article.DoesNotExist:
+            return HttpResponse(json.dumps({'status': 'Bad Article'}))
+
+        try:
+            image_url = ImageExtractor.getImages(article.url)[0]['url']
+        except IndexError:
+            pass
+        else:
+            # important bit
+            try:
+                image = StringIO(urllib2.urlopen(image_url).read())
+            except (urllib2.HTTPError, DownloadError):
+                pass
+            else:
+                image = UploadFile(image, '.'.join([str(article.id), image_url.rsplit('.', 1)[1][:4]]))
+                upload_url = blobstore.create_upload_url(reverse('Articles.views.upload'))
+
+                try:
+                    urllib2.urlopen(upload_url, {'file': image})
+                except (DownloadError, RequestTooLargeError):
+                    pass
+            # end of important bit
+
+        return HttpResponse(json.dumps({'status': 'OK'}))
+
+Here is basically what happens in the important bit:
+
+1.  Download image from url and change it to a StringIO
+2.  Make an UploadFile (basically a bundle of [byte-string](http://en.wikipedia.org/wiki/String_%28computer_science%29 "String (computer science)")-data and desired filename)
+3.  Create an upload_url with the blobstore API
+4.  Fake a file-upload form post
+
+The next thing we need is a view that will handle the request the blobstore will send back to our app.
+
+    @csrf_exempt
+    def upload(request):
+        if request.method == 'POST':
+            blobs = get_uploads(request, field_name='file', populate_post=True)
+
+            article = Article.objects.get(id=int(blobs[0].filename.split('.')[0]))
+            article.media = blobs[0].filename
+            article.parsed = True
+            article.save()
+
+            return HttpResponseRedirect(reverse('Articles.views.upload'))
+        else:
+            return HttpResponse('meow')
+
+Basically it extracts the article's id from the filename (the only way I could make work to pass that information) and stores some changes into the datastore. You'll notice that I'm basically just storing the article's id again in another field, this is to preserve knowledge of the file extension. It's also important to note that the blobstore requires a redirect response upon success, otherwise it will throw an error. Here is the get_uploads function I found online somewhere.
+
+    def get_uploads(request, field_name=None, populate_post=False):
+        """Get uploads sent to this handler.
+        Args:
+          field_name: Only select uploads that were sent as a specific field.
+          populate_post: Add the non blob fields to request.POST
+        Returns:
+          A list of BlobInfo records corresponding to each upload.
+          Empty list if there are no blob-info records for field_name.
+        """
+
+        if hasattr(request,'__uploads') == False:
+            request.META['wsgi.input'].seek(0)
+            fields = cgi.FieldStorage(request.META['wsgi.input'], environ=request.META)
+
+            request.__uploads = {}
+            if populate_post:
+                request.POST = {}
+
+            for key in fields.keys():
+                field = fields[key]
+                if isinstance(field, cgi.FieldStorage) and 'blob-key' in field.type_options:
+                    request.__uploads.setdefault(key, []).append(blobstore.parse_blob_info(field))
+                elif populate_post:
+                    request.POST[key] = field.value
+        if field_name:
+            try:
+                return list(request.__uploads[field_name])
+            except KeyError:
+                return []
+        else:
+            results = []
+            for uploads in request.__uploads.itervalues():
+                results += uploads
+            return results
+
+Now the process of serving this blob to the browser is very simple and goes something like this:
+
+    class ImageForm(forms.Form):
+        id = forms.CharField(required=True)
+
+    @form_valid(ImageForm, 'GET')
+    @cache_response
+    def image(request):
+        blob = BlobInfo.gql("WHERE filename='%s' LIMIT 1" % request.form.cleaned_data['id'])[0]
+
+        return HttpResponse(BlobReader(blob.key()).read(),
+                            content_type=blob.content_type)
+
+#### One final note
+
+And one VERY important final note. The vanilla urllib2 library can't handle file uploads, so I found one online that can. It's called [urllib2_file](http://fabien.seisen.org/python/urllib2_file/). However it doesn't quite work on google appengine. For example it can't handle being told what you want the filename to be and some other details because it relies on raw file access. So I changed it a little bit, unfortunately I don't quite know how to upstream my changes so I'm hosting it on github. You can get it [at github](http://github.com/Swizec/urllib2_file), feel free to contribute.
+
+###### Related articles by Zemanta
+
+-   [Using BlobReader, wildcard subdomains and webapp2 on Google AppEngine](http://blog.notdot.net/2010/08/Using-BlobReader-wildcard-subdomains-and-webapp2) (notdot.net)
+-   [Django protip #2: Forms are awesome](http://swizec.com/blog/django-protip-2-forms-are-awesome/swizec/1410) (swizec.com)
+-   [App Engine SDK 1.3.5 Released With New Task Queue, Python Precompilation, and Blob Features](http://googleappengine.blogspot.com/2010/06/app-engine-sdk-135-released-with-new.html) (googleappengine.blogspot.com)
+-   [Parsing file uploads at 500 mb/s with node.js](http://debuggable.com/posts/parsing-file-uploads-at-500-mb-s-with-node-js:4c03862e-351c-4faa-bb67-4365cbdd56cb) (debuggable.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=82ae7610-8dea-47af-9e81-485f91ffacd6)](http://www.zemanta.com/ "Enhanced by Zemanta")

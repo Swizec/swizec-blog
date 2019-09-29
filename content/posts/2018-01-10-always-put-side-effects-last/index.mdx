@@ -1,0 +1,50 @@
+---
+layout: post
+title: Always put side effects last
+date: 2018-01-10
+categories: Startups, Technical
+author: Swizec Teller
+hero: ./img/salesforce-tower-panorama-1024x358.jpg
+---
+
+![](./img/salesforce-tower-panorama-1024x358.jpg) You know how some lessons you can only learn from experience? This is such a lesson. I'm sharing it with you so that I may remember it better. https&#x3A;//twitter.com/Swizec/status/950152073819009024 Let's say you're building a system for drip campaigns. Because that's how I learned this lesson. Your system is given a set of leads. You have to send them a series of messages, update metadata in your database, and keep the sales CRM (customer relationship management) system up-to-date so when a lead eventually replies to your message, a sales person knows what to do. Hundreds of these systems have been developed by thousands of developers. You're building your own because startups. The core of your system is a `send_next_message` function. Something like this 👇
+
+    def send_next_message(lead)
+        campaign = lead.campaign
+        Twilio.send_message(lead, campaign.message)
+        CRM.update_data(lead)
+        campaign.advance_to_next_message
+    end
+
+It makes sense, right? You take the drip campaign, send the current message with Twilio, update some metadata on your CRM, then advance your campaign to the next message. Works perfect 👌 You run it in a cronjob once a day. Like this:
+
+    def send_campaigns
+        Lead.active.each do |lead|
+            send_next_message.perform_async(lead)
+        end
+    end
+
+You go through active leads, pick their campaign, and spawn a new background worker with `perform_async`. Eventually, your queue will run the code and send your campaign. If anything goes wrong, each campaign is isolated in its own worker. Errors don't affect other campaigns. 👌 Even better, if something goes wrong while sending the campaign, you can retry the worker.
+
+## And you've just spammed your leads and made them angry
+
+Let's review our `send_next_message` code.
+
+    def send_next_message(lead)
+        campaign = lead.campaign
+        Twilio.send_message(lead, campaign.message)
+        CRM.update_data(lead)
+        campaign.advance_to_next_message
+    end
+
+An error can happen at any point here. Maybe something goes wrong when you read campaigns from the database. The worker terminates on 1st instruction, and all is good. Things can go wrong when talking to Twilio as well. Their service could be down, your internet could act up, or something else entirely. The worker terminates on 2nd instruction, and all is still good. What if things break when updating your CRM? Third party service, complex set of instructions with multiple API calls, a lot can go wrong. Worker terminates on 3rd instruction. Now you're in trouble. You've already sent a message to your user, but you weren't able to save that info. Your system doesn't know sending happened, and your CRM doesn't know either. When the worker retries, you send the message again. And again. And again. Until the whole worker succeeds. 😅 Your lead just got a bazillion messages, and they're upset. Here's what you should do instead 👇
+
+    def send_next_message(lead)
+        campaign = lead.campaign
+        message = campaign.message
+        CRM.update_data(lead)
+        campaign.advance_to_next_message
+        Twilio.send_message(lead, campaign.message)
+    end
+
+Fetch campaign, save the message in a local variable. _Then_ update data in your CRM. Now if updating the CRM fails, you can keep retrying until it succeeds. Updating the CRM was least reliable in my experience. After updating the CRM, you update your local database. This is a reliable operation, but the most common source of programmer errors and `nil` failures. It happens. Break fast and move things, right? :) At the end, when you're absolutely certain all your data is updated, you send the message to your lead. This is least likely to fail, and if it does, screw it. With this approach, you are guaranteed never to spam your leads. The worst that could happen is that you advance the campaign too early and they get 4 messages instead of 5 and your sales pitch is less polished. That's okay 🙏🏻 Your copy is robust, and annoying people is bad. And now I know why sales automation companies have so much money. This stuff is hard. 😅 **PS:** There are ways to further improve your worker. You could do your DB first, then rollback if an error occurs. You could try to rollback changes on the CRM if sending fails etc. But that gets complicated fast.

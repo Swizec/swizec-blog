@@ -1,0 +1,54 @@
+---
+layout: post
+title: The commonest javascript bug
+date: 2012-02-24
+categories: closures, For loop, JavaScript, JSON, Languages, Programming, Scope (computer science)
+author: Swizec Teller
+hero: ./img/2921731384_72ed2e98da_m5.jpg
+---
+
+\[caption id="" align="alignright" width="240" caption="CAEN 25th Anniversary Celebration (Photo credit: rosefirerising)"][![CAEN 25th Anniversary Celebration](./img/2921731384_72ed2e98da_m5.jpg "CAEN 25th Anniversary Celebration")](http://www.flickr.com/photos/69145729@N00/2921731384)\[/caption] Every couple of weeks somebody will come running to me: _"Swizec, Swizec, I did everything right, but this [javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") isn't doing what it's supposed to! Whatever I [click](http://en.wikipedia.org/wiki/Event_%28computing%29 "Event (computing)") only the last item works. Halp!"_ Every time it's the same bug - people just don't understand how loops and [closures](http://en.wikipedia.org/wiki/Closure_%28computer_science%29 "Closure (computer science)") play together in javascript. Invariably they [loop](http://en.wikipedia.org/wiki/Control_flow "Control flow") through an array, attach the index to an event, then get frustrated when, upon triggering the event, that particular variable seems to have the wrong value. The code usually looks something like this:
+
+    json = JSON.parse(this.responseText);
+    for (i = 0; i < json.links.length; i++) {
+           params = json.links[i];
+
+           row = $$.ui.createRow({
+                     // use params for settings, it works
+                     click: function () {
+                        var modalBrowser = new MiniBrowser({
+                                            // it all breaks down here
+                                            url: params.url,
+                        });
+           });
+           // do some other stuff
+    }
+
+Can you spot the problem? On the first use of _params_ everything is happy, using the [local variable](http://en.wikipedia.org/wiki/Local_variable "Local variable"), which is updated on every loop iteration. But when that _click_ event is triggered it **still** uses the local params variable ... that was updated on every loop iteration. By now, the loop has long since completed and that variable holds the last value - causing a weird-looking bug that is difficult for newbies to fix because, hey, why should I know about how pointers work? This is a [scripting language](http://en.wikipedia.org/wiki/Scripting_language "Scripting language") damn it! Luckily the fix is very simple:
+
+    json = JSON.parse(this.responseText);
+    json.links.map(function (params) {
+
+           row = $$.ui.createRow({
+                   // use params for settings, it works
+                   click: function () {
+                        var modalBrowser = new MiniBrowser({
+                                       // it magically still works here
+                                       url: params.url,
+                        });
+           });
+           // do some other stuff
+    });
+
+Just change the for loop to a map and you don't even have to fix anything else. Everything works as usual, except now all the code is wrapped up in a closure and caries a reference to the whole [variable scope](http://en.wikipedia.org/wiki/Scope_%28computer_science%29 "Scope (computer science)") around. Simply put - when the click event is triggered all the variables that were known when it was set are still there, with exactly the same values. Generally speaking, even a modest understanding of closures (like I have) will make it _much_ easier to write javascript. Might even help you fix a memory leak or fifty.
+
+###### Related articles
+
+-   [Fun javascript feature](http://swizec.com/blog/fun-javascript-feature/swizec/3141) (swizec.com)
+-   [How to disable Javascript redirect on click event](http://stackoverflow.com/questions/9426655/how-to-disable-javascript-redirect-on-click-event) (stackoverflow.com)
+-   [dynamic closure functions for a multiplication game in javascript](http://stackoverflow.com/questions/9425775/dynamic-closure-functions-for-a-multiplication-game-in-javascript) (stackoverflow.com)
+-   [Major and Minor JavaScript Pitfalls and ECMAScript 6](http://css.dzone.com/articles/major-and-minor-javascript) (css.dzone.com)
+-   [Pass PHP variable from while loop to javascript function](http://stackoverflow.com/questions/9245484/pass-php-variable-from-while-loop-to-javascript-function) (stackoverflow.com)
+-   [JavaScript Closures Explained](http://lostechies.com/derekgreer/2012/02/17/javascript-closures-explained/) (lostechies.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=41f7ec3d-4d57-4679-9c01-21f8627cc5bc)](http://www.zemanta.com/ "Enhanced by Zemanta")
