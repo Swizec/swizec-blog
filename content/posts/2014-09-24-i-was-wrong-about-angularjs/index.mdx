@@ -1,9 +1,77 @@
 ---
 layout: post
-title: I was wrong about AngularJS
+title: 'I was wrong about AngularJS'
 date: 2014-09-24
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: ./img/21380?token=HhIlUPZY9RXuPRfOpGRctox6FoU0XQguyv0u4rpgynHlN-DOppDWqpjriFmSdTefOatp1b9AoP0v2hu5vfkEMSQ
+hero: ./img/images-21380.jpg
 ---
+\[caption id="" align="alignnone" width="640"]![Here be dragons](./img/images-21380.jpg "Here be dragons") Here be dragons\[/caption]
 
-\[caption id="" align="alignnone" width="640"]![Here be dragons](./img/21380?token=HhIlUPZY9RXuPRfOpGRctox6FoU0XQguyv0u4rpgynHlN-DOppDWqpjriFmSdTefOatp1b9AoP0v2hu5vfkEMSQ "Here be dragons") Here be dragons\[/caption] I started using Angular a few months ago. I hated it. Backbone was _so much_ better. I cursed Angular every day. Logic mixed with HTML, bits of javascript polluting everything, the organisation of services and modules and controllers and apps and all the things feeling like some old school Java app. And god forbid you try to stray from the path, Angular will bash you over the head. And I never liked how much logic Angular hides from you. When I work on something, I want to understand the whole system. Having a bunch of _"Here be dragons, don't go here"_ signposts everywhere feels weird. How can you reason about your code if half of it is hidden? There was a case where I spent a whole day chasing down a bug because of that. When you clicked on a thing an unrelated thing cried out in pain and the app crashed. Turns out Angular was messing up the event cycle and tried to update something before a different thing made it ready to be updated. Yes, very descriptive, I know. But Angular's _"This thing can't be called, derp"_ was super helpful too. Had to wrap a bunch of code in `setTimeout`. Ew. BUT! The past few weeks I poked at Backbone again. My love. And you know what, I can't argue with results. Despite everything I hate about Angular on a philosophical level, it gets the job done. Fast. Getting stuff done with Angular is just so much easier. Especially the simple stuff that I don't want to think about. Want something to be visible or not? `ng-show`. Want to display a value to users? `ng-model`. And so on. All these trivial little things that, yes, are simple, and, yes, I can code in my sleep, but with Angular I don't have to. It takes 10 seconds with Angular, 3 minutes with Backbone. Who cares right? It's only 94% quicker. Oh ... It adds up, man. It really does. And because I don't have to care about these tiny things, I get to spend more brain cycles on the main logic. It even leaves enough time to deal with the millions of steps of responsibility misdirection between the various controllers. But man do I hate writing so much Javascript in HTML. Didn't we agree to ban `onclick=` ten years ago?
+
+
+I started using Angular a few months ago. I hated it. Backbone was _so much_ better.
+
+
+
+I cursed Angular every day. Logic mixed with HTML, bits of javascript polluting everything, the organisation of services and modules and controllers and apps and all the things feeling like some old school Java app. And god forbid you try to stray from the path, Angular will bash you over the head.
+
+
+
+And I never liked how much logic Angular hides from you. When I work on something, I want to understand the whole system. Having a bunch of _"Here be dragons, don't go here"_ signposts everywhere feels weird.
+
+
+
+How can you reason about your code if half of it is hidden?
+
+
+
+There was a case where I spent a whole day chasing down a bug because of that. When you clicked on a thing an unrelated thing cried out in pain and the app crashed.
+
+
+
+Turns out Angular was messing up the event cycle and tried to update something before a different thing made it ready to be updated. Yes, very descriptive, I know. But Angular's _"This thing can't be called, derp"_ was super helpful too.
+
+
+
+Had to wrap a bunch of code in `setTimeout`. Ew.
+
+
+
+BUT!
+
+
+
+The past few weeks I poked at Backbone again. My love.
+
+
+
+And you know what, I can't argue with results. Despite everything I hate about Angular on a philosophical level, it gets the job done. Fast.
+
+
+
+Getting stuff done with Angular is just so much easier. Especially the simple stuff that I don't want to think about. Want something to be visible or not? `ng-show`. Want to display a value to users? `ng-model`.
+
+
+
+And so on.
+
+
+
+All these trivial little things that, yes, are simple, and, yes, I can code in my sleep, but with Angular I don't have to. It takes 10 seconds with Angular, 3 minutes with Backbone.
+
+
+
+Who cares right? It's only 94% quicker. Oh ...
+
+
+
+It adds up, man. It really does.
+
+
+
+And because I don't have to care about these tiny things, I get to spend more brain cycles on the main logic. It even leaves enough time to deal with the millions of steps of responsibility misdirection between the various controllers.
+
+
+
+But man do I hate writing so much Javascript in HTML. Didn't we agree to ban `onclick=` ten years ago?

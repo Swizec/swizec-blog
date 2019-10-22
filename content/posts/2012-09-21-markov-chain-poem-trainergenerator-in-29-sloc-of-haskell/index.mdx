@@ -1,125 +1,186 @@
 ---
 layout: post
-title: Markov chain poem trainer+generator in 29 sloc of Haskell
+title: 'Markov chain poem trainer+generator in 29 sloc of Haskell'
 date: 2012-09-21
-categories: Amanda Palmer, Arts, Haskell, Markov chain, Randomness
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: undefined
+hero: ../../../defaultHero.jpg
 ---
-
 Another step in my [Automagic Poetry Generation](https://github.com/Swizec/Le-Thesis) project.
 
-> when i think we have tickets we't my abortion i drank it't my best friend melissa mahoney oh we tried to the building ~The Markov Chain, based on Amanda Palmer's Oasis
+> when i think we have tickets we't my abortion i drank it't my best friend melissa mahoney oh we tried to the building
+>
+>
+>
+> ~The Markov Chain, based on Amanda Palmer's Oasis
 
-I'm making an evolutionary algorithm to generate poetry, but it needs a good base to start from. Random data is preferred, but being completely random means you waste the first couple of epochs just getting to something solid to work from - that's a waste of time. To make everything a bit smoother, I've written a [markov chain](http://en.wikipedia.org/wiki/Markov_chain "Markov chain") generator in [Haskell](http://haskell.org "Haskell (programming language)") that generates the initial population. The principle is very simple:
+I'm making an evolutionary algorithm to generate poetry, but it needs a good base to start from. Random data is preferred, but being completely random means you waste the first couple of epochs just getting to something solid to work from - that's a waste of time.
 
-1.  Read seed poem from file
-2.  Tokenize
-3.  Train markov chain
-4.  A generator spits out an infinitely long list based on the markov chain
-5.  Take X tokens
-6.  Detokenize
-7.  Done
 
-Simple. A quick brush up for people who don't breathe "hardcore" [Comp Sci](http://en.wikipedia.org/wiki/Computer_science "Computer science") stuff: A markov chain is essentially a probabilistic state automata, usually represented with a probability matrix. You take the current state and translate it into the next state by observing the proper probabilities. The output is a random string that looks a lot like some drunk tweets you might see on a friday night.
+
+To make everything a bit smoother, I've written a [markov chain](http://en.wikipedia.org/wiki/Markov_chain "Markov chain") generator in [Haskell](http://haskell.org "Haskell (programming language)") that generates the initial population. The principle is very simple:
+
+1. Read seed poem from file
+2. Tokenize
+3. Train markov chain
+4. A generator spits out an infinitely long list based on the markov chain
+5. Take X tokens
+6. Detokenize
+7. Done
+
+Simple.
+
+
+
+A quick brush up for people who don't breathe "hardcore" [Comp Sci](http://en.wikipedia.org/wiki/Computer_science "Computer science") stuff: A markov chain is essentially a probabilistic state automata, usually represented with a probability matrix. You take the current state and translate it into the next state by observing the proper probabilities.
+
+
+
+The output is a random string that looks a lot like some drunk tweets you might see on a friday night.
 
 ## Le Code
 
 Our main function is a simple convolution of a bunch of things:
 
-    start_population::(RandomGen g) => g -> String -> IO String
-    start_population gen start = do
-      return . (foldr detokenize "") . (take Config.seed_length) . (produce gen start). chain . tokenize =<< readFile Config.seed_data
+```
+start_population::(RandomGen g) => g -> String -> IO String
+start_population gen start = do
+  return . (foldr detokenize "") . (take Config.seed_length) . (produce gen start). chain . tokenize =<< readFile Config.seed_data
+```
 
-Reading it from right to left you can see that it first reads some data, tokenizes it, makes the chain, produces some output, cuts it to the proper length and then shoves it back into a normal string. Simple. Because I wanted to handle punctuation and new lines, which are important in poems, I had to write my own tokenization and detokenization functions. Otherwise the built in _words_ function would be sufficient.
+Reading it from right to left you can see that it first reads some data, tokenizes it, makes the chain, produces some output, cuts it to the proper length and then shoves it back into a normal string.
 
-    tokenize::String -> [String]
-    tokenize s = Prelude.filter (\x -> x /= " " && x /= "") $
-                 Split.split (whenElt
-                              (\x -> isSeparator x || isPunctuation x || x == '\n')) $
-                 Prelude.map toLower s
 
-    detokenize::String -> String -> String
-    detokenize a b
-      | punctuation a || punctuation b = a++b
-      | otherwise = a++" "++b
-      where punctuation = (\x -> length x > 0 && isPunctuation (x!!0))
 
-You can see that tokenize splits on pretty much everything and detokenize takes special care not to put spaces around punctuation. Another important step is building the chain itself.
+Simple.
 
-    chain::[String] -> Map String [String]
-    chain [now, last] =
-      insert now [last] $ singleton last []
-    chain (token:xs) =
-      insertWith (\new old -> new++old) token [xs!!0] $ chain xs
 
-Simply put - this function builds a HashMap from a token to many tokens. The idea here is to make a note of every token that comes _after_ some other token. To make things simpler, if a pair of tokens happens twice, it will be recorded twice. This magically gives us the ability to properly weigh the random function that chooses what to generate next.
 
-    next_token::(RandomGen g) => g -> Map String [String] -> String -> (g, String)
-    next_token gen map s =
-      let choices = findWithDefault [] s map
-          (i, gen') = randomR (0, length choices - 1) gen
-      in (gen', choices!!i)
+Because I wanted to handle punctuation and new lines, which are \\important in poems, I had to write my own tokenization and detokenization functions. Otherwise the built in _words_ function would be sufficient.
 
-    produce::(RandomGen g) => g -> String -> Map String [String] -> [String]
-    produce gen s map =
-      let (gen', next) = next_token gen map s
-      in s:(produce gen' next map)
+```
+tokenize::String -> [String]
+tokenize s = Prelude.filter (\x -> x /= " " && x /= "") $
+             Split.split (whenElt
+                          (\x -> isSeparator x || isPunctuation x || x == '\n')) $
+             Prelude.map toLower s
 
-I have a nasty suspicion the _next_token_ and _produce_ functions could be merged, but I found this easier to reason about. _Next_token_ is the meat of our algorithm - it does nothing but take a token, find a list of its possible successors in the HashMap and return a random member of that list. To avoid any issues it will return an empty string if nothing is found. The _produce_ function takes care of driving _next_token_ and makes sure it gets a fresh random generator every time. A problem with my technique is that once you give a random generator to the markov chain, you're not getting it back. While it does ensure the result will always be fresh, you might be using a stale generator in other parts of your code if you're not careful. Maybe I should finally look into that random monad I've been hearing about. Either way, here's the full code, which is 38 sloc because I like including the function headers - makes code easier to think about, but I've tried and it does work without any type hints. Haskell is smarter than I am. Plus I added the whole part that only exposes _start_population_ to the outside world, which isn't otherwise necessary.
+detokenize::String -> String -> String
+detokenize a b
+  | punctuation a || punctuation b = a++b
+  | otherwise = a++" "++b
+  where punctuation = (\x -> length x > 0 && isPunctuation (x!!0))
+```
 
-    module Initiators.MarkovChain (
-      start_population
-      ) where
+You can see that tokenize splits on pretty much everything and detokenize takes special care not to put spaces around punctuation.
 
-    import System.Random
-    import Data.HashMap
-    import Data.List.Split as Split
-    import Data.Char
 
-    import Config
 
-    -- read corpus data
-    -- build markov chain
-    -- spit out data
-    start_population::(RandomGen g) => g -> String -> IO String
-    start_population gen start = do
-      return . (foldr detokenize "") . (take Config.seed_length) . (produce gen start). chain . tokenize =<< readFile Config.seed_data tokenize::String -> [String]
-    tokenize s = Prelude.filter (\x -> x /= " " && x /= "") $
-                 Split.split (whenElt
-                              (\x -> isSeparator x || isPunctuation x || x == '\n')) $
-                 Prelude.map toLower s
+Another \\important step is building the chain itself.
 
-    detokenize::String -> String -> String
-    detokenize a b
-      | punctuation a || punctuation b = a++b
-      | otherwise = a++" "++b
-      where punctuation = (\x -> length x > 0 && isPunctuation (x!!0))
+```
+chain::[String] -> Map String [String]
+chain [now, last] =
+  insert now [last] $ singleton last []
+chain (token:xs) =
+  insertWith (\new old -> new++old) token [xs!!0] $ chain xs
+```
 
-    chain::[String] -> Map String [String]
-    chain [now, last] =
-      insert now [last] $ singleton last []
-    chain (token:xs) =
-      insertWith (\new old -> new++old) token [xs!!0] $ chain xs
+Simply put - this function builds a HashMap from a token to many tokens. The idea here is to make a note of every token that comes _after_ some other token. To make things simpler, if a pair of tokens happens twice, it will be recorded twice.
 
-    next_token::(RandomGen g) => g -> Map String [String] -> String -> (g, String)
-    next_token gen map s =
-      let choices = findWithDefault [] s map
-          (i, gen') = randomR (0, length choices - 1) gen
-      in (gen', choices!!i)
 
-    produce::(RandomGen g) => g -> String -> Map String [String] -> [String]
-    produce gen s map =
-      let (gen', next) = next_token gen map s
-      in s:(produce gen' next map)
+
+This magically gives us the ability to properly weigh the random function that chooses what to generate next.
+
+```
+next_token::(RandomGen g) => g -> Map String [String] -> String -> (g, String)
+next_token gen map s =
+  let choices = findWithDefault [] s map
+      (i, gen') = randomR (0, length choices - 1) gen
+  in (gen', choices!!i)
+
+produce::(RandomGen g) => g -> String -> Map String [String] -> [String]
+produce gen s map =
+  let (gen', next) = next_token gen map s
+  in s:(produce gen' next map)
+```
+
+I have a nasty suspicion the _next_token_ and _produce_ functions could be merged, but I found this easier to reason about.
+
+
+
+_Next_token_ is the meat of our algorithm - it does nothing but take a token, find a list of its possible successors in the HashMap and return a random member of that list. To avoid any issues it will return an empty string if nothing is found.
+
+
+
+The _produce_ function takes care of driving _next_token_ and makes sure it gets a fresh random generator every time.
+
+
+
+A problem with my technique is that once you give a random generator to the markov chain, you're not getting it back. While it does ensure the result will always be fresh, you might be using a stale generator in other parts of your code if you're not careful.
+
+
+
+Maybe I should finally look into that random monad I've been hearing about.
+
+
+
+Either way, here's the full code, which is 38 sloc because I like including the function headers - makes code easier to think about, but I've tried and it does work without any type hints. Haskell is smarter than I am. Plus I added the whole part that only exposes _start_population_ to the outside world, which isn't otherwise necessary.
+
+```
+module Initiators.MarkovChain (
+  start_population
+  ) where
+
+\import System.Random
+\import Data.HashMap
+\import Data.List.Split as Split
+\import Data.Char
+
+\import Config
+
+-- read corpus data
+-- build markov chain
+-- spit out data
+start_population::(RandomGen g) => g -> String -> IO String
+start_population gen start = do
+  return . (foldr detokenize "") . (take Config.seed_length) . (produce gen start). chain . tokenize =<< readFile Config.seed_data tokenize::String -> [String]
+tokenize s = Prelude.filter (\x -> x /= " " && x /= "") $
+             Split.split (whenElt
+                          (\x -> isSeparator x || isPunctuation x || x == '\n')) $
+             Prelude.map toLower s
+
+detokenize::String -> String -> String
+detokenize a b
+  | punctuation a || punctuation b = a++b
+  | otherwise = a++" "++b
+  where punctuation = (\x -> length x > 0 && isPunctuation (x!!0))
+
+chain::[String] -> Map String [String]
+chain [now, last] =
+  insert now [last] $ singleton last []
+chain (token:xs) =
+  insertWith (\new old -> new++old) token [xs!!0] $ chain xs
+
+next_token::(RandomGen g) => g -> Map String [String] -> String -> (g, String)
+next_token gen map s =
+  let choices = findWithDefault [] s map
+      (i, gen') = randomR (0, length choices - 1) gen
+  in (gen', choices!!i)
+
+produce::(RandomGen g) => g -> String -> Map String [String] -> [String]
+produce gen s map =
+  let (gen', next) = next_token gen map s
+  in s:(produce gen' next map)
+```
 
 ###### Related articles
 
--   [![](http://i.zemanta.com/109018143_80_80.jpg)](http://isnerd.wordpress.com/2012/08/28/the-markovian-mind/)[The Markovian Mind](http://isnerd.wordpress.com/2012/08/28/the-markovian-mind/)
--   [![](http://i.zemanta.com/noimg_79_80_80.jpg)](http://terse-words.blogspot.com/2012/02/generating-gibberish-in-python-markov.html)[Generating Gibberish in Python - Markov Chains](http://terse-words.blogspot.com/2012/02/generating-gibberish-in-python-markov.html)
--   [![](http://i.zemanta.com/107290574_80_80.jpg)](http://swizec.com/blog/amdahls-law-in-action-27s-to-0-03s-by-changing-a-function/swizec/5106)[Amdahl's law in action - 27s to 0.03s by changing a function](http://swizec.com/blog/amdahls-law-in-action-27s-to-0-03s-by-changing-a-function/swizec/5106)
--   [![](http://i.zemanta.com/110047375_80_80.jpg)](http://swizec.com/blog/monads-monads-monads-monads/swizec/5206)[Monads, monads, monads, monads](http://swizec.com/blog/monads-monads-monads-monads/swizec/5206)
--   [![](http://i.zemanta.com/106367996_80_80.jpg)](http://swizec.com/blog/an-elegant-way-to-randomly-change-every-list-member-in-haskell/swizec/5060)[An elegant way to randomly change every list member in Haskell](http://swizec.com/blog/an-elegant-way-to-randomly-change-every-list-member-in-haskell/swizec/5060)
--   [![](http://i.zemanta.com/noimg_61_80_80.jpg)](http://blog.ezyang.com/2012/09/common-misconceptions-about-safe-haskell/)[Common misconceptions about Safe Haskell](http://blog.ezyang.com/2012/09/common-misconceptions-about-safe-haskell/)
+- [![](http://i.zemanta.com/109018143_80_80.jpg)](http://isnerd.wordpress.com/2012/08/28/the-markovian-mind/)[The Markovian Mind](http://isnerd.wordpress.com/2012/08/28/the-markovian-mind/)
+- [![](http://i.zemanta.com/noimg_79_80_80.jpg)](http://terse-words.blogspot.com/2012/02/generating-gibberish-in-python-markov.html)[Generating Gibberish in Python - Markov Chains](http://terse-words.blogspot.com/2012/02/generating-gibberish-in-python-markov.html)
+- [![](http://i.zemanta.com/107290574_80_80.jpg)](http://swizec.com/blog/amdahls-law-in-action-27s-to-0-03s-by-changing-a-function/swizec/5106)[Amdahl's law in action - 27s to 0.03s by changing a function](http://swizec.com/blog/amdahls-law-in-action-27s-to-0-03s-by-changing-a-function/swizec/5106)
+- [![](http://i.zemanta.com/110047375_80_80.jpg)](http://swizec.com/blog/monads-monads-monads-monads/swizec/5206)[Monads, monads, monads, monads](http://swizec.com/blog/monads-monads-monads-monads/swizec/5206)
+- [![](http://i.zemanta.com/106367996_80_80.jpg)](http://swizec.com/blog/an-elegant-way-to-randomly-change-every-list-member-in-haskell/swizec/5060)[An elegant way to randomly change every list member in Haskell](http://swizec.com/blog/an-elegant-way-to-randomly-change-every-list-member-in-haskell/swizec/5060)
+- [![](http://i.zemanta.com/noimg_61_80_80.jpg)](http://blog.ezyang.com/2012/09/common-misconceptions-about-safe-haskell/)[Common misconceptions about Safe Haskell](http://blog.ezyang.com/2012/09/common-misconceptions-about-safe-haskell/)
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=3a0ab92f-5b51-431b-8e1b-7e2fee5375a0)](http://www.zemanta.com/?px "Enhanced by Zemanta")

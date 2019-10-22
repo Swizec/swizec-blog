@@ -28,6 +28,11 @@ module.exports = {
                 contentPosts: "content/posts",
                 contentAuthors: "content/authors",
                 basePath: "/",
+                mailchimp: false,
+                sources: {
+                    local: true,
+                    contentful: false
+                }
             },
         },
         {
@@ -42,12 +47,11 @@ module.exports = {
                 icon: `src/assets/favicon.png`,
             },
         },
-        'gatsby-plugin-styled-components'
-        // {
-        //   resolve: `gatsby-plugin-google-analytics`,
-        //   options: {
-        //     trackingId: "UA-118232427-3",
-        //   },
-        // },
+        'gatsby-plugin-styled-components' {
+            resolve: `gatsby-plugin-google-analytics`,
+            options: {
+                trackingId: "UA-1464315-1",
+            },
+        },
     ],
 };

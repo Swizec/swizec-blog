@@ -1,12 +1,71 @@
 ---
 layout: post
-title: CircleCI - sexy continuous integration for private repos
+title: 'CircleCI - sexy continuous integration for private repos'
 date: 2013-07-05
-categories: Continuous integration, Dwellers, Github, Heroku, Programming
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: ./img/PI3LtjaZQRaz2ZB2GOfM
+hero: ../../../defaultHero.jpg
 ---
+One of the best parts of spinning up a new programming team is setting the processes up from scratch. That means fixing your past failures and, more \\importantly, playing with the shiny new toys.
 
-One of the best parts of spinning up a new programming team is setting the processes up from scratch. That means fixing your past failures and, more importantly, playing with the shiny new toys. \[caption id="" align="alignnone" width="667"]![CircleCI dashboard](./img/PI3LtjaZQRaz2ZB2GOfM "CircleCI dashboard") CircleCI dashboard\[/caption] The first thing we fixed at [Dwellers](http://dwellers.com), was setting up a [continuous integration](http://en.wikipedia.org/wiki/Continuous_integration "Continuous integration") service on the very first day. I've never worked with an environment that makes sure all my tests are passing and pushes things into staging before. I tried a few years ago, but it was a bitch to set up and never worked. It sucks. Sure I run tests all the time, and have no problem deploying to a server - especially [Heroku](http://www.heroku.com/ "Heroku") where you just do a `git push heroku`. But it's tedious and the less things you have to think about, the more brain cycles are free to solve actual problems. Initially I suggested using [TravisCI](https://travis-ci.org/) but they _still_ don't support private repositories. Luckily we found [CircleCI](https://circleci.com/). It focuses exclusively on private [Github](http://github.com "GitHub") repositories. Perfect. The more I look, the more I'm impressed by everything CircleCI does. It made pushing code even more fun. When you push to your branch it runs tests on that branch alone and tells you how you did. There's also a history of the past few pushes in the dashboard so you can see what your track record's like. Click on a specific push, will show you the run steps in real time. It's really fun to watch. But I should get over the novelty and stop yak shaving all the time. \[caption id="" align="alignnone" width="600"]![A CircleCI test run](./img/tu573fdfRCKQQjlrS2hz "A CircleCI test run") A CircleCI test run\[/caption] If all the tests pass and you pushed to `master`, the code is automatically deployed to staging so the business guys can have fun clicking around. And seeing your code live, even just on a server nobody outside the office will see, only a few minutes after pushing to Github, is super rewarding. CircleCI can also notify you about the tests in a number of ways like sending you an email or being chatty on HipChat/IRC ... but that's not very interesting. My favourite feature is that Github seems to support CircleCI. Somehow. I haven't installed any plugins or anything, just connected my Github account to CircleCI, which is how you login and get access to any project you have access to on Github, and something new appeared. \[caption id="" align="alignnone" width="657"]![Test badges in branch list](./img/bzq7m0YxTaCLMzn39JaZ "Test badges in branch list") Test badges in branch list\[/caption] Those little icons in the branches list. That's new. I don't know how it got there, but it's dynamically updated with the status of every particular branch from CircleCI. If you're still waiting for TravisCI to support private repos, give CircleCI a shot. It's really awesome.
+
+
+\[caption id="" align="alignnone" width="667"]![CircleCI dashboard](https://www.filepicker.io/api/file/PI3LtjaZQRaz2ZB2GOfM "CircleCI dashboard") CircleCI dashboard\[/caption]
+
+
+
+The first thing we fixed at [Dwellers](http://dwellers.com), was setting up a [continuous integration](http://en.wikipedia.org/wiki/Continuous_integration "Continuous integration") service on the very first day. I've never worked with an environment that makes sure all my tests are passing and pushes things into staging before. I tried a few years ago, but it was a bitch to set up and never worked.
+
+
+
+It sucks.
+
+
+
+Sure I run tests all the time, and have no problem deploying to a server - especially [Heroku](http://www.heroku.com/ "Heroku") where you just do a `git push heroku`. But it's tedious and the less things you have to think about, the more brain cycles are free to solve actual problems.
+
+
+
+Initially I suggested using [TravisCI](https://travis-ci.org/) but they _still_ don't support private repositories. Luckily we found [CircleCI](https://circleci.com/). It focuses exclusively on private [Github](http://github.com "GitHub") repositories. Perfect.
+
+
+
+The more I look, the more I'm impressed by everything CircleCI does. It made pushing code even more fun.
+
+
+
+When you push to your branch it runs tests on that branch alone and tells you how you did. There's also a history of the past few pushes in the dashboard so you can see what your track record's like.
+
+
+
+Click on a specific push, will show you the run steps in real time. It's really fun to watch. But I should get over the novelty and stop yak shaving all the time.
+
+
+
+\[caption id="" align="alignnone" width="600"]![A CircleCI test run](https://www.filepicker.io/api/file/tu573fdfRCKQQjlrS2hz "A CircleCI test run") A CircleCI test run\[/caption]
+
+
+
+If all the tests pass and you pushed to `master`, the code is automatically deployed to staging so the business guys can have fun clicking around. And seeing your code live, even just on a server nobody outside the office will see, only a few minutes after pushing to Github, is super rewarding.
+
+
+
+CircleCI can also notify you about the tests in a number of ways like sending you an email or being chatty on HipChat/IRC ... but that's not very interesting.
+
+
+
+My favourite feature is that Github seems to support CircleCI. Somehow. I haven't installed any plugins or anything, just connected my Github account to CircleCI, which is how you login and get access to any project you have access to on Github, and something new appeared.
+
+
+
+\[caption id="" align="alignnone" width="657"]![Test badges in branch list](https://www.filepicker.io/api/file/bzq7m0YxTaCLMzn39JaZ "Test badges in branch list") Test badges in branch list\[/caption]
+
+
+
+Those little icons in the branches list. That's new. I don't know how it got there, but it's dynamically updated with the status of every particular branch from CircleCI.
+
+
+
+If you're still waiting for TravisCI to support private repos, give CircleCI a shot. It's really awesome.
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=553a99a5-d1b7-4c28-86e9-1bf2c0ed3a40)](http://www.zemanta.com/?px "Enhanced by Zemanta")

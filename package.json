@@ -7,17 +7,21 @@
         "build": "gatsby build && cp -R _redirects public/",
         "develop": "gatsby develop",
         "start": "gatsby develop",
-        "clean": "gatsby clean"
+        "clean": "gatsby clean",
+        "copyPosts": "rm -rf content/posts/* && cp -rf ../wordpress-to-markdown/out/* ./content/posts"
     },
     "dependencies": {
-        "@narative/gatsby-theme-novela": "^0.8.1",
+        "@narative/gatsby-theme-novela": "^0.9.5",
         "babel-plugin-styled-components": "^1.10.6",
-        "gatsby": "^2.15.22",
-        "gatsby-plugin-google-analytics": "^2.1.17",
-        "gatsby-plugin-manifest": "^2.2.4",
-        "gatsby-plugin-styled-components": "^3.1.6",
+        "gatsby": "^2.16.5",
+        "gatsby-plugin-google-analytics": "^2.1.23",
+        "gatsby-plugin-manifest": "^2.2.23",
+        "gatsby-plugin-styled-components": "^3.1.11",
         "react": "^16.9.0",
         "react-dom": "^16.9.0",
         "styled-components": "^4.4.0"
+    },
+    "resolutions": {
+        "gatsby": "^2.16.5"
     }
 }

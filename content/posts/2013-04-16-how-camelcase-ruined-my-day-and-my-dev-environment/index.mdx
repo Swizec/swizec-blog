@@ -1,37 +1,146 @@
 ---
 layout: post
-title: How CamelCase ruined my day and my dev environment
+title: 'How CamelCase ruined my day and my dev environment'
 date: 2013-04-16
-categories: Bitcoin, CamelCase, Programming, Ruby, RubyGems
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: ./img/7297820998_d94789a144_m.jpg
+hero: ./img/7082-7297820998_d94789a144_m.jpg
 ---
+\[caption id="" align="alignright" width="240"][![Bitcoin Magazine](./img/7082-7297820998_d94789a144_m.jpg "Bitcoin Magazine")](http://www.flickr.com/photos/22823034@N00/7297820998) Bitcoin Magazine (Photo credit: zcopley)\[/caption]
 
-\[caption id="" align="alignright" width="240"][![Bitcoin Magazine](./img/7297820998_d94789a144_m.jpg "Bitcoin Magazine")](http://www.flickr.com/photos/22823034@N00/7297820998) Bitcoin Magazine (Photo credit: zcopley)\[/caption] Yesterday everything went so comically wrong I just have to share. This post might be more a confession than a tale of warning, you be the judge. My objective, convert prices in USD to prices in bitcoin. Simple. Especially after I discovered someone's already made a [gem that talks to the MtGox exchange](https://github.com/sferik/mtgox) and tells me how much a single BTC is worth. All I had to do was this:
 
-    Gemfile:
-    gem 'mtgox'
 
-    bundle install
+Yesterday everything went so comically wrong I just have to share. This post might be more a confession than a tale of warning, you be the judge.
 
-    Controller:
-    price/MtGox.ticker.sell
 
-Simple, right? Because I like to make sure I'm working from a sane state I first ran the test suite. [Ruby](http://www.ruby-lang.org/ "Ruby (programming language)") core dump. Right, I've been having these problems randomly for about a week now and they usually go away if you run the tests twice or thrice. This time, it just did not work. I got a ruby core dump, _you have probably encountered a ruby bug_ every single time. No wonder! My Ruby interpreter is going to be a year old in a few days! Let's update. It all went downhill from that. And not in a pleasant adrenaline rush kind of way either. After about an hour of fiddling with RVM and Ruby versions and aliasing things from _~/.rvm/bin/_ to _/usr/bin/_ the tests are finally running and I can begin. Mtgox is not defined. Hmm ... okay then. I thought Rails automagically loaded all gems specified in the Gemfile. A quick google later and I discovered that I can list all loaded gems with _Gem.loaded_specs.keys_. Sure thing, the gem was loaded. Right, let's make a separate ruby file and make sure things are working.
 
-    require 'rubygems'
-    require 'mtgox'
+My objective, convert prices in USD to prices in bitcoin. Simple. Especially after I discovered someone's already made a [gem that talks to the MtGox exchange](https://github.com/sferik/mtgox) and tells me how much a single BTC is worth.
 
-    puts Mtgox.ticker.sell
 
-No such gem "mtgox". Grrrr, okay fine. _gem install mtgox_ ... already installed, wtf are you doing Swizec, you have that? Oh right, I did just update my Ruby stuff and maybe broke the environment and require paths are confused. Let's try this on my mac, I haven't done any fiddling there. The mtgox gem only works with Ruby 1.9.2+, you have 1.8.7 ... that's what you get for using your expensive laptop as a Skype and [IRC](http://en.wikipedia.org/wiki/Internet_Relay_Chat "Internet Relay Chat") machine. I can just update this, no problem! Your Homebrew is out of date. Your [XCode](http://developer.apple.com/tools/xcode/ "Xcode") does not exist. I have no idea what you're trying to do! Grargh. Fiddle fiddle fiddle and I eventually get Homebrew installed after at least an hour of _effort_. Let's try that RVM thing once again. After several fails with automake and sometimes just simply saying _"Hey, an error happened"_and the log looking perfectly fine I finally got it to start installing Ruby.
 
-    ruby-1.9.3-p392 - #configuring........
-    ruby-1.9.3-p392 - #compiling.
-    ruby-1.9.3-p392 - #installing .
-    ruby-1.9.3-p392 is not installed.
-    To install do: 'rvm install ruby-1.9.3-p392'
+All I had to do was this:
 
-What? Fine, I give up on you laptop, we will pick this fight another day. Back to the Ubuntu box. After deleting all Ruby binaries from _/usr/bin_ it finally decided to start using things in _~/.rvm/_ and lo and behold, I can require the mtgox gem. Mtgox is undefined. God damn it! What now!? What could possibly be wrong now!? Find the source. Add some puts. Yes, yes the gem **is** getting loaded. It's printing to the console and I can ... wait a minute. It says _module MtGox_, not _module Mtgox_ Oh for fuck's sake! Capital G ... All this time. All this effort. And I never, not once, noticed the module was [CamelCase](http://en.wikipedia.org/wiki/CamelCase "CamelCase") instead of just capital first letter. Sigh. Oh, now running _bundle_ says bundler isn't installed _even though I just ran it!_ What now ...
+```
+Gemfile:
+gem 'mtgox'
+
+bundle install
+
+Controller:
+price/MtGox.ticker.sell
+```
+
+Simple, right?
+
+
+
+Because I like to make sure I'm working from a sane state I first ran the test suite. [Ruby](http://www.ruby-lang.org/ "Ruby (programming language)") core dump.
+
+
+
+Right, I've been having these problems randomly for about a week now and they usually go away if you run the tests twice or thrice. This time, it just did not work. I got a ruby core dump, _you have probably encountered a ruby bug_ every single time.
+
+
+
+No wonder! My Ruby interpreter is going to be a year old in a few days! Let's update. It all went downhill from that. And not in a pleasant adrenaline rush kind of way either.
+
+
+
+After about an hour of fiddling with RVM and Ruby versions and aliasing things from _~/.rvm/bin/_ to _/usr/bin/_ the tests are finally running and I can begin.
+
+
+
+Mtgox is not defined.
+
+
+
+Hmm ... okay then. I thought Rails automagically loaded all gems specified in the Gemfile. A quick google later and I discovered that I can list all loaded gems with _Gem.loaded_specs.keys_.
+
+
+
+Sure thing, the gem was loaded.
+
+
+
+Right, let's make a separate ruby file and make sure things are working.
+
+```
+require 'rubygems'
+require 'mtgox'
+
+puts Mtgox.ticker.sell
+```
+
+No such gem "mtgox".
+
+
+
+Grrrr, okay fine. _gem install mtgox_ ... already installed, wtf are you doing Swizec, you have that? Oh right, I did just update my Ruby stuff and maybe broke the environment and require paths are confused.
+
+
+
+Let's try this on my mac, I haven't done any fiddling there.
+
+
+
+The mtgox gem only works with Ruby 1.9.2+, you have 1.8.7 ... that's what you get for using your expensive laptop as a Skype and [IRC](http://en.wikipedia.org/wiki/Internet_Relay_Chat "Internet Relay Chat") machine. I can just update this, no problem!
+
+
+
+Your Homebrew is out of date. Your [XCode](http://developer.apple.com/tools/xcode/ "Xcode") does not exist. I have no idea what you're trying to do!
+
+
+
+Grargh.
+
+
+
+Fiddle fiddle fiddle and I eventually get Homebrew installed after at least an hour of _effort_. Let's try that RVM thing once again.
+
+
+
+After several fails with automake and sometimes just simply saying _"Hey, an error happened"_and the log looking perfectly fine I finally got it to start installing Ruby.
+
+```
+ruby-1.9.3-p392 - #configuring........
+ruby-1.9.3-p392 - #compiling.
+ruby-1.9.3-p392 - #installing .
+ruby-1.9.3-p392 is not installed.
+To install do: 'rvm install ruby-1.9.3-p392'
+```
+
+What?
+
+
+
+Fine, I give up on you laptop, we will pick this fight another day. Back to the Ubuntu box.
+
+
+
+After deleting all Ruby binaries from _/usr/bin_ it finally decided to start using things in _~/.rvm/_ and lo and behold, I can require the mtgox gem.
+
+
+
+Mtgox is undefined.
+
+
+
+God damn it! What now!? What could possibly be wrong now!?
+
+
+
+Find the source. Add some puts. Yes, yes the gem **is** getting loaded. It's printing to the console and I can ... wait a minute. It says _module MtGox_, not _module Mtgox_
+
+
+
+Oh for fuck's sake! Capital G ... All this time. All this effort. And I never, not once, noticed the module was [CamelCase](http://en.wikipedia.org/wiki/CamelCase "CamelCase") instead of just capital first letter.
+
+
+
+Sigh.
+
+
+
+Oh, now running _bundle_ says bundler isn't installed _even though I just ran it!_ What now ...
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=95c13b44-f693-4055-889c-13011575bd3e)](http://www.zemanta.com/?px "Enhanced by Zemanta")

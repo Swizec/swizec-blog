@@ -1,12 +1,10 @@
 ---
 layout: post
-title: Perl will solve your bug!
+title: 'Perl will solve your bug!'
 date: 2008-07-31
-categories: life
 author: Swizec Teller
-hero: undefined
+hero: ../../../defaultHero.jpg
 ---
-
 Yesterday upon coming to work I was greeted by an e-mail saying that [Detextive](http://detextive.net) is having issues when large files are uploaded. It instantly felt suspicious because it didn't _use_ to have these problems. So off I go and try a 100k word file on for size and woe and behold, the upload hung. Not to be deterred I turned on debugging and tried again, this time the culprit reared its ugly head and said hello.
 
 The file uploaded well, but where it failed was ... counting the number of words there was. Strange huh? See the word counting "algorithm" kind of took more than 30 seconds to execute on such a monstrous text and so a timeout occured. I could've gone the usual solution, shoved it into an asynchronous process and simply wait it out, but it didn't feel right. I shouldn't _have to_ do something like that just to bloody count how many words there were in a file. And there wasn't anything I could do with the algorithm to speed it up since regex function calls where hanging not the algorithm itself.

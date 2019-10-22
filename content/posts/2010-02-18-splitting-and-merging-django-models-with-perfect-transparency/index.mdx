@@ -1,120 +1,157 @@
 ---
 layout: post
-title: Splitting and merging django models with perfect transparency
+title: 'Splitting and merging django models with perfect transparency'
 date: 2010-02-18
-categories: django, food for thought, intrigues, Programming, python
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: undefined
+hero: ../../../defaultHero.jpg
 ---
+This is a howto that might come in handy to some people, but mostly I just want to document how I poked around some very angry django dragons and created something marvelous. There are also people on twitter who were wondering what the fuck I was doing.
 
-This is a howto that might come in handy to some people, but mostly I just want to document how I poked around some very angry django dragons and created something marvelous. There are also people on twitter who were wondering what the fuck I was doing. So let's start by describing the problem. We have a base user model named _pUser_ (yes stupid naming convention) that is tied to a cookie, which holds an id. These users are then tied to a number of different API accounts. In my case it is Delicious, Twitter and Facebook. The _user_id_ is also used to tie a bunch of meta data in different other models to them. The problem is that we do not want to trouble users with a special login for our service. But they are using different computers and browsers, so the same physical user can have multiple user id's. However through their Delicious et al. credentials we can tie them back together into a single entity. But we do not want to trouble the rest of the code with this detail, it should just work seamlessly because otherwise we'd be forced to introduce checking for this stuff at about 50 different places in the project. My approach to solving this goes as follows; at the end will be the three tests that indicate that the solution is valid. A hardcore test through the actual UI also confirmed that everything works.
+
+
+So let's start by describing the problem. We have a base user model named _pUser_ (yes stupid naming convention) that is tied to a cookie, which holds an id. These users are then tied to a number of different API accounts. In my case it is Delicious, Twitter and Facebook. The _user_id_ is also used to tie a bunch of meta data in different other models to them.
+
+
+
+The problem is that we do not want to trouble users with a special login for our service. But they are using different computers and browsers, so the same physical user can have multiple user id's.
+
+
+
+However through their Delicious et al. credentials we can tie them back together into a single entity. But we do not want to trouble the rest of the code with this detail, it should just work seamlessly because otherwise we'd be forced to introduce checking for this stuff at about 50 different places in the project.
+
+
+
+My approach to solving this goes as follows; at the end will be the three tests that indicate that the solution is valid. A hardcore test through the actual UI also confirmed that everything works.
 
 ## Funky geek stuff follows, you have been warned
 
 First we introduce a model that connects different user id's to the main user (i.e. the first id said user was given)
 
-    class UserNormalisation(models.Model):
-    	main_id = models.IntegerField()
-    	sub_id = models.IntegerField()
+```
+class UserNormalisation(models.Model):
+	main_id = models.IntegerField()
+	sub_id = models.IntegerField()
 
-    	class Meta:
-    		unique_together = ("main_id", "sub_id")
+	class Meta:
+		unique_together = ("main_id", "sub_id")
+```
 
 Then we give our Delicious model a ModelManager that will perform duplicity checking and tie different users together as needed.
 
-    class DeliciousManager(models.Manager):
-    	def create(self, **kwargs):
-    		try:
-    			old = Delicious.objects.get(username=kwargs['username'])
-    			new = super(DeliciousManager, self).create(**kwargs)
-    			try:
-    				UserNormalisation(main_id = old.user.id,
-    						  sub_id = new.user.id).save()
-    			except IntegrityError:
-    				pass
-    			new.delete()
-    			return old
-    		except Delicious.DoesNotExist:
-    			return super(DeliciousManager, self).create(**kwargs)
+```
+class DeliciousManager(models.Manager):
+	def create(self, **kwargs):
+		try:
+			old = Delicious.objects.get(username=kwargs['username'])
+			new = super(DeliciousManager, self).create(**kwargs)
+			try:
+				UserNormalisation(main_id = old.user.id,
+						  sub_id = new.user.id).save()
+			except IntegrityError:
+				pass
+			new.delete()
+			return old
+		except Delicious.DoesNotExist:
+			return super(DeliciousManager, self).create(**kwargs)
 
-    class Delicious(models.Model):
-    	user = models.ForeignKey( pUser )
-    	username = models.CharField( max_length=255 )
-    	password = models.CharField( max_length=255 )
-    	isScrobbled = models.BooleanField( default=False )
+class Delicious(models.Model):
+	user = models.ForeignKey( pUser )
+	username = models.CharField( max_length=255 )
+	password = models.CharField( max_length=255 )
+	isScrobbled = models.BooleanField( default=False )
 
-    	objects = DeliciousManager()
+	objects = DeliciousManager()
+```
 
-Basically when the _create_function is called it checks whether a Delicious model with the same username already exists and if it does, then a row is added to the UserNormalisation table to tie the two user id's together. And here's the real magic, the changes we did to the pUser model.
+Basically when the _create_function is called it checks whether a Delicious model with the same username already exists and if it does, then a row is added to the UserNormalisation table to tie the two user id's together.
 
-    class pUserManager(models.Manager):
-    	def get(self, **kwargs):
-    		user = super(pUserManager, self).get(**kwargs)
-    		try:
-    			id = UserNormalisation.objects.get(sub_id=user.id).main_id
-    			user = super(pUserManager, self).get(id=id)
-    		except UserNormalisation.DoesNotExist:
-    			pass
-    		return user
 
-    class pUser(models.Model):
-    	username = models.CharField( max_length=50 )
-    	password = models.CharField( max_length=255 )
-    	creation = models.DateTimeField( auto_now=True )
 
-    	objects = pUserManager()
+And here's the real magic, the changes we did to the pUser model.
 
-    	def __init__(self, *args, **kwargs):
-    		super(pUser, self).__init__(*args, **kwargs)
-    		try:
-    			id = UserNormalisation.objects.get(sub_id=self.id).main_id
-    			self.id = id
+```
+class pUserManager(models.Manager):
+	def get(self, **kwargs):
+		user = super(pUserManager, self).get(**kwargs)
+		try:
+			id = UserNormalisation.objects.get(sub_id=user.id).main_id
+			user = super(pUserManager, self).get(id=id)
+		except UserNormalisation.DoesNotExist:
+			pass
+		return user
 
-    		except UserNormalisation.DoesNotExist:
-    			pass
+class pUser(models.Model):
+	username = models.CharField( max_length=50 )
+	password = models.CharField( max_length=255 )
+	creation = models.DateTimeField( auto_now=True )
 
-The pUserManager should have a few more functions that do essentially the same thing for other operations (filter comes to mind). Essentially whenever a pUser is fetched from the db the manager will return the real user as per the UserNormalisation model. Another trick that makes this work seamlessly even when used as a connecting model (primary key for instance) in a different table is that \_\_init\_\_ function. What I've discovered is that there it's enough to just change the user's id in place and everything will work. Here are the tests that confirm all of this funky stuff actually performs as expected
+	objects = pUserManager()
 
-    	def test_normalisation(self):
-    		user = pUser(username="test", password="test")
-    		user.save()
+	def __init__(self, *args, **kwargs):
+		super(pUser, self).__init__(*args, **kwargs)
+		try:
+			id = UserNormalisation.objects.get(sub_id=self.id).main_id
+			self.id = id
 
-    		user2 = pUser(username="test2", password="test")
-    		user2.save()
+		except UserNormalisation.DoesNotExist:
+			pass
+```
 
-    		norm = UserNormalisation(main_id=user.id, sub_id=user2.id)
-    		norm.save()
+The pUserManager should have a few more functions that do essentially the same thing for other operations (filter comes to mind). Essentially whenever a pUser is fetched from the db the manager will return the real user as per the UserNormalisation model.
 
-    		fixture = pUser.objects.get(id=user2.id)
-    		self.assertEquals( fixture.id, user.id )
 
-    	def test_normalisation2(self):
-    		user = pUser()
-    		user.save()
-    		user2 = pUser()
-    		user2.save()
 
-    		user.delicious_set.create(username="test", password="test")
-    		fixture = user2.delicious_set.create(username="test", password="test")
+Another trick that makes this work seamlessly even when used as a connecting model (primary key for instance) in a different table is that \_\_init\_\_ function. What I've discovered is that there it's enough to just change the user's id in place and everything will work.
 
-    		self.assertEquals( fixture.user.id, user.id )
-    		self.assertEquals( UserNormalisation.objects.get(sub_id=user2.id).main_id, user.id )
-    		self.assertEquals( fixture.user, user )
 
-    	def test_normalisation3(self):
-    		user = pUser()
-    		user.save()
-    		user2 = pUser()
-    		user2.save()
 
-    		user.delicious_set.create(username="test", password="test")
-    		fixture = user2.delicious_set.create(username="test", password="test")
-    		
-    		norm = UserNormalisation.objects.all()
+Here are the tests that confirm all of this funky stuff actually performs as expected
 
-    		Concepts.relate(user=user2, concept1="tag1", concept2="tag2")
-    		relation = ConceptRelation.objects.filter(user=user2, concept1="tag1")[0]
-    		self.assertEquals( relation.user.id, user.id )
-    		self.assertEquals( relation.user, user )
+```
+	def test_normalisation(self):
+		user = pUser(username="test", password="test")
+		user.save()
+
+		user2 = pUser(username="test2", password="test")
+		user2.save()
+
+		norm = UserNormalisation(main_id=user.id, sub_id=user2.id)
+		norm.save()
+
+		fixture = pUser.objects.get(id=user2.id)
+		self.assertEquals( fixture.id, user.id )
+
+	def test_normalisation2(self):
+		user = pUser()
+		user.save()
+		user2 = pUser()
+		user2.save()
+
+		user.delicious_set.create(username="test", password="test")
+		fixture = user2.delicious_set.create(username="test", password="test")
+
+		self.assertEquals( fixture.user.id, user.id )
+		self.assertEquals( UserNormalisation.objects.get(sub_id=user2.id).main_id, user.id )
+		self.assertEquals( fixture.user, user )
+
+	def test_normalisation3(self):
+		user = pUser()
+		user.save()
+		user2 = pUser()
+		user2.save()
+
+		user.delicious_set.create(username="test", password="test")
+		fixture = user2.delicious_set.create(username="test", password="test")
+		
+		norm = UserNormalisation.objects.all()
+
+		Concepts.relate(user=user2, concept1="tag1", concept2="tag2")
+		relation = ConceptRelation.objects.filter(user=user2, concept1="tag1")[0]
+		self.assertEquals( relation.user.id, user.id )
+		self.assertEquals( relation.user, user )
+```
+
+
 
 Take special note to the latter two examples. In test_normalisation2 you can see that when a delicious_set is created for user2, the two users become the same thing because both we're using the same delicious username both times. Something similar happens in test_normalisation3, but there we see that creating a ConceptRelation for user2 actually creates it for the first user because they both behave as if they were the original user.

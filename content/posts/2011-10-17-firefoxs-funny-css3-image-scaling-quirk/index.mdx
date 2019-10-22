@@ -1,29 +1,76 @@
 ---
 layout: post
-title: Firefox's "funny" css3 image scaling quirk
+title: 'Firefox''s "funny" css3 image scaling quirk'
 date: 2011-10-17
-categories: Cascading Style Sheets, CSS, HTML, JavaScript, Mozilla
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: ./img/Selection_044-300x122.png
+hero: ./img/blog-wp-content-uploads-2011-10-Selection_044-300x122.png
 ---
+Last night as I was rewriting the CSS for [postme.me](http://postme.me) from scratch and I was cursing and shouting obscenities under my breath and trying to find a way to punch all of [Mozilla](http://en.wikipedia.org/wiki/Mozilla "Mozilla") in the face over the internet ... I discovered something silly.
 
-Last night as I was rewriting the CSS for [postme.me](http://postme.me) from scratch and I was cursing and shouting obscenities under my breath and trying to find a way to punch all of [Mozilla](http://en.wikipedia.org/wiki/Mozilla "Mozilla") in the face over the internet ... I discovered something silly. \[caption id="attachment_2642" align="alignright" width="300" caption="A quirk"][![](./img/Selection_044-300x122.png "A quirk")](./img/Selection_044.png)\[/caption] Scaling images is something every developer on the web has had to come to grips with. Maybe you were implementing an image gallery and wanted to display thumbnails, maybe you've reimplemented all the scaling algorithms several times. It's surprising how complex something as simple as making sure no dimension is beyond a certain size while maintaining aspect ratio can be. Which is exactly why I wanted to avoid the whole thing this time 'round and let the browser take care of it all.
+
+
+\[caption id="attachment_2642" align="alignright" width="300" caption="A quirk"][![](./img/blog-wp-content-uploads-2011-10-Selection_044-300x122.png "A quirk")](./img/blog-wp-content-uploads-2011-10-Selection_044.png)\[/caption]
+
+
+
+Scaling images is something every developer on the web has had to come to grips with. Maybe you were implementing an image gallery and wanted to display thumbnails, maybe you've reimplemented all the scaling algorithms several times.
+
+
+
+It's surprising how complex something as simple as making sure no dimension is beyond a certain size while maintaining aspect ratio can be. Which is exactly why I wanted to avoid the whole thing this time 'round and let the browser take care of it all.
 
 <!--more-->
 
-Should be pretty simple with CSS right? Turns out it is, here's everything you have to do:
 
-    img {
-       max-width: 300px;
-       max-height: 200px;
-    }
 
-Casting aside concerns such as load times and bandwidth for a moment. This is an elegant solution to a hairy problem. Browsers as it turns out do exactly the right thing - make sure neither dimension is too big and carefully adjusting the other dimension to maintain aspect ratio. But try putting that image into a flexbox div and strange things start happening in firefox. \[caption id="attachment_2642" align="alignnone" width="573" caption="Flexbox and image scaling in FF"][![](http://swizec.com/blog/wp-content/uploads/2011/10/Selection_044.png "Flexbox and image scaling in FF")](http://swizec.com/blog/wp-content/uploads/2011/10/Selection_044.png)\[/caption] What's stranger still is that wrapping that same image into a vanilla div with zero styling not only fixes the image resizing issue, but also maintains centering and other flexbox properties you were originally going for. \[caption id="attachment_2643" align="alignnone" width="448" caption="And then it works"][![](http://swizec.com/blog/wp-content/uploads/2011/10/Selection_045.png "And then it works")](./img/Selection_045.png)\[/caption] You can check it out in action [here](http://swizec.com/code/firefox-scaling-quirk.html). Not sure exactly what's going on here, but I'm glad I managed to find a fix for one strange thing among many. Now I have a website full of very _very_ nonsemantic [HTML](http://en.wikipedia.org/wiki/HTML "HTML") simply because of javascript's quirks. This brings up memories of times before I decided I don't care about IE support anymore ... granted, these features are far from standardized and it's therefore to be expected strangeness might appear. But Firefox is not where I expected such problems to crop up.
+Should be pretty simple with CSS right?
+
+
+
+Turns out it is, here's everything you have to do:
+
+```
+img {
+   max-width: 300px;
+   max-height: 200px;
+}
+```
+
+Casting aside concerns such as load times and bandwidth for a moment. This is an elegant solution to a hairy problem. Browsers as it turns out do exactly the right thing - make sure neither dimension is too big and carefully adjusting the other dimension to maintain aspect ratio.
+
+
+
+But try putting that image into a flexbox div and strange things start happening in firefox.
+
+
+
+\[caption id="attachment_2642" align="alignnone" width="573" caption="Flexbox and image scaling in FF"][![](http://swizec.com/blog/wp-content/uploads/2011/10/Selection_044.png "Flexbox and image scaling in FF")](http://swizec.com/blog/wp-content/uploads/2011/10/Selection_044.png)\[/caption]
+
+
+
+What's stranger still is that wrapping that same image into a vanilla div with zero styling not only fixes the image resizing issue, but also maintains centering and other flexbox properties you were originally going for.
+
+
+
+\[caption id="attachment_2643" align="alignnone" width="448" caption="And then it works"][![](http://swizec.com/blog/wp-content/uploads/2011/10/Selection_045.png "And then it works")](./img/blog-wp-content-uploads-2011-10-Selection_045.png)\[/caption]
+
+
+
+You can check it out in action [here](http://swizec.com/code/firefox-scaling-quirk.html).
+
+
+
+Not sure exactly what's going on here, but I'm glad I managed to find a fix for one strange thing among many. Now I have a website full of very _very_ nonsemantic [HTML](http://en.wikipedia.org/wiki/HTML "HTML") simply because of javascript's quirks.
+
+
+
+This brings up memories of times before I decided I don't care about IE support anymore ... granted, these features are far from standardized and it's therefore to be expected strangeness might appear. But Firefox is not where I expected such problems to crop up.
 
 ###### Related articles
 
--   [CSS3 Flexible Box Layout Explained](http://coding.smashingmagazine.com/2011/09/19/css3-flexible-box-layout-explained/) (coding.smashingmagazine.com)
--   [Firefox for Tablets tailors browsing experience for larger Android displays](http://www.geek.com/articles/gadgets/firefox-for-tablets-tailors-browsing-experience-for-larger-android-displays-20110830/) (geek.com)
--   [10 jQuery Layout Tutorials](http://codingpython.wordpress.com/2011/09/05/1661/) (codingpython.wordpress.com)
+- [CSS3 Flexible Box Layout Explained](http://coding.smashingmagazine.com/2011/09/19/css3-flexible-box-layout-explained/) (coding.smashingmagazine.com)
+- [Firefox for Tablets tailors browsing experience for larger Android displays](http://www.geek.com/articles/gadgets/firefox-for-tablets-tailors-browsing-experience-for-larger-android-displays-20110830/) (geek.com)
+- [10 jQuery Layout Tutorials](http://codingpython.wordpress.com/2011/09/05/1661/) (codingpython.wordpress.com)
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=33f22781-c36e-4740-8b6a-4c2adb7d58c4)](http://www.zemanta.com/ "Enhanced by Zemanta")

@@ -1,20 +1,122 @@
 ---
 layout: post
-title: Week 6, A query on confirmation
+title: 'Week 6, A query on confirmation'
 date: 2013-11-25
-categories: 52papers52weeks, Goodman, Inductive reasoning, Karl Popper, Learning, Marble, Nelson Goodman, Personal, Predicate (grammar), Problem of induction
 author: Swizec Teller
-hero: undefined
+hero: ../../../defaultHero.jpg
 ---
+_\[This post is part of an ongoing challenge to understand 52 papers in 52 weeks. You can read previous entries, [here](http://swizec.com/blog/category/52-papers-in-52-weeks), or subscribe to get notified of new posts by [email](http://swiz.ec/52papers-list)]_
 
-_\[This post is part of an ongoing challenge to understand 52 papers in 52 weeks. You can read previous entries, [here](http://swizec.com/blog/category/52-papers-in-52-weeks), or subscribe to get notified of new posts by [email](http://swiz.ec/52papers-list)]_ You've just found a bowl you know nothing about. You start pulling out marbles and the first 99 marbles are red. Will the 100th marble be red as well? D'oh. But is it really that obvious? How can you be sure? In his 1946 paper, [A Query on Confirmation](https://docs.google.com/viewer?url=http%3A%2F%2Fwordsmatter.caltech.edu%2F%7Efranz%2FConfirmation%2520and%2520Induction%2FPDFs%2FNelson%2520Goodman%2520-%2520A%2520Query%2520on%2520Confirmation.pdf), [Nelson Goodman](http://en.wikipedia.org/wiki/Nelson_Goodman "Nelson Goodman") exposed problems with [inductive reasoning](http://en.wikipedia.org/wiki/Inductive_reasoning "Inductive reasoning"). In particular he looked at the fact that we have no formal way of defining what is admissible evidence and what isn't. The four page paper pokes holes in all earlier definitions of induction.
+
+
+You've just found a bowl you know nothing about. You start pulling out marbles and the first 99 marbles are red. Will the 100th marble be red as well?
+
+
+
+D'oh.
+
+
+
+But is it really that obvious? How can you be sure?
+
+
+
+In his 1946 paper, [A Query on Confirmation](https://docs.google.com/viewer?url=http%3A%2F%2Fwordsmatter.caltech.edu%2F%7Efranz%2FConfirmation%2520and%2520Induction%2FPDFs%2FNelson%2520Goodman%2520-%2520A%2520Query%2520on%2520Confirmation.pdf), [Nelson Goodman](http://en.wikipedia.org/wiki/Nelson_Goodman "Nelson Goodman") exposed problems with [inductive reasoning](http://en.wikipedia.org/wiki/Inductive_reasoning "Inductive reasoning"). In particular he looked at the fact that we have no formal way of defining what is admissible evidence and what isn't. The four page paper pokes holes in all earlier definitions of induction.
 
 ## Tricky predicates
 
-Back to the bowl example. Given a [predicate](http://en.wikipedia.org/wiki/Predicate_%28grammar%29 "Predicate (grammar)") `R`, meaning "the marble is red", we start taking marbles out and continue to do so until Thanskgiving, by which point we've taken out 99 marbles and all were red. We express the evidence as a conjuction: `Ra1 ∧ Ra2 ∧ Ra3 ∧ ... ∧ Ra99`. This is strong evidence that the 100th marble will be red as well. The formally expressed evidence and its projection also go well with our intuition. The more marbles we take out, the more certain we are that our predicate is projectible into the future and the next marble will be red. But not all predicates are that nice to us. Let's take a predicate, `S`, which says _"A marble will be either red and pulled out before Thanksgiving, or pulled out after Thanksgiving and non-red"_. As before, the evidence after 99 marbles can be expressed as a conjunction: `Sa1 ∧ Sa2 ∧ Sa3 ∧ ... ∧ Sa99` But the 100th marble will be pulled out after Thanksgiving. Given our evidence the 100th marble should be non-red. Except we don't really expect that. `S` has gained no credibility from this experiment and as such has very little inductive power. S even feels odd as a predicate despite being a valid predicate in terms of propositional logic. You can always add OR conditions without changing the result. I can't remember from my logic classes which rule exactly we used in this case, but it works out because we're mixing negation correctly on either side of an OR. We're essentially adding a tautology (not thanskgiving OR thanskgiving) with an OR, which means the resulting truth table fully relies on the part we didn't change. The point is, there's a problem in choosing how to define evidence and while in some cases we can easily see a predicate doesn't make sense, there isn't really a good way of deciding what makes a good predicate and what doesn't. The problem extends even beyond pure projectability. The formulation affects our degree of certainty as well. Take for instance an unknown machine that throws out marbles. Exactly every third marble is red. We observe the machine for a while and gather our evidence: `¬Ra1 ∧ ¬Ra2 ∧ Ra3 ∧ ¬Ra4 ∧ ¬Ra5 ∧ Ra6 ∧ ... ∧ ¬Ra94 ∧ ¬Ra95 ∧ Ra96`. Now, what is the degree of confirmation for our prediction that there will now be two non-red marbles and one red marble, `¬Ra97 ∧ ¬Ra98 ∧ Ra99`? It works out to `2/3 * 2/3 * 1/3 == 4/27` (two thirds chance a ball is non-red, one third it's red). This feels much too low because we are intuitively certain that's exactly what's going to happen. We can improve our approach to the problem so it matches our intuitions. Instead of taking the experiment one marble at a time, we can look at it as a sequence of threes. `S` means out of three marbles the first two were non-red and the third was red. Now our evidence can be expressed with a simpler conjunction: `Sb1 ∧ Sb2 ∧ ... ∧ Sb32` Our degree of confirmation for `Sb33` becomes 1. According to the evidence we are completely certain the next three marbles will follow the same pattern. Even though both predicates make sense in this case, their degree of confirmation varies wildly and doesn't have much bearing on reality.
+Back to the bowl example.
+
+
+
+Given a [predicate](http://en.wikipedia.org/wiki/Predicate_%28grammar%29 "Predicate (grammar)") `R`, meaning "the marble is red", we start taking marbles out and continue to do so until Thanskgiving, by which point we've taken out 99 marbles and all were red.
+
+
+
+We express the evidence as a conjuction: `Ra1 ∧ Ra2 ∧ Ra3 ∧ ... ∧ Ra99`. This is strong evidence that the 100th marble will be red as well. The formally expressed evidence and its projection also go well with our intuition.
+
+
+
+The more marbles we take out, the more certain we are that our predicate is projectible into the future and the next marble will be red.
+
+
+
+But not all predicates are that nice to us.
+
+
+
+Let's take a predicate, `S`, which says _"A marble will be either red and pulled out before Thanksgiving, or pulled out after Thanksgiving and non-red"_. As before, the evidence after 99 marbles can be expressed as a conjunction: `Sa1 ∧ Sa2 ∧ Sa3 ∧ ... ∧ Sa99`
+
+
+
+But the 100th marble will be pulled out after Thanksgiving. Given our evidence the 100th marble should be non-red. Except we don't really expect that. `S` has gained no credibility from this experiment and as such has very little inductive power.
+
+
+
+S even feels odd as a predicate despite being a valid predicate in terms of propositional logic. You can always add OR conditions without changing the result. I can't remember from my logic classes which rule exactly we used in this case, but it works out because we're mixing negation correctly on either side of an OR. We're essentially adding a tautology (not thanskgiving OR thanskgiving) with an OR, which means the resulting truth table fully relies on the part we didn't change.
+
+
+
+The point is, there's a problem in choosing how to define evidence and while in some cases we can easily see a predicate doesn't make sense, there isn't really a good way of deciding what makes a good predicate and what doesn't.
+
+
+
+The problem extends even beyond pure projectability. The formulation affects our degree of certainty as well.
+
+
+
+Take for instance an unknown machine that throws out marbles. Exactly every third marble is red.
+
+
+
+We observe the machine for a while and gather our evidence: `¬Ra1 ∧ ¬Ra2 ∧ Ra3 ∧ ¬Ra4 ∧ ¬Ra5 ∧ Ra6 ∧ ... ∧ ¬Ra94 ∧ ¬Ra95 ∧ Ra96`.
+
+
+
+Now, what is the degree of confirmation for our prediction that there will now be two non-red marbles and one red marble, `¬Ra97 ∧ ¬Ra98 ∧ Ra99`?
+
+
+
+It works out to `2/3 * 2/3 * 1/3 == 4/27` (two thirds chance a ball is non-red, one third it's red). This feels much too low because we are intuitively certain that's exactly what's going to happen.
+
+
+
+We can improve our approach to the problem so it matches our intuitions. Instead of taking the experiment one marble at a time, we can look at it as a sequence of threes.
+
+
+
+`S` means out of three marbles the first two were non-red and the third was red. Now our evidence can be expressed with a simpler conjunction: `Sb1 ∧ Sb2 ∧ ... ∧ Sb32`
+
+
+
+Our degree of confirmation for `Sb33` becomes 1. According to the evidence we are completely certain the next three marbles will follow the same pattern.
+
+
+
+Even though both predicates make sense in this case, their degree of confirmation varies wildly and doesn't have much bearing on reality.
 
 ## The conclusion?
 
-Goodman concludes, in a rambling way, that despite the work done by Hempel, [Carnap](http://en.wikipedia.org/wiki/Rudolf_Carnap "Rudolf Carnap"), and Oppenheim, inductive reasoning still has problems. Although the use of induction has been formally defined, there is no formal way of determining which evidence to take into account and which to dismiss. As such, the problem with induction is whether it's got any bearing on true knowledge or not. Can we use induction to gain knowledge of the world, or are we making no more than a guess without _actually_ learning anything? I did some more reading around the topic and found two or three papers written as a direct response to Goodman's Query, which I want to get into eventually. Later work by [Karl Popper](http://en.wikipedia.org/wiki/Karl_Popper "Karl Popper") might have solved the problem of induction by translating it to deduction, but I haven't read into that yet. It's a fascinating topic that's been racking my brain for most of the weekend. The most interesting implication of the [induction problem](http://en.wikipedia.org/wiki/Problem_of_induction "Problem of induction") I can think of, is regarding how we do science. The whole approach of collecting evidence and making conclusions has been put under question for me. I love it when that happens.
+Goodman concludes, in a rambling way, that despite the work done by Hempel, [Carnap](http://en.wikipedia.org/wiki/Rudolf_Carnap "Rudolf Carnap"), and Oppenheim, inductive reasoning still has problems. Although the use of induction has been formally defined, there is no formal way of determining which evidence to take into account and which to dismiss.
+
+
+
+As such, the problem with induction is whether it's got any bearing on true knowledge or not. Can we use induction to gain knowledge of the world, or are we making no more than a guess without _actually_ learning anything?
+
+
+
+I did some more reading around the topic and found two or three papers written as a direct response to Goodman's Query, which I want to get into eventually. Later work by [Karl Popper](http://en.wikipedia.org/wiki/Karl_Popper "Karl Popper") might have solved the problem of induction by translating it to deduction, but I haven't read into that yet.
+
+
+
+It's a fascinating topic that's been racking my brain for most of the weekend.
+
+
+
+The most interesting implication of the [induction problem](http://en.wikipedia.org/wiki/Problem_of_induction "Problem of induction") I can think of, is regarding how we do science. The whole approach of collecting evidence and making conclusions has been put under question for me.
+
+
+
+I love it when that happens.
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=21dbadb6-e437-45ff-aa8f-5f66bcc95de8)](http://www.zemanta.com/?px "Enhanced by Zemanta")

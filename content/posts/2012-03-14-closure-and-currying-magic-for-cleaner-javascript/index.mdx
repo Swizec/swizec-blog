@@ -1,105 +1,158 @@
 ---
 layout: post
-title: Closure and currying magic for cleaner javascript
+title: 'Closure and currying magic for cleaner javascript'
 date: 2012-03-14
-categories: closures, functions, JavaScript, jQuery, Languages, Plug-in (computing), Programming
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: undefined
+hero: ../../../defaultHero.jpg
 ---
+Sometimes you find a piece of [javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"), a perfect piece of javascript, it does _exactly_ what you need! Perfect! You could spend hours, even days, getting something to work and someone's already done it, shared the code on the internets even!
 
-Sometimes you find a piece of [javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"), a perfect piece of javascript, it does _exactly_ what you need! Perfect! You could spend hours, even days, getting something to work and someone's already done it, shared the code on the internets even! Hooray! But ... the code looks something like this:
 
-    // to populate later
-    var data = [], oldData = [], semiOldData = [];
-    var a_switch = "blah";
 
-    function do_something() {
-       // use subset of globals
-    }
+Hooray!
 
-    function something_else() {
-       // use some other globals
-    }
 
-    // etc.
 
-    function update() {
-      // use all of the above
-    }
+But ... the code looks something like this:
 
-The code works ... if you only need to use it once. What if you need two independent widgets? Well, you could take the time to recode all of that so it becomes [purely functional](http://en.wikipedia.org/wiki/Purely_functional "Purely functional"). But that's going to be a problem - the code heavily relies on state. Ok maybe object oriented? Object oriented kind of sucks in javascript and you'd have to recode all of that, have to perfectly understand it etc. Pain in the arse!
+```
+// to populate later
+var data = [], oldData = [], semiOldData = [];
+var a_switch = "blah";
+
+function do_something() {
+   // use subset of globals
+}
+
+function something_else() {
+   // use some other globals
+}
+
+// etc.
+
+function update() {
+  // use all of the above
+}
+```
+
+The code works ... if you only need to use it once. What if you need two independent widgets? Well, you could take the time to recode all of that so it becomes [purely functional](http://en.wikipedia.org/wiki/Purely_functional "Purely functional").
+
+
+
+But that's going to be a problem - the code heavily relies on state. Ok maybe object oriented? Object oriented kind of sucks in javascript and you'd have to recode all of that, have to perfectly understand it etc.
+
+
+
+Pain in the arse!
 
 ## Closure magic
 
 There's a better way - put it in a closure.
 
-    var my_widget = (function (data_function) {
-    // to populate later
-    var data = [], oldData = [], semiOldData = [];
-    var an_index = 1;
+```
+var my_widget = (function (data_function) {
+// to populate later
+var data = [], oldData = [], semiOldData = [];
+var an_index = 1;
 
-    function do_something() {
-       // use subset of globals
-    }
+function do_something() {
+   // use subset of globals
+}
 
-    function something_else() {
-       // use some other globals
-    }
+function something_else() {
+   // use some other globals
+}
 
-    // etc.
+// etc.
 
-    function update(index) {
-      an_index = index;
-      data = data_function();
-      // use all of the above
-    }
+function update(index) {
+  an_index = index;
+  data = data_function();
+  // use all of the above
+}
 
-    return update;
-    });
+return update;
+});
+```
 
-Now you get to create the widget with a simple function call. Hooray! And the function returns its own update function so you can run an update whenever you need. All the state and weirdness is neatly packaged inside the closure, the code itself doesn't need to know anything about the outside state. By changing the update function a little bit you can even affect the internal state of the closure by calling the [curried function](http://en.wikipedia.org/wiki/Currying "Currying").
+Now you get to create the widget with a simple function call. Hooray!
+
+
+
+And the function returns its own update function so you can run an update whenever you need. All the state and weirdness is neatly packaged inside the closure, the code itself doesn't need to know anything about the outside state.
+
+
+
+By changing the update function a little bit you can even affect the internal state of the closure by calling the [curried function](http://en.wikipedia.org/wiki/Currying "Currying").
 
 ## Closures upon [closures](http://en.wikipedia.org/wiki/Closure_%28computer_science%29 "Closure (computer science)")
 
-Here's where it gets even more magical. Stacking closures to achieve true greatness. Code is the best way to explain what I mean ...
+Here's where it gets even more magical. Stacking closures to achieve true greatness.
 
-    // these functions are used to slice up data
-    var slice_functions = {
-            students: function (item) { return !!item.cs_student; },
-            others: function (item) { return !item.cs_student; },
-            everyone: function (item) { return true; }
-        },
-            slice_func = slice_functions.students,
 
-    // these functions provide cleaned up data
-    // all must use the same main slice_func
-            data_functions = {
-                year_vs_pay: function (year) {
-                    var data = DATA.filter(slice_func).filter(function (item) {
-                        return item.years_study == year;
-                    }),
-                    // ...
-                    return fin_data;
-                },
-                study_vs_pay: function (study) {
-                    var data = DATA.filter(slice_func).filter(function (item) {
-                        return item.study_time == study;
-                    }),
-                    // ...
-                    return fin_data;
-                },
+
+Code is the best way to explain what I mean ...
+
+```
+// these functions are used to slice up data
+var slice_functions = {
+        students: function (item) { return !!item.cs_student; },
+        others: function (item) { return !item.cs_student; },
+        everyone: function (item) { return true; }
+    },
+        slice_func = slice_functions.students,
+
+// these functions provide cleaned up data
+// all must use the same main slice_func
+        data_functions = {
+            year_vs_pay: function (year) {
+                var data = DATA.filter(slice_func).filter(function (item) {
+                    return item.years_study == year;
+                }),
                 // ...
+                return fin_data;
+            },
+            study_vs_pay: function (study) {
+                var data = DATA.filter(slice_func).filter(function (item) {
+                    return item.study_time == study;
+                }),
+                // ...
+                return fin_data;
+            },
+            // ...
+```
 
-Those are our data functions, when creating new widgets we can provide them as the _data_function_ argument shown above. Now comes the tricky part - we can externally change the _slice_func_ and all the data_functions (now safely tucked inside closures) **change** their behaviour by using the new slice_function since variables inside closures are pointers rather than copies. Magic! We have reached a situation where all code is tucked neatly inside closures. The closures themselves have no knowledge of the outside world, there are no flags they need to check, no external data anywhere. All they care about is running the data function and doing their thing. And yet, through the magic of closures, we get to globally change their behaviour without worrying about internal state _or_ having to call a specific function to do something on an object. To me this feels cleaner than any abstraction [object oriented programming](http://en.wikipedia.org/wiki/Object-oriented_programming "Object-oriented programming") has ever come up with.
+Those are our data functions, when creating new widgets we can provide them as the _data_function_ argument shown above.
+
+
+
+Now comes the tricky part - we can externally change the _slice_func_ and all the data_functions (now safely tucked inside closures) **change** their behaviour by using the new slice_function since variables inside closures are pointers rather than copies.
+
+
+
+Magic!
+
+
+
+We have reached a situation where all code is tucked neatly inside closures. The closures themselves have no knowledge of the outside world, there are no flags they need to check, no external data anywhere. All they care about is running the data function and doing their thing.
+
+
+
+And yet, through the magic of closures, we get to globally change their behaviour without worrying about internal state _or_ having to call a specific function to do something on an object.
+
+
+
+To me this feels cleaner than any abstraction [object oriented programming](http://en.wikipedia.org/wiki/Object-oriented_programming "Object-oriented programming") has ever come up with.
 
 ###### Related articles
 
--   [Breakout - Connect your Arduino sensors and actuators to javascript](http://www.adafruit.com/blog/2012/03/14/breakout-connect-your-arduino-sensors-and-actuators-to-javascript/) (adafruit.com)
--   [Calling Javascript functions from a Java Applet](http://stackoverflow.com/questions/9684105/calling-javascript-functions-from-a-java-applet) (stackoverflow.com)
--   [The commonest javascript bug](http://swizec.com/blog/the-commonest-javascript-bug/swizec/3740) (swizec.com)
--   [Building Collections Efficiently Using jQuery](http://www.websanova.com/tutorials/jquery/building-collections-efficiently-using-jquery) (websanova.com)
--   [10 Coding Tips to Write Superior jQuery Plugins](http://www.websanova.com/tutorials/jquery/10-coding-tips-to-write-superior-jquery-plugins) (websanova.com)
--   [Good examples for using a Closure in Javascript](http://stackoverflow.com/questions/9058248/good-examples-for-using-a-closure-in-javascript) (stackoverflow.com)
--   [JavaScript Closures Explained](http://lostechies.com/derekgreer/2012/02/17/javascript-closures-explained/) (lostechies.com)
+- [Breakout - Connect your Arduino sensors and actuators to javascript](http://www.adafruit.com/blog/2012/03/14/breakout-connect-your-arduino-sensors-and-actuators-to-javascript/) (adafruit.com)
+- [Calling Javascript functions from a Java Applet](http://stackoverflow.com/questions/9684105/calling-javascript-functions-from-a-java-applet) (stackoverflow.com)
+- [The commonest javascript bug](http://swizec.com/blog/the-commonest-javascript-bug/swizec/3740) (swizec.com)
+- [Building Collections Efficiently Using jQuery](http://www.websanova.com/tutorials/jquery/building-collections-efficiently-using-jquery) (websanova.com)
+- [10 Coding Tips to Write Superior jQuery Plugins](http://www.websanova.com/tutorials/jquery/10-coding-tips-to-write-superior-jquery-plugins) (websanova.com)
+- [Good examples for using a Closure in Javascript](http://stackoverflow.com/questions/9058248/good-examples-for-using-a-closure-in-javascript) (stackoverflow.com)
+- [JavaScript Closures Explained](http://lostechies.com/derekgreer/2012/02/17/javascript-closures-explained/) (lostechies.com)
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=dd5a4e07-700e-44df-b113-8195cf2d3133)](http://www.zemanta.com/ "Enhanced by Zemanta")

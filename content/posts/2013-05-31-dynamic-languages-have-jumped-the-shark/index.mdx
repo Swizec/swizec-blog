@@ -1,28 +1,115 @@
 ---
 layout: post
-title: Dynamic languages have jumped the shark
+title: 'Dynamic languages have jumped the shark'
 date: 2013-05-31
-categories: Dynamic programming language, Java, JavaScript, Read–eval–print loop, Ruby, Scala, Type system
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: ./img/jJuq5mNjQbC0ZJrdJYms
+hero: ../../../defaultHero.jpg
 ---
+![Jumping the shark](https://www.filepicker.io/api/file/jJuq5mNjQbC0ZJrdJYms)
 
-![Jumping the shark](./img/jJuq5mNjQbC0ZJrdJYms) I still remember the heated arguments I'd have with my high school professors about dynamic languages. What do you mean python isn't a _real_ language? What's wrong with you!? [Dynamic languages](http://en.wikipedia.org/wiki/Dynamic_programming_language "Dynamic programming language") are the coolest thing ever! Some kids fight about curfews and school rules, I fought about [scripting languages](http://en.wikipedia.org/wiki/Scripting_language "Scripting language") being just as "real" as the likes of C and Pascal. That was ten years ago - dynamic languages were all the rage and I just started exploring the world of programming beyond what my mentors laid out in front of me. Nimble scripting languages sounded like a promised land compared to the musky static languages of yore. No longer would you be forced to think about data types all the time, no longer would your code be littered with the `int` and `char` and `double` of the world, no more stifling constraints on using a variable once it's been defined. Just a pure expression of thought. Programmer and problem at peace with one another, no angry compiler will get in your way.
+
+
+I still remember the heated arguments I'd have with my high school professors about dynamic languages. What do you mean python isn't a _real_ language? What's wrong with you!? [Dynamic languages](http://en.wikipedia.org/wiki/Dynamic_programming_language "Dynamic programming language") are the coolest thing ever!
+
+
+
+Some kids fight about curfews and school rules, I fought about [scripting languages](http://en.wikipedia.org/wiki/Scripting_language "Scripting language") being just as "real" as the likes of C and Pascal. That was ten years ago - dynamic languages were all the rage and I just started exploring the world of programming beyond what my mentors laid out in front of me.
+
+
+
+Nimble scripting languages sounded like a promised land compared to the musky static languages of yore. No longer would you be forced to think about data types all the time, no longer would your code be littered with the `int` and `char` and `double` of the world, no more stifling constraints on using a variable once it's been defined.
+
+
+
+Just a pure expression of thought. Programmer and problem at peace with one another, no angry compiler will get in your way.
 
 ## The promised land tumbles
 
-Yesterday I realised dynamic languages have jumped the shark. The evidence has been mounting for a while, but yesterday's mishap with [Ruby on Rails](http://rubyonrails.org "Ruby on Rails") sealed the deal. Did you know that Rails environment settings, the `ENV` hash, only accepts string settings? I wanted to make a boolean flag. The only solution was to make a string `'false'`, then do a [string comparison](http://en.wikipedia.org/wiki/Comparison_of_programming_languages_%28string_functions%29 "Comparison of programming languages (string functions)") when needed. There isn't even a native way to cast a string to a boolean. Programmer left completely to his own devices. Out in the rain. With no chance of escape. The closest Ruby will let you to casting a string to a boolean is using something like `!!'blah'`, but all strings evaluate to `true`. Even empty strings. Useless. The situation is just as bad in other dynamic languages. [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") is particularly famous for its weird handling of data types.
+Yesterday I realised dynamic languages have jumped the shark. The evidence has been mounting for a while, but yesterday's mishap with [Ruby on Rails](http://rubyonrails.org "Ruby on Rails") sealed the deal.
 
-> And this, of course, evaluates to the string "fail".(!\[]+\[])\[+\[]]+(!\[]+\[])\[+!+\[]]+(\[!\[]]+\[]\[\[]])\[+!+\[]+\[+\[]]]+(!\[]+\[])\[!+\[]+!+\[]]; — Marcus Lagergren (@lagergren) [May 23, 2013](https://twitter.com/lagergren/status/337484475204255744)
 
-Try it. It works. Part of the code returns `undefined`, which is magically transformed into a string, then other parts of the code select particular characters from that string ... the mind reels in disbelief. I don't want to remember the atrocities I've committed in [PHP](http://www.php.net "PHP") just to convince it that yes, I do know what I'm doing, yes I do want that variable to behave like it's a particular type. Python's strong typing at least ensures we can't add a string to an integer, but there's still the odd `5/float(2)` type of hack. Some people suggest going as far as littering your code with assert statements to ensure your team mates can't do stupid things with your functions. This is the exact opposite of what I was promised as an aspiring 15 year old coder.
+
+Did you know that Rails environment settings, the `ENV` hash, only accepts string settings? I wanted to make a boolean flag. The only solution was to make a string `'false'`, then do a [string comparison](http://en.wikipedia.org/wiki/Comparison_of_programming_languages_%28string_functions%29 "Comparison of programming languages (string functions)") when needed. There isn't even a native way to cast a string to a boolean.
+
+
+
+Programmer left completely to his own devices. Out in the rain. With no chance of escape.
+
+
+
+The closest Ruby will let you to casting a string to a boolean is using something like `!!'blah'`, but all strings evaluate to `true`. Even empty strings.
+
+
+
+Useless.
+
+
+
+The situation is just as bad in other dynamic languages. [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") is particularly famous for its weird handling of data types.
+
+> And this, of course, evaluates to the string "fail".(!\[]+\[])\[+\[]]+(!\[]+\[])\[+!+\[]]+(\[!\[]]+\[]\[\[]])\[+!+\[]+\[+\[]]]+(!\[]+\[])\[!+\[]+!+\[]];
+>
+>
+>
+> — Marcus Lagergren (@lagergren) [May 23, 2013](https://twitter.com/lagergren/status/337484475204255744)
+
+Try it. It works.
+
+
+
+Part of the code returns `undefined`, which is magically transformed into a string, then other parts of the code select particular characters from that string ... the mind reels in disbelief.
+
+
+
+I don't want to remember the atrocities I've committed in [PHP](http://www.php.net "PHP") just to convince it that yes, I do know what I'm doing, yes I do want that variable to behave like it's a particular type.
+
+
+
+Python's strong typing at least ensures we can't add a string to an integer, but there's still the odd `5/float(2)` type of hack. Some people suggest going as far as littering your code with assert statements to ensure your team mates can't do stupid things with your functions.
+
+
+
+This is the exact opposite of what I was promised as an aspiring 15 year old coder.
 
 ## Why we wanted dynamic languages in the first place
 
-![](./img/8xojSjy5S9CpVtWes2dl) Dynamic languages promised an ease of development, a sense of thinking about solving the problem instead of worrying about talking to the computer. And the world fell in love. Instead, dynamic languages delivered a hodgepodge so wibbly-wobbly it always forces you to think about data types, even about the particular quirks of how this particular language handles certain conversions. Always at the worst possible moment. Nothing is true anymore, you can't rely on a single thing; without automated tests you're flying blind, relying on nothing but your raw coding prowess to stave off the always imminent failure. God forbid one of your team mates does something stupid. But we did get away from the whole `int a` nonsense. And we did get fancy [REPL](http://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop "Read–eval–print loop")'s. And we did get away from the write-compile-run cycle. But what have the Romans ever done for us!
+![](https://www.filepicker.io/api/file/8xojSjy5S9CpVtWes2dl)
+
+
+
+Dynamic languages promised an ease of development, a sense of thinking about solving the problem instead of worrying about talking to the computer. And the world fell in love.
+
+
+
+Instead, dynamic languages delivered a hodgepodge so wibbly-wobbly it always forces you to think about data types, even about the particular quirks of how this particular language handles certain conversions. Always at the worst possible moment. Nothing is true anymore, you can't rely on a single thing; without automated tests you're flying blind, relying on nothing but your raw coding prowess to stave off the always imminent failure.
+
+
+
+God forbid one of your team mates does something stupid.
+
+
+
+But we did get away from the whole `int a` nonsense. And we did get fancy [REPL](http://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop "Read–eval–print loop")'s. And we did get away from the write-compile-run cycle.
+
+
+
+But what have the Romans ever done for us!
 
 ## Static is better now
 
-Here's the thing, though, there is now a whole new class of even awesomer languages - the modern statically strong typed languages. [Scala](http://www.scala-lang.org/ "Scala (programming language)") and [Haskell](http://haskell.org) have everything we've always wanted from a dynamic language. You never have to spell out a variable's name, the compiler often knows better than you do anyway, and there is a REPL you can use to prototype things. But unlike dynamic languages you can rely on _everything_. All the benefits of [static type](http://en.wikipedia.org/wiki/Type_system "Type system") analysis, most of the benefits of dynamic languages. Hell, you can get rid of the write-compile-run cycle with a simple bash script that compiles your code before running it. Just remember, static languages are not just C and Java anymore. The world has moved on while we were stuck in the dynamic hell hole for the past ten years.
+Here's the thing, though, there is now a whole new class of even awesomer languages - the modern statically strong typed languages.
+
+
+
+[Scala](http://www.scala-lang.org/ "Scala (programming language)") and [Haskell](http://haskell.org) have everything we've always wanted from a dynamic language. You never have to spell out a variable's name, the compiler often knows better than you do anyway, and there is a REPL you can use to prototype things.
+
+
+
+But unlike dynamic languages you can rely on _everything_. All the benefits of [static type](http://en.wikipedia.org/wiki/Type_system "Type system") analysis, most of the benefits of dynamic languages. Hell, you can get rid of the write-compile-run cycle with a simple bash script that compiles your code before running it.
+
+
+
+Just remember, static languages are not just C and Java anymore. The world has moved on while we were stuck in the dynamic hell hole for the past ten years.
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=83b08eef-ef3e-4b96-9d39-cf7b256a3e51)](http://www.zemanta.com/?px "Enhanced by Zemanta")

@@ -1,21 +1,43 @@
 ---
 layout: post
-title: NaN does not equal NaN
+title: 'NaN does not equal NaN'
 date: 2011-09-27
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: undefined
+hero: ../../../defaultHero.jpg
 ---
-
 For the second time today I noticed someone on twitter berating javascript over this little connundrum:
 
-    > NaN == NaN
-    false
-    > NaN === NaN
-    false
-    > NaN !== NaN
-    true
-    >
+```
+> NaN == NaN
+false
+> NaN === NaN
+false
+> NaN !== NaN
+true
+>
+```
 
-Counterintuitively, it would seem that NaN does not equal NaN. But let's think about this for a second. Is it really that strange or just a symptom of what the logical symbol NaN actually stands for? Thing is, NaN stands for "Not a Number" and if memory serves comes right out of [IEEE754](http://en.wikipedia.org/wiki/IEEE_754-2008 "IEEE 754-2008") [floating point arithmetic](http://en.wikipedia.org/wiki/Floating_point "Floating point"). It's very handy for representing things like 0/0, different kinds of infinity and operations involving infinities. In short, it represents an _undefinable number_. Now, what could possibly be the result of comparing two undefinable numbers? Mathematically, I have no idea what the result should be ... probably something we simply agreed upon? Like how the 0th power is 1. But in my naive understanding of these things it should produce random results. However, [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") is kind enough to always claim that NaN does not equal NaN, if for naught else than to remind us we are trying to do something stupid. Can anyone tell me if other languages handle this differently? Just produce an error of some sort? Also, please share this post with your local JavaScript newbie, I die a little every time I see that sort of tweet.
+Counterintuitively, it would seem that NaN does not equal NaN. But let's think about this for a second. Is it really that strange or just a symptom of what the logical symbol NaN actually stands for?
+
+
+
+Thing is, NaN stands for "Not a Number" and if memory serves comes right out of [IEEE754](http://en.wikipedia.org/wiki/IEEE_754-2008 "IEEE 754-2008") [floating point arithmetic](http://en.wikipedia.org/wiki/Floating_point "Floating point"). It's very handy for representing things like 0/0, different kinds of infinity and operations involving infinities. In short, it represents an _undefinable number_.
+
+
+
+Now, what could possibly be the result of comparing two undefinable numbers?
+
+
+
+Mathematically, I have no idea what the result should be ... probably something we simply agreed upon? Like how the 0th power is 1. But in my naive understanding of these things it should produce random results. However, [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") is kind enough to always claim that NaN does not equal NaN, if for naught else than to remind us we are trying to do something stupid.
+
+
+
+Can anyone tell me if other languages handle this differently? Just produce an error of some sort?
+
+
+
+Also, please share this post with your local JavaScript newbie, I die a little every time I see that sort of tweet.
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=fef0bbc6-0acd-4e80-b24d-0faea5e230f1)](http://www.zemanta.com/ "Enhanced by Zemanta")

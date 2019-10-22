@@ -1,23 +1,98 @@
 ---
 layout: post
-title: The strange world of getting user data onto a piece of paper
+title: 'The strange world of getting user data onto a piece of paper'
 date: 2011-10-24
-categories: Data Formats, Google Docs, Internet meme, Linux
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: ./img/5059286742_eb649aaae3_m5.jpg
+hero: ./img/blog-wp-content-uploads-2011-10-5059286742_eb649aaae3_m5.jpg
 ---
+When was the last time you tried to put something digital onto a piece of paper?
 
-When was the last time you tried to put something digital onto a piece of paper? It's not very difficult right? As it shouldn't be, we live in the future! Take a document, click print and voila, the magical elves in a plastic box do their magic and you get a lovely piece of paper with some crap on it.
 
-\[caption id="" align="alignright" width="240" caption="Image by JimYounkin via Flickr"][![trollface](./img/5059286742_eb649aaae3_m5.jpg "trollface")](http://www.flickr.com/photos/37996586299@N01/5059286742)\[/caption]
 
-If you don't have a box of elves of your own, you take it to the nearest person who does, pay them the price of a tenth of gum and they do it for you. But sometimes you want to do this in a more sophisticated manner. Perhaps your target [paper size](http://en.wikipedia.org/wiki/Paper_size "Paper size") isn't A4, perhaps you're doing something that can't just be whisked up in your favourite Word clone. Maybe, just maybe, you aren't producing the content, maybe you have a form somewhere on the interwebs that people can fill out. As I found out last night and this morning, that bit isn't too simple. Last night I set out on the monumental task of preparing the second batch of [Postme.me's](http://postme.me) for printing. I was once told that everybody in the world uses something called [InDesign](http://www.adobe.com/products/indesign/main.html "Adobe InDesign") to do this, hell, I used it to set up the first batch. But it was 18 cards this time, that's a bit much to do by hand isn't it? [I'm a lazy programmer](http://swizec.com/blog/programmers-are-fucking-lazy/swizec/2648 "Programmers are fucking lazy") after all and my kind cowers before menial tasks like nobody's business! _I will automate this!,_ I thought. The fuck I will. After spending five minutes getting the database to export as a shiny [XML](http://en.wikipedia.org/wiki/XML "XML") I spent upwards of two hours trying to figure out how to convince InDesign to import said XML. Yes, it does haz the capabilities, no they don't help ... or maybe I just can't think like a designer and that's why nothing made sense. I mean come on, you tag all the fields, you get all the data to import and be properly tagged ... but it just does not want to fill the template. It could at least help with the menial tasks. Nope, _Fuck you! I will reset all your fonts and colours to a magical default._ Problem? InDesign was trolling me on purpose, I swear! Oh but what's this, browsers have a shiny print to PDF feature don't they? Maybe I can just export as nice [HTML](http://en.wikipedia.org/wiki/HTML "HTML") and get a browser to print it into a PDF and be done with it. Yeah, fuck that too. Turns out no matter how hard I tried it is virtually impossible to convince any browser to print without margins. Even setting up a custom paper size that explicitly defines zero margins ... nope. The closest browser to come to cracking the problem was Chromium on [Linux](http://www.kernel.org/ "Linux") ... things only got screwy around page 15 ... and only got worse henceforth. Chromium on Mac indeed has an actual working marginless feature. But it only supports A4 directly, use the OS's print screen and the marginless feature magically vanishes, but you do get different paper sizes. And it only gets worse. Tried a number of different programs and libraries to export a piece of nicely formatted modern-ish HTML to PDF and nothing worked. Either the paper sizes were off (but the margins were alright) or the font didn't render correctly. In the end, after at least five hours of trying different things, I broke down and did it by hand. Copy pasted all the images and all the text into an InDesign file ... ... it took 20 minutes. Hat's off to all the designers of the world who do this stuff on a daily basis.
+It's not very difficult right? As it shouldn't be, we live in the future! Take a document, click print and voila, the magical elves in a plastic box do their magic and you get a lovely piece of paper with some crap on it.
+
+
+
+\[caption id="" align="alignright" width="240" caption="Image by JimYounkin via Flickr"][![trollface](./img/blog-wp-content-uploads-2011-10-5059286742_eb649aaae3_m5.jpg "trollface")](http://www.flickr.com/photos/37996586299@N01/5059286742)\[/caption]
+
+
+
+If you don't have a box of elves of your own, you take it to the nearest person who does, pay them the price of a tenth of gum and they do it for you.
+
+
+
+But sometimes you want to do this in a more sophisticated manner. Perhaps your target [paper size](http://en.wikipedia.org/wiki/Paper_size "Paper size") isn't A4, perhaps you're doing something that can't just be whisked up in your favourite Word clone. Maybe, just maybe, you aren't producing the content, maybe you have a form somewhere on the interwebs that people can fill out.
+
+
+
+As I found out last night and this morning, that bit isn't too simple.
+
+
+
+Last night I set out on the monumental task of preparing the second batch of [Postme.me's](http://postme.me) for printing. I was once told that everybody in the world uses something called [InDesign](http://www.adobe.com/products/indesign/main.html "Adobe InDesign") to do this, hell, I used it to set up the first batch.
+
+
+
+But it was 18 cards this time, that's a bit much to do by hand isn't it? [I'm a lazy programmer](http://swizec.com/blog/programmers-are-fucking-lazy/swizec/2648 "Programmers are fucking lazy") after all and my kind cowers before menial tasks like nobody's business!
+
+
+
+_I will automate this!,_ I thought.
+
+
+
+The fuck I will.
+
+
+
+After spending five minutes getting the database to export as a shiny [XML](http://en.wikipedia.org/wiki/XML "XML") I spent upwards of two hours trying to figure out how to convince InDesign to \\import said XML. Yes, it does haz the capabilities, no they don't help ... or maybe I just can't think like a designer and that's why nothing made sense.
+
+
+
+I mean come on, you tag all the fields, you get all the data to \\import and be properly tagged ... but it just does not want to fill the template. It could at least help with the menial tasks. Nope, _Fuck you! I will reset all your fonts and colours to a magical default._ Problem?
+
+
+
+InDesign was trolling me on purpose, I swear!
+
+
+
+Oh but what's this, browsers have a shiny print to PDF feature don't they? Maybe I can just export as nice [HTML](http://en.wikipedia.org/wiki/HTML "HTML") and get a browser to print it into a PDF and be done with it.
+
+
+
+Yeah, fuck that too. Turns out no matter how hard I tried it is virtually impossible to convince any browser to print without margins. Even setting up a custom paper size that explicitly defines zero margins ... nope. The closest browser to come to cracking the problem was Chromium on [Linux](http://www.kernel.org/ "Linux") ... things only got screwy around page 15 ... and only got worse henceforth.
+
+
+
+Chromium on Mac indeed has an actual working marginless feature. But it only supports A4 directly, use the OS's print screen and the marginless feature magically vanishes, but you do get different paper sizes.
+
+
+
+And it only gets worse.
+
+
+
+Tried a number of different programs and libraries to export a piece of nicely formatted modern-ish HTML to PDF and nothing worked. Either the paper sizes were off (but the margins were alright) or the font didn't render correctly.
+
+
+
+In the end, after at least five hours of trying different things, I broke down and did it by hand. Copy pasted all the images and all the text into an InDesign file ...
+
+
+
+... it took 20 minutes.
+
+
+
+Hat's off to all the designers of the world who do this stuff on a daily basis.
 
 ###### Related articles
 
--   [A Web Developer's Guide To Adobe InDesign](http://tc.eserver.org/38079.html) (tc.eserver.org)
--   [Trollface Approved](http://ugliesttattoos.failblog.org/2011/10/23/funny-tattoos-trollface-approved/) (ugliesttattoos.failblog.org)
--   [Featured Meme: Rage Comic Memes](http://teenwebzine.wordpress.com/2011/05/18/featured-meme-rage-comic-memes/) (teenwebzine.wordpress.com)
--   [Trollface](http://thegreatflashbang.wordpress.com/2011/10/16/874/) (thegreatflashbang.wordpress.com)
+- [A Web Developer's Guide To Adobe InDesign](http://tc.eserver.org/38079.html) (tc.eserver.org)
+- [Trollface Approved](http://ugliesttattoos.failblog.org/2011/10/23/funny-tattoos-trollface-approved/) (ugliesttattoos.failblog.org)
+- [Featured Meme: Rage Comic Memes](http://teenwebzine.wordpress.com/2011/05/18/featured-meme-rage-comic-memes/) (teenwebzine.wordpress.com)
+- [Trollface](http://thegreatflashbang.wordpress.com/2011/10/16/874/) (thegreatflashbang.wordpress.com)
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=38b6b8c0-faa8-4a03-8cc1-ecbcf3788301)](http://www.zemanta.com/ "Enhanced by Zemanta")

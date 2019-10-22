@@ -1,40 +1,133 @@
 ---
 layout: post
-title: My very own daily WTF
+title: 'My very own daily WTF'
 date: 2013-01-10
-categories: Development Tools, HTML, Java, JavaScript, jQuery, Languages, Programming
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: ./img/8364284798_807d9de35e_m.jpg
+hero: ./img/8226-8364284798_807d9de35e_m.jpg
 ---
+People often hire me to grab their [codebase](http://en.wikipedia.org/wiki/Codebase "Codebase") by the horns and introduce a modicum of engineering standards. Eventually I get to implement new features, but they usually come at the cost of heavy refactoring before I can even get started.
 
-People often hire me to grab their [codebase](http://en.wikipedia.org/wiki/Codebase "Codebase") by the horns and introduce a modicum of engineering standards. Eventually I get to implement new features, but they usually come at the cost of heavy refactoring before I can even get started. \[caption id="" align="alignright" width="159"][![JavaScript](./img/8364284798_807d9de35e_m.jpg "JavaScript")](http://www.flickr.com/photos/48080704@N06/8364284798) JavaScript (Photo credit: Johannes_wl)\[/caption] A good month ago a founder emails me _"Hey, I have this product, customer development at a point where big customers are waiting with fat checks to use product. I can't even get it to run, original developers nowhere to be seen. Can you help?"_ The original developers fleeing was a bit of a red flag, but the product was right up my alley: node.js, mongodb, plenty of real-time data flow and speed requirements for updating the UI. The names of waiting users made my ears perk up as well. I'll do it! How bad could it be?
+
+
+\[caption id="" align="alignright" width="159"][![JavaScript](./img/8226-8364284798_807d9de35e_m.jpg "JavaScript")](http://www.flickr.com/photos/48080704@N06/8364284798) JavaScript (Photo credit: Johannes_wl)\[/caption]
+
+
+
+A good month ago a founder emails me _"Hey, I have this product, customer development at a point where big customers are waiting with fat checks to use product. I can't even get it to run, original developers nowhere to be seen. Can you help?"_
+
+
+
+The original developers fleeing was a bit of a red flag, but the product was right up my alley: node.js, mongodb, plenty of real-time data flow and speed requirements for updating the UI. The names of waiting users made my ears perk up as well.
+
+
+
+I'll do it! How bad could it be?
 
 ## A daily dose of WTF
 
-It could be very bad. Part of the project is done in [Java](http://www.oracle.com/technetwork/java/ "Java (programming language)"). This makes sense, strict typing is the only logical decision considering what the codebase is doing. Everything else is done in [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"). The communication protocol between Java and server JavaScript and frontend JavaScript ... well that's got a ban on parameter names being longer than three characters. Okay, saving bandwidth, right? We're talking about a high volume of data so let's keep those json objects small. That's where things get tricky. Because the core protocol only features names that are 3 characters long, so does the database. And because the database is full of such objects, guess what happens next? That's right! Most of the codebase is an incoherent mess of variable names are no longer than 3 characters. The habit leaks beyond variables touching the data. Why write _label_ when you can have _lbl_? And so on and on ... in almost two months of working on this codebase, I still have no idea what most of the names actually mean. I use them as pictograms describing vague concepts. I'm starting to get a feel for how they fit together. It gets better. How do you make a [boolean value](http://en.wikipedia.org/wiki/Boolean_data_type "Boolean data type") fit this protocol? By doing this:
+It could be very bad.
 
-    function fix(boolean_value) {
-        return boolean_value ? 'tru' : 'fls';
-    }
 
-So much for saving space. Encode 1bit values into 24bit strings! Booyah! Oh I wish that was all, here's another interesting thing I discovered ... this is repeated through much of the code and I don't dare touch it because I don't know what crazy things will break. Did I mention there's no [unit tests](http://en.wikipedia.org/wiki/Unit_testing "Unit testing")? How about that I'm discouraged for writing them? Yep. But hey, it's not like this application needs to go through a proper security audit when it's done ... oh wait, it does.
 
-    if (!thing || thing === 'null') ...
+Part of the project is done in [Java](http://www.oracle.com/technetwork/java/ "Java (programming language)"). This makes sense, strict typing is the only logical decision considering what the codebase is doing.
 
-Lovely huh? _Of course_ null is encoded as a string. How else would you do it? I try to convince myself there was a good reason for this originally. But I could live with all of that, some of it might have sounded reasonable at the time, or might simply be a result of deluded optimisations and whatnot. It's bad, but something I can live with. Here's the stuff that really makes my life difficult:
 
-    function getPurple(cake) {
-       cake.color = global_color_setting;
-       return cake;
-    }
 
-I don't know how to even _begin_ refactoring that so it makes sense ... it's just ... what? Who does that!? However, the worst thing, the absolute worst thing is that some time in the past this application was moved from traditional [jQuery](http://jquery.com/ "JQuery") to [Backbone](http://backbonejs.org/). Nothing wrong with that, great move I'd say, I love Backbone! They forgot to move most things. A lot of times Backbone is just a thin wrapper around old stuff. Most of the code doesn't even leverage Backbone and there's still a bunch of _$.ajax_ peppered everywhere. And don't even get me started on _"Hey, we changed name X in the protocol, can you change all references to that please"_in a weakly typed language with no unit tests ... fun times. I never know when something's going to blow up because I forgot to click on a button when testing. Grep only gets you so far ...
+Everything else is done in [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"). The communication protocol between Java and server JavaScript and frontend JavaScript ... well that's got a ban on parameter names being longer than three characters.
+
+
+
+Okay, saving bandwidth, right? We're talking about a high volume of data so let's keep those json objects small.
+
+
+
+That's where things get tricky.
+
+
+
+Because the core protocol only features names that are 3 characters long, so does the database. And because the database is full of such objects, guess what happens next? That's right! Most of the codebase is an incoherent mess of variable names are no longer than 3 characters.
+
+
+
+The habit leaks beyond variables touching the data.
+
+
+
+Why write _label_ when you can have _lbl_? And so on and on ... in almost two months of working on this codebase, I still have no idea what most of the names actually mean. I use them as pictograms describing vague concepts. I'm starting to get a feel for how they fit together.
+
+
+
+It gets better.
+
+
+
+How do you make a [boolean value](http://en.wikipedia.org/wiki/Boolean_data_type "Boolean data type") fit this protocol? By doing this:
+
+```
+function fix(boolean_value) {
+    return boolean_value ? 'tru' : 'fls';
+}
+```
+
+So much for saving space. Encode 1bit values into 24bit strings! Booyah!
+
+
+
+Oh I wish that was all, here's another interesting thing I discovered ... this is repeated through much of the code and I don't dare touch it because I don't know what crazy things will break.
+
+
+
+Did I mention there's no [unit tests](http://en.wikipedia.org/wiki/Unit_testing "Unit testing")? How about that I'm discouraged for writing them? Yep. But hey, it's not like this application needs to go through a proper security audit when it's done ... oh wait, it does.
+
+```
+if (!thing || thing === 'null') ...
+```
+
+Lovely huh? _Of course_ null is encoded as a string. How else would you do it?
+
+
+
+I try to convince myself there was a good reason for this originally.
+
+
+
+But I could live with all of that, some of it might have sounded reasonable at the time, or might simply be a result of deluded optimisations and whatnot. It's bad, but something I can live with.
+
+
+
+Here's the stuff that really makes my life difficult:
+
+```
+function getPurple(cake) {
+   cake.color = global_color_setting;
+   return cake;
+}
+```
+
+I don't know how to even _begin_ refactoring that so it makes sense ... it's just ... what? Who does that!?
+
+
+
+However, the worst thing, the absolute worst thing is that some time in the past this application was moved from traditional [jQuery](http://jquery.com/ "JQuery") to [Backbone](http://backbonejs.org/). Nothing wrong with that, great move I'd say, I love Backbone!
+
+
+
+They forgot to move most things. A lot of times Backbone is just a thin wrapper around old stuff. Most of the code doesn't even leverage Backbone and there's still a bunch of _$.ajax_ peppered everywhere.
+
+
+
+And don't even get me started on _"Hey, we changed name X in the protocol, can you change all references to that please"_in a weakly typed language with no unit tests ... fun times. I never know when something's going to blow up because I forgot to click on a button when testing.
+
+
+
+Grep only gets you so far ...
 
 ###### Related articles
 
--   [![](http://i.zemanta.com/136156352_80_80.jpg)](http://timelessrepo.com/json-isnt-a-javascript-subset/)[JSON: The JavaScript subset that isn't](http://timelessrepo.com/json-isnt-a-javascript-subset/)
--   [![](http://i.zemanta.com/noimg_102_80_80.jpg)](http://www.digitalsurgeons.com/blog/learning-javascript-basics-tutorial/)[Understanding JavaScript Basics](http://www.digitalsurgeons.com/blog/learning-javascript-basics-tutorial/)
--   [![](http://i.zemanta.com/noimg_66_80_80.jpg)](http://blog.mariosangiorgio.com/2013/01/08/a-developers-checklist/)[A developer's checklist](http://blog.mariosangiorgio.com/2013/01/08/a-developers-checklist/)
--   [![](http://i.zemanta.com/135076493_80_80.jpg)](http://shop.oreilly.com/product/0636920027713.do)[JavaScript Enlightenment](http://shop.oreilly.com/product/0636920027713.do)
+- [![](http://i.zemanta.com/136156352_80_80.jpg)](http://timelessrepo.com/json-isnt-a-javascript-subset/)[JSON: The JavaScript subset that isn't](http://timelessrepo.com/json-isnt-a-javascript-subset/)
+- [![](http://i.zemanta.com/noimg_102_80_80.jpg)](http://www.digitalsurgeons.com/blog/learning-javascript-basics-tutorial/)[Understanding JavaScript Basics](http://www.digitalsurgeons.com/blog/learning-javascript-basics-tutorial/)
+- [![](http://i.zemanta.com/noimg_66_80_80.jpg)](http://blog.mariosangiorgio.com/2013/01/08/a-developers-checklist/)[A developer's checklist](http://blog.mariosangiorgio.com/2013/01/08/a-developers-checklist/)
+- [![](http://i.zemanta.com/135076493_80_80.jpg)](http://shop.oreilly.com/product/0636920027713.do)[JavaScript Enlightenment](http://shop.oreilly.com/product/0636920027713.do)
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=e46fb08c-1158-4e30-ac78-8a27e95de93d)](http://www.zemanta.com/?px "Enhanced by Zemanta")

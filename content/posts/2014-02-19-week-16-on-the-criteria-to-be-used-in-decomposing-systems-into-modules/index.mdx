@@ -1,51 +1,145 @@
 ---
 layout: post
-title: Week 16: On the criteria to be used in decomposing systems into modules
+title: 'Week 16: On the criteria to be used in decomposing systems into modules'
 date: 2014-02-19
-categories: 52papers52weeks, Information hiding, Languages, Learning, Modules, Personal, Programming
 author: Swizec Teller
-hero: undefined
+hero: ../../../defaultHero.jpg
 ---
+_\[This post is part of an ongoing challenge to understand 52 papers in 52 weeks. You can read previous entries, [here](http://swizec.com/blog/category/52-papers-in-52-weeks), or subscribe to be notified of new posts by [email](http://swiz.ec/52papers-list)]_
 
-_\[This post is part of an ongoing challenge to understand 52 papers in 52 weeks. You can read previous entries, [here](http://swizec.com/blog/category/52-papers-in-52-weeks), or subscribe to be notified of new posts by [email](http://swiz.ec/52papers-list)]_ In December 1972, David L. Parnas published [_On The Criteria To Be Used In Decomposing Systems Into Modules_](https://www.cs.umd.edu/class/spring2003/cmsc838p/Design/criteria.pdf) and set the stage for the concept of [information hiding](http://en.wikipedia.org/wiki/Information_hiding "Information hiding") in systems design. Information hiding is one the main principles used in modern programming so this paper is one big d'oh. But remember, this was written **42 years ago**. Then again, I run into code that forces me to intimately understand its internals on a daily basis. Pay attention!
+
+
+In December 1972, David L. Parnas published [_On The Criteria To Be Used In Decomposing Systems Into Modules_](https://www.cs.umd.edu/class/spring2003/cmsc838p/Design/criteria.pdf) and set the stage for the concept of [information hiding](http://en.wikipedia.org/wiki/Information_hiding "Information hiding") in systems design.
+
+
+
+Information hiding is one the main principles used in modern programming so this paper is one big d'oh. But remember, this was written **42 years ago**.
+
+
+
+Then again, I run into code that forces me to intimately understand its internals on a daily basis. Pay attention!
 
 ## What is modularization
 
 [Modularization](http://en.wikipedia.org/wiki/Modularity "Modularity") gives us three main benefits:
 
-1.  shorter dev time - teams can work in parallel
-2.  flexibility - you can change parts of system without affecting others
-3.  comprehensibility - you can understand one piece at a time
+1. shorter dev time - teams can work in parallel
+2. flexibility - you can change parts of system without affecting others
+3. comprehensibility - you can understand one piece at a time
 
-Mind you, we aren't talking about subprograms or objects or whatever. Modularization is something you have to do _before_ any of that, when you're just deciding how to split a problem into responsibilities. For example, let's take a simple [KWIC index](http://en.wikipedia.org/wiki/Key_Word_in_Context "Key Word in Context"). You get an ordered set of lines, which contains an ordered set of words, which are ordered sets of characters. Lines can be circularly shifted by taking the first word and placing it at the end. The KWIC system outputs a listing of all circular shifts in alphabetical order. These days, that's not very difficult. But in 1972 this was a problem that would take a good programmer one or two weeks to solve according to Parnas. Interesting. He proposes two different modularizations:
+Mind you, we aren't talking about subprograms or objects or whatever. Modularization is something you have to do _before_ any of that, when you're just deciding how to split a problem into responsibilities.
 
-1.  Input module - reads data lines, stores them in the core for further processing
-2.  [Circular Shift](http://en.wikipedia.org/wiki/Circular_shift "Circular shift") module - prepares an index of circular shifts
-3.  Alphabetizing module - uses the previous results to alphabetize the circular shift index
-4.  Output module - uses the alphabetized index and stored lines to create a nice output
-5.  Master Control module - makes sure other modules are called in the right order
+
+
+For example, let's take a simple [KWIC index](http://en.wikipedia.org/wiki/Key_Word_in_Context "Key Word in Context"). You get an ordered set of lines, which contains an ordered set of words, which are ordered sets of characters. Lines can be circularly shifted by taking the first word and placing it at the end.
+
+
+
+The KWIC system outputs a listing of all circular shifts in alphabetical order.
+
+
+
+These days, that's not very difficult. But in 1972 this was a problem that would take a good programmer one or two weeks to solve according to Parnas. Interesting.
+
+
+
+He proposes two different modularizations:
+
+1. Input module - reads data lines, stores them in the core for further processing
+2. [Circular Shift](http://en.wikipedia.org/wiki/Circular_shift "Circular shift") module - prepares an index of circular shifts
+3. Alphabetizing module - uses the previous results to alphabetize the circular shift index
+4. Output module - uses the alphabetized index and stored lines to create a nice output
+5. Master Control module - makes sure other modules are called in the right order
 
 This modularization makes sense. All modules are small, have well defined interfaces, and according to Parnas this is the first design most programmers will come up with.
 
-1.  Line Storage module - provides a bunch of functions to work with strings, essentially
-2.  Input module - reads data, uses Line Storage to store it
-3.  Circular Shifter module - has a function that builds the index, then gives similar interface to module 1, but for shifted lines
-4.  Alphabetizer module - a function that alphabetizes and another that retrieves according to the index
-5.  Output module - prints stuff
-6.  Master Control module - as above, drives the whole process
+1. Line Storage module - provides a bunch of functions to work with strings, essentially
+2. Input module - reads data, uses Line Storage to store it
+3. Circular Shifter module - has a function that builds the index, then gives similar interface to module 1, but for shifted lines
+4. Alphabetizer module - a function that alphabetizes and another that retrieves according to the index
+5. Output module - prints stuff
+6. Master Control module - as above, drives the whole process
 
 This modularization sounds a lot closer to what we call objects these days and generally smells like modern programming. Instead of modules doing stuff and saving data that other modules operate on, they are a collection of functions that act as an interface. Shiny.
 
 ## The criteria
 
-Both of those modularizations work. The system will do what it's told in both cases. Neither is much more complex than the other, and neither has hidden performance issues. Hell, they could both use the same algorithms! However, the second is _much_ easier to work with. Let's see. **Changeability**. We might want to change a bunch of things at a later date. Everything from the input format to how lines are stored in memory. With the first modularization everybody needs to know how lines are stored, whereas the second hides that information from everything but _Line Storage_. This is the case with almost any change you can think of. From changing how alphabetization works to changing whether the circular index is calculated on the fly or stored. First modularization necessitates poking everything every time. The second does not. The first modularization doesn't help much with **Independent Development** either. Everybody needs to agree on formats, and storing things, and whatnot. A lot of work. The second modularization is just a bunch of abstract interfaces, which is fairly quick to agree on. Subjectively, the second modularization also has greater **comprehensibility** because you don't have to understand how everything else works just to read the output module. With the first, you always have to understand the whole system. You'll quickly notice that the first system was designed out of a flowchart. Think about data flowing through the system from input to output, each step gets a big box - turn those boxes into modules. The second was designed according to information hiding. How can we decompose this problem into modules so as much of the details are hidden as possible? This creates a system that is easier to work with and can make a huge difference in how much technical debt you accumulate over the years. Parnas only warns that the second modularization could pose a performance issue if you aren't careful about implementation. Everything keeps calling everything.
+Both of those modularizations work. The system will do what it's told in both cases. Neither is much more complex than the other, and neither has hidden performance issues. Hell, they could both use the same algorithms!
+
+
+
+However, the second is _much_ easier to work with. Let's see.
+
+
+
+**Changeability**. We might want to change a bunch of things at a later date. Everything from the input format to how lines are stored in memory. With the first modularization everybody needs to know how lines are stored, whereas the second hides that information from everything but _Line Storage_.
+
+
+
+This is the case with almost any change you can think of. From changing how alphabetization works to changing whether the circular index is calculated on the fly or stored. First modularization necessitates poking everything every time. The second does not.
+
+
+
+The first modularization doesn't help much with **Independent Development** either. Everybody needs to agree on formats, and storing things, and whatnot. A lot of work. The second modularization is just a bunch of abstract interfaces, which is fairly quick to agree on.
+
+
+
+Subjectively, the second modularization also has greater **comprehensibility** because you don't have to understand how everything else works just to read the output module. With the first, you always have to understand the whole system.
+
+
+
+You'll quickly notice that the first system was designed out of a flowchart. Think about data flowing through the system from input to output, each step gets a big box - turn those boxes into modules.
+
+
+
+The second was designed according to information hiding. How can we decompose this problem into modules so as much of the details are hidden as possible?
+
+
+
+This creates a system that is easier to work with and can make a huge difference in how much technical debt you accumulate over the years. Parnas only warns that the second modularization could pose a performance issue if you aren't careful about implementation. Everything keeps calling everything.
 
 ## Hierarchical structure
 
-There is also a hierarchy to the second modularization. _Line Storage_ doesn't use any of the other modules, so it's level 1. _Input_ and _Circular Shifter_ do need _Line Storage_, so they're level 2. _Alphabetizer_ and _Output_ need the circular shifts so they're level 3. But line storage and circular shifter are somewhat compatible. We could alphabetize/output just the raw lines via some sort of parametrization. Our system can run at two levels of hierarchy! Cool. What's really cool here, though, is that this hierarchy allows us to _reuse_ parts of the system. Line Storage can be used for anything that needs to store strings, for instance At any point we can prune the higher levels in the hierarchy and build something new! More importantly, those higher levels are greatly simplified by reusing the lower parts. It's pretty nifty.
+There is also a hierarchy to the second modularization.
+
+
+
+_Line Storage_ doesn't use any of the other modules, so it's level 1. _Input_ and _Circular Shifter_ do need _Line Storage_, so they're level 2. _Alphabetizer_ and _Output_ need the circular shifts so they're level 3.
+
+
+
+But line storage and circular shifter are somewhat compatible. We could alphabetize/output just the raw lines via some sort of parametrization. Our system can run at two levels of hierarchy! Cool.
+
+
+
+What's really cool here, though, is that this hierarchy allows us to _reuse_ parts of the system. Line Storage can be used for anything that needs to store strings, for instance
+
+
+
+At any point we can prune the higher levels in the hierarchy and build something new!
+
+
+
+More \\importantly, those higher levels are greatly simplified by reusing the lower parts. It's pretty nifty.
 
 ## Fin
 
-As you can see, Parnas had some really good ideas here. So good in fact we still consider software that is well designed to follow these principles. We have databases that handle our data, and servers take care of serving, and there's a piece that talks to views, and models talk to the database, and there's a piece that handles interactivity with the user. All the frameworks we use these days are designed with information hiding in mind. But we often forget to do that ourselves. We build tightly coupled systems just because it's the first thing that comes to mind. Or we get sloppy and modules become more and more coupled. Code like that sucks to work with so keep information hiding in mind next time you can no longer decide where a new function is supposed to go.
+As you can see, Parnas had some really good ideas here. So good in fact we still consider software that is well designed to follow these principles.
+
+
+
+We have databases that handle our data, and servers take care of serving, and there's a piece that talks to views, and models talk to the database, and there's a piece that handles interactivity with the user. All the frameworks we use these days are designed with information hiding in mind.
+
+
+
+But we often forget to do that ourselves.
+
+
+
+We build tightly coupled systems just because it's the first thing that comes to mind. Or we get sloppy and modules become more and more coupled.
+
+
+
+Code like that sucks to work with so keep information hiding in mind next time you can no longer decide where a new function is supposed to go.
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=1cd36eb5-c19b-4e2b-9e2a-90c200f1aec0)](http://www.zemanta.com/?px "Enhanced by Zemanta")

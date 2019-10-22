@@ -1,49 +1,106 @@
 ---
 layout: post
-title: Collatz, Haskell and Memoization
+title: 'Collatz, Haskell and Memoization'
 date: 2012-01-09
-categories: collatzconjecture, Haskell, Languages, Math, Memoization, Number Theory, Programming, Project Euler
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: ./img/collatz_conjecture3.png
+hero: ./img/blog-wp-content-uploads-2012-01-collatz_conjecture3.png
 ---
+\[caption id="" align="alignright" width="311" caption="xkcd collatz conjecture"][![xkcd collatz conjecture](./img/blog-wp-content-uploads-2012-01-collatz_conjecture3.png "xkcd collatz conjecture")](http://xkcd.com/710/)\[/caption]
 
-\[caption id="" align="alignright" width="311" caption="xkcd collatz conjecture"][![xkcd collatz conjecture](./img/collatz_conjecture3.png "xkcd collatz conjecture")](http://xkcd.com/710/)\[/caption] After an awesome [longboarding](http://en.wikipedia.org/wiki/Longboarding "Longboarding") session yesterday afternoon I decided to play around with [infinite sequences](http://en.wikipedia.org/wiki/Sequence "Sequence") in [Haskell](http://haskell.org "Haskell (programming language)") - it's supposed to be one of the more (most?) powerful features of Haskell - because it's a [lazy language](http://en.wikipedia.org/wiki/Evaluation_strategy "Evaluation strategy") apparently. My first impulse of creating a primes generator was nipped in the bud by a long page of [prime number generators in Haskell](http://www.haskell.org/haskellwiki/Prime_numbers). Scary, complex, mindboggling. [Project Euler](http://projecteuler.net/ "Project Euler") posed a much better challenge: _Which starting number, under one million, produces the longest collatz chain?_ The solution I came up with was a simple brute force generator of infinitely many collatz sequences. Then I would take the first 1,000,000 find the maximum and that's that.
 
-    collatz :: Integer -> [Integer]
-    collatz 1 = []
-    collatz n
-        | odd n = 3*n+1:collatz(3*n+1)
-        | even n = div n 2:collatz(div n 2)
 
-    chains = [collatz x | x <- [1..]]
+After an awesome [longboarding](http://en.wikipedia.org/wiki/Longboarding "Longboarding") session yesterday afternoon I decided to play around with [infinite sequences](http://en.wikipedia.org/wiki/Sequence "Sequence") in [Haskell](http://haskell.org "Haskell (programming language)") - it's supposed to be one of the more (most?) powerful features of Haskell - because it's a [lazy language](http://en.wikipedia.org/wiki/Evaluation_strategy "Evaluation strategy") apparently.
 
-Didn't help. So I started looking for the maximum a bit differently - take all the sequences, sort them by length and take the last one.
 
-    longest max =
-      last $ sortBy (comparing snd) $ zip [1..] $ map length $ take max chains
 
-Great! It worked! But it takes ~26 seconds! Well sorting maybe isn't the best idea ever, so let's try creating a list of sequences where the list's tail only contains those sequences that are longer than the head. A sprinkle of dropWhile and it was done.
+My first impulse of creating a primes generator was nipped in the bud by a long page of [prime number generators in Haskell](http://www.haskell.org/haskellwiki/Prime_numbers). Scary, complex, mindboggling.
 
-    longest' (max_i, max_l) =
-      let l = head $ dropWhile (\(i,l) -> l <= max_l) $ zip [max_i..] $ map length $ chains' max_i
-      in l:longest' l
 
-~25 seconds! That's odd ... even odder still is running both algorithms one after another only takes 33 seconds. Huh? It would seem I'm using [memoization](http://en.wikipedia.org/wiki/Memoization "Memoization") incorrectly. I've heard it performs funny in recursive functions. The theory I formulated last night was that because haskell was lazy each execution chain was constructed to its end and the intermittent memoized values never got used until the whole function was called again. Looking at the code samples this morning, though, I discovered this:
 
-    collatz :: Integer -> [Integer]
-    collatz = memoize col where
-      col 1 = []
-      col n
-        | odd n = 3*n+1:collatz(3*n+1)
-        | even n = div n 2:collatz(div n 2)
+[Project Euler](http://projecteuler.net/ "Project Euler") posed a much better challenge: _Which starting number, under one million, produces the longest collatz chain?_
 
-As you can see, I don't call the memoized function internally. Just goes to show what a night's sleep can do to one's coding abilities. I bashed my head against this problem for four hours yesterday and I never noticed I was recursing to the wrong function! Interestingly enough, fixing that makes the algorithm spaz out and die after 16 seconds. The only output I get is "Killed". Curious.
+
+
+The solution I came up with was a simple brute force generator of infinitely many collatz sequences. Then I would take the first 1,000,000 find the maximum and that's that.
+
+
+
+```
+collatz :: Integer -> [Integer]
+collatz 1 = []
+collatz n
+    | odd n = 3*n+1:collatz(3*n+1)
+    | even n = div n 2:collatz(div n 2)
+
+chains = [collatz x | x <- [1..]]
+```
+
+
+
+Didn't help.
+
+
+
+So I started looking for the maximum a bit differently - take all the sequences, sort them by length and take the last one.
+
+```
+longest max =
+  last $ sortBy (comparing snd) $ zip [1..] $ map length $ take max chains
+```
+
+Great! It worked! But it takes ~26 seconds!
+
+
+
+Well sorting maybe isn't the best idea ever, so let's try creating a list of sequences where the list's tail only contains those sequences that are longer than the head. A sprinkle of dropWhile and it was done.
+
+
+
+```
+longest' (max_i, max_l) =
+  let l = head $ dropWhile (\(i,l) -> l <= max_l) $ zip [max_i..] $ map length $ chains' max_i
+  in l:longest' l
+```
+
+
+
+~25 seconds!
+
+
+
+That's odd ... even odder still is running both algorithms one after another only takes 33 seconds. Huh?
+
+
+
+It would seem I'm using [memoization](http://en.wikipedia.org/wiki/Memoization "Memoization") incorrectly. I've heard it performs funny in recursive functions. The theory I formulated last night was that because haskell was lazy each execution chain was constructed to its end and the intermittent memoized values never got used until the whole function was called again.
+
+
+
+Looking at the code samples this morning, though, I discovered this:
+
+```
+collatz :: Integer -> [Integer]
+collatz = memoize col where
+  col 1 = []
+  col n
+    | odd n = 3*n+1:collatz(3*n+1)
+    | even n = div n 2:collatz(div n 2)
+```
+
+
+
+As you can see, I don't call the memoized function internally. Just goes to show what a night's sleep can do to one's coding abilities. I bashed my head against this problem for four hours yesterday and I never noticed I was recursing to the wrong function!
+
+
+
+Interestingly enough, fixing that makes the algorithm spaz out and die after 16 seconds. The only output I get is "Killed". Curious.
 
 ###### Related articles
 
--   [Graphing the Collatz Conjecture](http://mrhonner.com/2011/11/18/graphing-the-collatz-conjecture/) (mrhonner.com)
--   [The Point of Laziness in Programing Languages](http://existentialtype.wordpress.com/2011/04/24/the-real-point-of-laziness/) (existentialtype.wordpress.com)
--   [Learning me a Haskell](http://swizec.com/blog/learning-me-a-haskell/swizec/3272) (swizec.com)
--   [Memoization explained using a python implementation of fibonacci](http://geeklogs.posterous.com/what-is-memoization) (geeklogs.posterous.com)
+- [Graphing the Collatz Conjecture](http://mrhonner.com/2011/11/18/graphing-the-collatz-conjecture/) (mrhonner.com)
+- [The Point of Laziness in Programing Languages](http://existentialtype.wordpress.com/2011/04/24/the-real-point-of-laziness/) (existentialtype.wordpress.com)
+- [Learning me a Haskell](http://swizec.com/blog/learning-me-a-haskell/swizec/3272) (swizec.com)
+- [Memoization explained using a python implementation of fibonacci](http://geeklogs.posterous.com/what-is-memoization) (geeklogs.posterous.com)
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=6f7c0838-57e3-4b8a-a0c3-3ef0dc670559)](http://www.zemanta.com/ "Enhanced by Zemanta")

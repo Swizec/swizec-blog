@@ -1,12 +1,32 @@
 ---
 layout: post
-title: FANN - neural networks made easy
+title: 'FANN - neural networks made easy'
 date: 2012-02-20
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: ./img/Selection_053-300x174.png
+hero: ./img/blog-wp-content-uploads-2012-02-Selection_053-300x174.png
 ---
+\[caption id="attachment_3718" align="alignright" width="300" caption="Convergence!"][![Convergence!](./img/blog-wp-content-uploads-2012-02-Selection_053-300x174.png "Convergence!")](./img/blog-wp-content-uploads-2012-02-Selection_053.png)\[/caption]
 
-\[caption id="attachment_3718" align="alignright" width="300" caption="Convergence!"][![Convergence!](./img/Selection_053-300x174.png "Convergence!")](./img/Selection_053.png)\[/caption] Over the weekend I was struck with the realization that I don't know _how to use [neural networks](http://en.wikipedia.org/wiki/Neural_network "Neural network") in practice, damn it._Even though a few months ago [I realized what neural networks are](http://swizec.com/blog/i-think-i-finally-understand-what-a-neural-network-is/swizec/2891 "I think I finally understand what a neural network is"), even though I've [tried implementing them](http://swizec.com/blog/i-suck-at-implementing-neural-networks-in-octave/swizec/2929 "I suck at implementing neural networks in octave"), even though I've used them in a class setting ... How the hell do you use these things in real life!? Implement from scratch? ... no that can't be it. Find a library, write some code, run some tests, fiddle with features, run a test, fiddle with features, realize everything is slow, decide to use more layers, fiddle with features, play around with activation functions, run a test, fiddle with features, rewrite the code because it's a mess, fiddle with features, run a test, run the network, run more tests and so on and on _ad nauseum_. That can't be it either ...
+
+
+Over the weekend I was struck with the realization that I don't know _how to use [neural networks](http://en.wikipedia.org/wiki/Neural_network "Neural network") in practice, damn it._Even though a few months ago [I realized what neural networks are](http://swizec.com/blog/i-think-i-finally-understand-what-a-neural-network-is/swizec/2891 "I think I finally understand what a neural network is"), even though I've [tried implementing them](http://swizec.com/blog/i-suck-at-implementing-neural-networks-in-octave/swizec/2929 "I suck at implementing neural networks in octave"), even though I've used them in a class setting ...
+
+
+
+How the hell do you use these things in real life!?
+
+
+
+Implement from scratch? ... no that can't be it.
+
+
+
+Find a library, write some code, run some tests, fiddle with features, run a test, fiddle with features, realize everything is slow, decide to use more layers, fiddle with features, play around with activation functions, run a test, fiddle with features, rewrite the code because it's a mess, fiddle with features, run a test, run the network, run more tests and so on and on _ad nauseum_.
+
+
+
+That can't be it either ...
 
 ## FANN
 
@@ -14,20 +34,72 @@ Looking far and wide for a good library to use I stumbled upon [FANN - Fast Arti
 
 > Fast Artificial Neural Network Library is a free open source neural network library, which implements multilayer artificial neural networks in C with support for both fully connected and sparsely connected networks. Cross-platform execution in both fixed and floating point are supported. It includes a framework for easy handling of [training data](http://en.wikipedia.org/wiki/Training_set "Training set") sets. It is easy to use, versatile, well documented, and fast. Bindings to more than [15 programming languages](http://leenissen.dk/fann/wp/language-bindings/) are available. An easy to read introduction [article](http://fann.sf.net/fann_en.pdf) and a [reference manual](http://leenissen.dk/fann/html/index.html) accompanies the library with examples and recommendations on how to use the library. Several graphical [user interfaces](http://leenissen.dk/fann/wp/graphical-interface/) are also available for the library.
 
-Perfect! Not only has someone gone to the trouble of implementing everything and making sure it works - nothing sucks more than figuring out whether you're using your learning software wrong or it's just buggy - they even gave it all the fiddly features I need! It gets better! There's a slew of graphical interfaces -> You get to play with the fiddly bits without even knowing what you're doing! Yes! Put the data in the fann format, load it up, and away you go. Playing around until you figure out what you're looking for, then you can just implement the same thing with the FANN binding of your choice. \[caption id="attachment_3715" align="alignnone" width="791" caption="It can suggest a good training algo"][![It can suggest a good training algo](http://swizec.com/blog/wp-content/uploads/2012/02/Selection_050.png "It can suggest a good training algo")](./img/Selection_050.png)\[/caption] \[caption id="attachment_3717" align="alignnone" width="759" caption="You get to set up the neural network"][![You get to set up the neural network](http://swizec.com/blog/wp-content/uploads/2012/02/Selection_052.png "You get to set up the neural network")](./img/Selection_052.png)\[/caption] \[caption id="attachment_3716" align="alignnone" width="764" caption="Fiddly bits!"][![Fiddly bits!](http://swizec.com/blog/wp-content/uploads/2012/02/Selection_051.png "Fiddly bits!")](./img/Selection_051.png)\[/caption] \[caption id="attachment_3718" align="alignnone" width="762" caption="Watch it converge in real time"][![Watch it converge in real time](http://swizec.com/blog/wp-content/uploads/2012/02/Selection_053.png "Watch it converge in real time")](http://swizec.com/blog/wp-content/uploads/2012/02/Selection_053.png)\[/caption]
+Perfect!
+
+
+
+Not only has someone gone to the trouble of implementing everything and making sure it works - nothing sucks more than figuring out whether you're using your learning software wrong or it's just buggy - they even gave it all the fiddly features I need!
+
+
+
+It gets better! There's a slew of graphical interfaces -> You get to play with the fiddly bits without even knowing what you're doing! Yes!
+
+
+
+Put the data in the fann format, load it up, and away you go. Playing around until you figure out what you're looking for, then you can just implement the same thing with the FANN binding of your choice.
+
+
+
+\[caption id="attachment_3715" align="alignnone" width="791" caption="It can suggest a good training algo"][![It can suggest a good training algo](http://swizec.com/blog/wp-content/uploads/2012/02/Selection_050.png "It can suggest a good training algo")](./img/blog-wp-content-uploads-2012-02-Selection_050.png)\[/caption]
+
+
+
+\[caption id="attachment_3717" align="alignnone" width="759" caption="You get to set up the neural network"][![You get to set up the neural network](http://swizec.com/blog/wp-content/uploads/2012/02/Selection_052.png "You get to set up the neural network")](./img/blog-wp-content-uploads-2012-02-Selection_052.png)\[/caption]
+
+
+
+\[caption id="attachment_3716" align="alignnone" width="764" caption="Fiddly bits!"][![Fiddly bits!](http://swizec.com/blog/wp-content/uploads/2012/02/Selection_051.png "Fiddly bits!")](./img/blog-wp-content-uploads-2012-02-Selection_051.png)\[/caption]
+
+
+
+\[caption id="attachment_3718" align="alignnone" width="762" caption="Watch it converge in real time"][![Watch it converge in real time](http://swizec.com/blog/wp-content/uploads/2012/02/Selection_053.png "Watch it converge in real time")](http://swizec.com/blog/wp-content/uploads/2012/02/Selection_053.png)\[/caption]
 
 ## Done in a few hours
 
-FANN really saved my skin last night. At least the [GUI](http://en.wikipedia.org/wiki/Graphical_user_interface "Graphical user interface") did. I still haven't solved my problem - trying to predict how many people will read a whole post - but it took me literally a couple of minutes to realize that the same network can't be used to predict two outputs since it won't even converge. That's something very specific to the problem. I also realized the networks were overfitting my data, then performing poorly on the test. Another specific thing. It is because of this incredibly problem-specific nature of most work involving neural networks that having tools like these is really important. Who wants to fiddle around with implementing all this stuff by hand for several hours before even running the first tests? I probably ran twenty or thirty different configurations in the space of three hours last night. Could I have done that without a simple tool? Probably not - wouldn't even have the first configuration implemented by now. Now if only the GUI tool calculated precision and recall instead of mean standard error ...
+FANN really saved my skin last night. At least the [GUI](http://en.wikipedia.org/wiki/Graphical_user_interface "Graphical user interface") did. I still haven't solved my problem - trying to predict how many people will read a whole post - but it took me literally a couple of minutes to realize that the same network can't be used to predict two outputs since it won't even converge.
+
+
+
+That's something very specific to the problem.
+
+
+
+I also realized the networks were overfitting my data, then performing poorly on the test.
+
+
+
+Another specific thing.
+
+
+
+It is because of this incredibly problem-specific nature of most work involving neural networks that having tools like these is really \\important. Who wants to fiddle around with implementing all this stuff by hand for several hours before even running the first tests?
+
+
+
+I probably ran twenty or thirty different configurations in the space of three hours last night. Could I have done that without a simple tool? Probably not - wouldn't even have the first configuration implemented by now.
+
+
+
+Now if only the GUI tool calculated precision and recall instead of mean standard error ...
 
 ###### Related articles
 
--   [I think I finally understand what a neural network is](http://swizec.com/blog/i-think-i-finally-understand-what-a-neural-network-is/swizec/2891) (swizec.com)
--   [I suck at implementing neural networks in octave](http://swizec.com/blog/i-suck-at-implementing-neural-networks-in-octave/swizec/2929) (swizec.com)
--   [Characteristics of Machine Learning Model](http://horicky.blogspot.com/2012/02/characteristics-of-machine-learning.html) (horicky.blogspot.com)
--   [Neural network: should the algorithm be rewritten for every case?](http://stackoverflow.com/questions/8595741/neural-network-should-the-algorithm-be-rewritten-for-every-case) (stackoverflow.com)
--   [Is it possible for Encog or Neuroph to run on Android?](http://stackoverflow.com/questions/8697054/is-it-possible-for-encog-or-neuroph-to-run-on-android) (stackoverflow.com)
--   [Sabbatical week day 3: Raining datatypes](http://swizec.com/blog/sabbatical-week-day-3-raining-datatypes/swizec/3293) (swizec.com)
--   [C++ machine learning framework](http://stackoverflow.com/questions/8682766/c-machine-learning-framework) (stackoverflow.com)
+- [I think I finally understand what a neural network is](http://swizec.com/blog/i-think-i-finally-understand-what-a-neural-network-is/swizec/2891) (swizec.com)
+- [I suck at implementing neural networks in octave](http://swizec.com/blog/i-suck-at-implementing-neural-networks-in-octave/swizec/2929) (swizec.com)
+- [Characteristics of Machine Learning Model](http://horicky.blogspot.com/2012/02/characteristics-of-machine-learning.html) (horicky.blogspot.com)
+- [Neural network: should the algorithm be rewritten for every case?](http://stackoverflow.com/questions/8595741/neural-network-should-the-algorithm-be-rewritten-for-every-case) (stackoverflow.com)
+- [Is it possible for Encog or Neuroph to run on Android?](http://stackoverflow.com/questions/8697054/is-it-possible-for-encog-or-neuroph-to-run-on-android) (stackoverflow.com)
+- [Sabbatical week day 3: Raining datatypes](http://swizec.com/blog/sabbatical-week-day-3-raining-datatypes/swizec/3293) (swizec.com)
+- [C++ machine learning framework](http://stackoverflow.com/questions/8682766/c-machine-learning-framework) (stackoverflow.com)
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=3b9f04bc-86a6-49e2-b0f1-6044eb94681d)](http://www.zemanta.com/ "Enhanced by Zemanta")

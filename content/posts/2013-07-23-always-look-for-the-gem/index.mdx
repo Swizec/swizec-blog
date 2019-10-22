@@ -1,32 +1,95 @@
 ---
 layout: post
-title: Always look for the gem
+title: 'Always look for the gem'
 date: 2013-07-23
-categories: Programming, Ruby, Tools, Web Design and Development
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: undefined
+hero: ../../../defaultHero.jpg
 ---
+You can be doing something straightforward. Say, listing some items from the database and giving them an `id` so javascript can reference them. Because you know names are unique, you decide to use those for `id`'s.
 
-You can be doing something straightforward. Say, listing some items from the database and giving them an `id` so javascript can reference them. Because you know names are unique, you decide to use those for `id`'s. You're using them for URL's too, so it makes sense. Simplifies [Backbone](http://backbonejs.org/) routing code. At this point experienced developers get the heebie jeebies. A tiny little voice screaming _"Watch out!"_ in the back of their head. I couldn't remember why using `name` felt funny, so I ignored the little voice and barged on. I deployed. Bam. Didn't work. After hours of debugging I finally traced the issue down to spaces in item names. Turns out `id="a word"` doesn't work. Who'd've thought? (hint: everyone) But that's an easy fix right? Just do something like:
 
-    id="<%= item.name.gsub(' ', '-') %>"
 
-Or add a function to the model. Whatever. The point is, all you have to do is replace spaces with dashes. Simple. But you're wrong. You are creating a slug. It looks easy, but is actually very complicated. Luckily others have solved the problem already. Better than you. A quick Google search reveals a bunch of solutions do in fact exist, but [Stringex](https://github.com/rsl/stringex) comes out as the best solution for [Ruby](http://www.ruby-lang.org/ "Ruby (programming language)"). There should be plenty for any language you love. Why spend an hour looking for and learning how to use a gem instead of solving the problem in two minutes of coding? Because -> from Stringex's documentation:
+You're using them for URL's too, so it makes sense. Simplifies [Backbone](http://backbonejs.org/) routing code.
 
-    # A simple prelude
-    "simple English".to_url => "simple-english"
-    "it's nothing at all".to_url => "its-nothing-at-all"
-    "rock & roll".to_url => "rock-and-roll"
 
-    # Let's show off
-    "$12 worth of Ruby power".to_url => "12-dollars-worth-of-ruby-power"
-    "10% off if you act now".to_url => "10-percent-off-if-you-act-now"
 
-    # You don't even wanna trust Iconv for this next part
-    "kick it en Français".to_url => "kick-it-en-francais"
-    "rock it Español style".to_url => "rock-it-espanol-style"
-    "tell your readers 你好".to_url => "tell-your-readers-ni-hao"
+At this point experienced developers get the heebie jeebies. A tiny little voice screaming _"Watch out!"_ in the back of their head.
 
-Impressive to say the least. There's the simple space to dash conversion, but Stringex handles various symbols and common substrings as well. Converting `$12` to `12-dollars` strikes me as something particularly useful I'd never come up with. Truth be told, the most advanced slug generation function I've ever come up with (and I've written many) only stripped non-alphanumeric characters from the string before changing spaces to dashes. It sucked. When you find yourself solving a simple problem, look for a gem. Focus your attention to the problem at hand and let others take care of the externalities. You won't be sorry.
+
+
+I couldn't remember why using `name` felt funny, so I ignored the little voice and barged on. I deployed.
+
+
+
+Bam. Didn't work.
+
+
+
+After hours of debugging I finally traced the issue down to spaces in item names. Turns out `id="a word"` doesn't work. Who'd've thought? (hint: everyone)
+
+
+
+But that's an easy fix right? Just do something like:
+
+
+
+```
+id="<%= item.name.gsub(' ', '-') %>"
+```
+
+Or add a function to the model. Whatever. The point is, all you have to do is replace spaces with dashes. Simple.
+
+
+
+But you're wrong. You are creating a slug. It looks easy, but is actually very complicated. Luckily others have solved the problem already. Better than you.
+
+
+
+A quick Google search reveals a bunch of solutions do in fact exist, but [Stringex](https://github.com/rsl/stringex) comes out as the best solution for [Ruby](http://www.ruby-lang.org/ "Ruby (programming language)"). There should be plenty for any language you love.
+
+
+
+Why spend an hour looking for and learning how to use a gem instead of solving the problem in two minutes of coding?
+
+
+
+Because -> from Stringex's documentation:
+
+```
+# A simple prelude
+"simple English".to_url => "simple-english"
+"it's nothing at all".to_url => "its-nothing-at-all"
+"rock & roll".to_url => "rock-and-roll"
+
+# Let's show off
+"$12 worth of Ruby power".to_url => "12-dollars-worth-of-ruby-power"
+"10% off if you act now".to_url => "10-percent-off-if-you-act-now"
+
+# You don't even wanna trust Iconv for this next part
+"kick it en Français".to_url => "kick-it-en-francais"
+"rock it Español style".to_url => "rock-it-espanol-style"
+"tell your readers 你好".to_url => "tell-your-readers-ni-hao"
+```
+
+
+
+Impressive to say the least.
+
+
+
+There's the simple space to dash conversion, but Stringex handles various symbols and common substrings as well. Converting `$12` to `12-dollars` strikes me as something particularly useful I'd never come up with.
+
+
+
+Truth be told, the most advanced slug generation function I've ever come up with (and I've written many) only stripped non-alphanumeric characters from the string before changing spaces to dashes.
+
+
+
+It sucked.
+
+
+
+When you find yourself solving a simple problem, look for a gem. Focus your attention to the problem at hand and let others take care of the externalities. You won't be sorry.
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=08b189ad-699b-42e3-b0db-11bebd9babfd)](http://www.zemanta.com/?px "Enhanced by Zemanta")

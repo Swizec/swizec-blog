@@ -1,36 +1,127 @@
 ---
 layout: post
-title: Symfony and the scary world of PHP
+title: 'Symfony and the scary world of PHP'
 date: 2012-10-26
-categories: Application programming interface, django, Frameworks, Object-relational mapping, Open source, PHP, Symfony
+categories: 'Uncategorized'
 author: Swizec Teller
-hero: ./img/2523296126_77affed9eb.jpg
+hero: ./img/3157-2523296126_77affed9eb.jpg
 ---
+[![PHP Rockstars](./img/3157-2523296126_77affed9eb.jpg "PHP Rockstars")](http://www.flickr.com/photos/23889540@N00/2523296126)
 
-[![PHP Rockstars](./img/2523296126_77affed9eb.jpg "PHP Rockstars")](http://www.flickr.com/photos/23889540@N00/2523296126) One of my clients demanded I do a recent project in [PHP](http://www.php.net "PHP"). Alarm bells all 'round, but hey, I used to do a lot of things in PHP before I got fed up with the inconsistent API and I hear many people still use it. It's clearly a viable technology for ... things. Sure thing mr. Client, I'll do this in PHP for you. What could possibly go wrong? Everything, obviously.
+
+
+One of my clients demanded I do a recent project in [PHP](http://www.php.net "PHP").
+
+
+
+Alarm bells all 'round, but hey, I used to do a lot of things in PHP before I got fed up with the inconsistent API and I hear many people still use it. It's clearly a viable technology for ... things. Sure thing mr. Client, I'll do this in PHP for you.
+
+
+
+What could possibly go wrong?
+
+
+
+Everything, obviously.
 
 ## Modern PHP world
 
-\[caption id="" align="alignright" width="240"][![Symfony Live Paris 2011](./img/5602898882_f49d02dac8_m.jpg "Symfony Live Paris 2011")](http://www.flickr.com/photos/28354998@N04/5602898882) Symfony Live Paris 2011 (Photo credit: Seldaek)\[/caption] There's no such thing. The PHP world is stuck in arcane ways of cobbled together solutions, [Not Invented Here syndrome](http://en.wikipedia.org/wiki/Not_Invented_Here "Not Invented Here"), everyone and their grandma inventing their own [CMS](http://en.wikipedia.org/wiki/Content_management_system "Content management system")-like thing and general weirdness. And yet, I looked far and wide for a framework similar enough to [Django](http://www.djangoproject.com "Django (Web framework)") that I could quickly pick up and make something useful without sacrificing my soul to the god of bad engineering practices.
+\[caption id="" align="alignright" width="240"][![Symfony Live Paris 2011](./img/5221-5602898882_f49d02dac8_m.jpg "Symfony Live Paris 2011")](http://www.flickr.com/photos/28354998@N04/5602898882) Symfony Live Paris 2011 (Photo credit: Seldaek)\[/caption]
+
+
+
+There's no such thing. The PHP world is stuck in arcane ways of cobbled together solutions, [Not Invented Here syndrome](http://en.wikipedia.org/wiki/Not_Invented_Here "Not Invented Here"), everyone and their grandma inventing their own [CMS](http://en.wikipedia.org/wiki/Content_management_system "Content management system")-like thing and general weirdness.
+
+
+
+And yet, I looked far and wide for a framework similar enough to [Django](http://www.djangoproject.com "Django (Web framework)") that I could quickly pick up and make something useful without sacrificing my soul to the god of bad engineering practices.
 
 > [Symfony](http://symfony.com/ "Symfony") is an Open Source distributed PHP framework. Of course, when you know how to develop in PHP, you don't need a framework. However, it is very nice to have one!
 
-Get it? Read it again. It's horrible because PHP developers are people who still need to be _convinced_ that letting somebody else worry about the boring stuff is better. Of _course_ they can make everything themselves! Are you questioning their manhood by suggesting a framework? Undeterred, I decided to make my _"Accept some data from the browser. Calculate three things. Send an email"_in Symfony. Using Django this would take one afternoon.
+Get it?
+
+
+
+Read it again.
+
+
+
+It's horrible because PHP developers are people who still need to be _convinced_ that letting somebody else worry about the boring stuff is better. Of _course_ they can make everything themselves! Are you questioning their manhood by suggesting a framework?
+
+
+
+Undeterred, I decided to make my _"Accept some data from the browser. Calculate three things. Send an email"_in Symfony. Using Django this would take one afternoon.
 
 ## Symfony
 
-I appreciate everything Symfony is trying to do, but Django it is not. \[caption id="" align="alignright" width="300"][![Symfony](./img/300px-Symfony_project.png "Symfony")](http://commons.wikipedia.org/wiki/File:Symfony_project.png) Symfony (Photo credit: Wikipedia)\[/caption] The base architecture is confusing - everything, even the framework, is a plugin of the framework ... what? - the documentation isn't very good and there's no community to speak of. I'm told this is the most popular PHP framework out there. Coming upon problems and Googling for answers will leave you pawing your way through a dark corridor, with one eye poked out and half your leg missing. The freshest [StackOverflow](http://stackoverflow.com/ "Stack Overflow") activity about Symfony is at least six months old. There are no forum posts to be found, almost zero blogposts ... The internet is screaming **DON'T USE THIS** at you. And yet, it's the best way to avoid writing your own form validations, request handling, testing frameworks, [object relational mapping](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational mapping") and a bunch of other things you've come to take for granted. However, the greatest offense is from the official documentation. I'm not sure if this is because the authors are trying so hard to sell their Cookbook, or just because they suck at writing docs. For starters, everything is padded out with a bunch of marketing bullshit and irrelevant hand holding. I _know_ why I'm looking at this damn it! Stop trying to convince me I'm really really going to love the feature you are about to explain; explain the fucking feature! \[caption id="" align="alignnone" width="500"][![Madness](./img/2719863711_7beb503420.jpg "Madness")](http://www.flickr.com/photos/cuppini/2719863711/) Madness, by Rickydavid\[/caption] To make it worse, everything lacks depth. Want to see a list of possible methods? Perhaps all the possible parameters and what they do? Nope. You can click your way through twenty levels of ... stuff ... and you'll get a short summary__of all the parameters and methods and such. A tiny piece of me died every time I went digging through the source code just to discover everything that's possible. Symfony guys, I understand you're trying to be helpful, but developers are smart humans - even PHP developers - we can figure out how to do something with the basic building blocks, but you really need to tell us what the building blocks are.
+I appreciate everything Symfony is trying to do, but Django it is not.
+
+
+
+\[caption id="" align="alignright" width="300"][![Symfony](./img/wikipedia-commons-thumb-9-92-Symfony_project.png-300px-Symfony_project.png "Symfony")](http://commons.wikipedia.org/wiki/File:Symfony_project.png) Symfony (Photo credit: Wikipedia)\[/caption]
+
+
+
+The base architecture is confusing - everything, even the framework, is a plugin of the framework ... what? - the documentation isn't very good and there's no community to speak of.
+
+
+
+I'm told this is the most popular PHP framework out there.
+
+
+
+Coming upon problems and Googling for answers will leave you pawing your way through a dark corridor, with one eye poked out and half your leg missing. The freshest [StackOverflow](http://stackoverflow.com/ "Stack Overflow") activity about Symfony is at least six months old. There are no forum posts to be found, almost zero blogposts ...
+
+
+
+The internet is screaming **DON'T USE THIS** at you.
+
+
+
+And yet, it's the best way to avoid writing your own form validations, request handling, testing frameworks, [object relational mapping](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational mapping") and a bunch of other things you've come to take for granted.
+
+
+
+However, the greatest offense is from the official documentation. I'm not sure if this is because the authors are trying so hard to sell their Cookbook, or just because they suck at writing docs.
+
+
+
+For starters, everything is padded out with a bunch of marketing bullshit and irrelevant hand holding. I _know_ why I'm looking at this damn it! Stop trying to convince me I'm really really going to love the feature you are about to explain; explain the fucking feature!
+
+
+
+\[caption id="" align="alignnone" width="500"][![Madness](./img/3252-2719863711_7beb503420.jpg "Madness")](http://www.flickr.com/photos/cuppini/2719863711/) Madness, by Rickydavid\[/caption]
+
+
+
+To make it worse, everything lacks depth. Want to see a list of possible methods? Perhaps all the possible parameters and what they do? Nope.
+
+
+
+You can click your way through twenty levels of ... stuff ... and you'll get a short summary__of all the parameters and methods and such. A tiny piece of me died every time I went digging through the source code just to discover everything that's possible.
+
+
+
+Symfony guys, I understand you're trying to be helpful, but developers are smart humans - even PHP developers - we can figure out how to do something with the basic building blocks, but you really need to tell us what the building blocks are.
 
 ## :/
 
-All in all, PHP is still a horrible place to be. Symfony makes it a dash more palatable, it's far from perfect, far from really _really_ useful, but the best I could find. My heart goes to all the programmers stuck in this madness, stay strong! PS: for anyone wondering, I was/am using Symfony 2.1
+All in all, PHP is still a horrible place to be. Symfony makes it a dash more palatable, it's far from perfect, far from really _really_ useful, but the best I could find.
+
+
+
+My heart goes to all the programmers stuck in this madness, stay strong!
+
+
+
+PS: for anyone wondering, I was/am using Symfony 2.1
 
 ###### Related articles
 
--   [![](http://i.zemanta.com/noimg_13_80_80.jpg)](http://www.nixtu.info/2012/10/jster-javascript-frontend-libraries-in.html)[JSter - JavaScript Frontend Libraries in One Place](http://www.nixtu.info/2012/10/jster-javascript-frontend-libraries-in.html)
--   [![](http://i.zemanta.com/noimg_84_80_80.jpg)](http://fabien.potencier.org/article/65/why-symfony)[Why Symfony?](http://fabien.potencier.org/article/65/why-symfony)
--   [![](http://i.zemanta.com/111578735_80_80.jpg)](http://blog.jetbrains.com/webide/2012/09/phpstorm-5-0-released-more-robust-php-editor-new-symfony2-mvc-view-better-sql-support/)[PhpStorm 5.0 released: more robust PHP editor, new Symfony2 MVC view, better SQL support](http://blog.jetbrains.com/webide/2012/09/phpstorm-5-0-released-more-robust-php-editor-new-symfony2-mvc-view-better-sql-support/)
--   [![](http://i.zemanta.com/noimg_89_80_80.jpg)](http://www.h-online.com/open/news/item/New-release-process-announced-for-Symfony-1726061.html)[New release process announced for Symfony](http://www.h-online.com/open/news/item/New-release-process-announced-for-Symfony-1726061.html)
--   [![](http://i.zemanta.com/noimg_65_80_80.jpg)](http://www.virtual-strategy.com/2012/09/15/symfony-live-san-francisco-2012-2nd-sensiolabs-us-rendez-vous)[Symfony Live San Francisco 2012 : the 2nd SensioLabs "US rendez-vous"](http://www.virtual-strategy.com/2012/09/15/symfony-live-san-francisco-2012-2nd-sensiolabs-us-rendez-vous)
+- [![](http://i.zemanta.com/noimg_13_80_80.jpg)](http://www.nixtu.info/2012/10/jster-javascript-frontend-libraries-in.html)[JSter - JavaScript Frontend Libraries in One Place](http://www.nixtu.info/2012/10/jster-javascript-frontend-libraries-in.html)
+- [![](http://i.zemanta.com/noimg_84_80_80.jpg)](http://fabien.potencier.org/article/65/why-symfony)[Why Symfony?](http://fabien.potencier.org/article/65/why-symfony)
+- [![](http://i.zemanta.com/111578735_80_80.jpg)](http://blog.jetbrains.com/webide/2012/09/phpstorm-5-0-released-more-robust-php-editor-new-symfony2-mvc-view-better-sql-support/)[PhpStorm 5.0 released: more robust PHP editor, new Symfony2 MVC view, better SQL support](http://blog.jetbrains.com/webide/2012/09/phpstorm-5-0-released-more-robust-php-editor-new-symfony2-mvc-view-better-sql-support/)
+- [![](http://i.zemanta.com/noimg_89_80_80.jpg)](http://www.h-online.com/open/news/item/New-release-process-announced-for-Symfony-1726061.html)[New release process announced for Symfony](http://www.h-online.com/open/news/item/New-release-process-announced-for-Symfony-1726061.html)
+- [![](http://i.zemanta.com/noimg_65_80_80.jpg)](http://www.virtual-strategy.com/2012/09/15/symfony-live-san-francisco-2012-2nd-sensiolabs-us-rendez-vous)[Symfony Live San Francisco 2012 : the 2nd SensioLabs "US rendez-vous"](http://www.virtual-strategy.com/2012/09/15/symfony-live-san-francisco-2012-2nd-sensiolabs-us-rendez-vous)
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=339e3e69-df10-4192-8aa3-a2b79e30b218)](http://www.zemanta.com/?px "Enhanced by Zemanta")
