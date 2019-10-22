@@ -47,11 +47,18 @@ module.exports = {
                 icon: `src/assets/favicon.png`,
             },
         },
-        'gatsby-plugin-styled-components' {
+        'gatsby-plugin-styled-components',
+        {
             resolve: `gatsby-plugin-google-analytics`,
             options: {
                 trackingId: "UA-1464315-1",
             },
         },
+        {
+            resolve: 'gatsby-plugin-facebook-pixel',
+            options: {
+                pixelId: '714190382013726'
+            }
+        }
     ],
 };
