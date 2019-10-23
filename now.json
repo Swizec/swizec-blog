@@ -15,5 +15,8 @@
         "config": {
             "distDir": "public"
         }
-    }]
+    }],
+    "env": {
+        "GIPHY_API_KEY": "@giphy-api-key-swizeccom"
+    }
 }

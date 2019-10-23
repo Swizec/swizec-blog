@@ -1,0 +1,102 @@
+---
+layout: post
+title: 'Livecoding #35 - A New Site for reactd3js.com'
+date: 2017-03-13
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2017-03-Screen-Shot-2017-03-12-at-23.41.01.png
+---
+_This is a Livecoding Recap – an almost-weekly post about interesting things discovered while livecoding ?. Almost always under 500 words and with pictures. You can follow my channel, [here](https://liveedu.tv/swizec). New content almost **every Sunday at 2pm Pacific**. There’s live chat, come say hai ?_
+
+
+
+&lt;This is where a video of the livecoding would go, but LiveEdu saved only the first 5 minutes. The rest went poof ?>
+
+
+
+
+
+I guess I _could_ upload my own copy to Youtube and embed that… ?
+
+
+
+Anyway… today, we built this: [reactd3js.com](http://www.reactd3js.com) – a new site for all things React & D3v4. After two years of working on [React+D3js the book](https://swizec.com/reactd3js), it dawned on me that “Hey, maybe I should buy the domain!”
+
+
+
+Nobody else thought to get it either :D
+
+
+
+https&#x3A;//twitter.com/Swizec/status/840270745724829696
+
+
+
+The new site isn't much to look at, and it doesn't have to be. It exists, and that's what matters because now I can make stickers! Right now, the site is a link to the book and to the next workshop.
+
+
+
+![](./img/blog-wp-content-uploads-2017-03-Screen-Shot-2017-03-12-at-23.41.01.png)
+
+
+
+Ok, I'll be honest: 90% of that screenshot happened many hours after livecoding was over. Writing with people watching over my shoulder still feels weird.
+
+
+
+So what did we learn while livecoding this?
+
+
+
+We learned that Canon didn't think their flip screen UX through. The cable between the camera and the computer covers the screen you use to see yourself. Maybe they never intended you to [use your DSLR as a webcam](https://swizec.com/blog/connected-canon-dslr-webcam/swizec/7477)? Who knows ...
+
+
+
+https&#x3A;//twitter.com/Swizec/status/841035308607000576
+
+
+
+We also learned that [@daemon92](https://www.liveedu.tv/daemon92/) misses Kiwi butt. With the new camera, my bird no longer puts his butt in front of the camera. Such loss.
+
+
+
+And Daemon is still doing homework. He hopes to finish soon, so he can go spring break and party. Young'uns these days… when I was in college, we partied first and studied second.
+
+
+
+We also learned that setting up a custom domain for Github pages is still confusing. Documentation feels circular, fragmented into too many pages that say two sentences, then tell you to go somewhere else for the real answer. It's ridiculous.
+
+
+
+At least they create [the CNAME file](https://github.com/Swizec/reactd3js.com/blob/master/CNAME) for you these days. I think that's how Github servers know which repository a domain links to.
+
+
+
+I mean, you're setting DNS to point at Github servers in general. They must be doing some sort of resolving internally.
+
+
+
+It's been a while since I sysadmined ?
+
+
+
+Oh, and fundamentally, we learned that using a custom domain when hosting your site on Github pages disables https. No green checkmark for your beautiful new page.
+
+
+
+This makes sense of course. They'd have to issue certificates for each domain hosted on their servers, and that kind of defats the purpose.
+
+
+
+Oh, and we learned that to get [Webpack offline-plugin](https://github.com/NekR/offline-plugin) to work, you have to `npm run eject` your app. This is unfortunate because you lose automatic `react-scripts` updates, but worth it because it makes your site hella fast. Hella. ?
+
+
+
+Until next time, happy hacking. ?
+
+
+
+PS: I later learned that running offline-plugin on localhost is a bad idea
+
+
+
+https&#x3A;//twitter.com/Swizec/status/841526755517116416

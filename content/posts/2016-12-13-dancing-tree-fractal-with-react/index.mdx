@@ -1,0 +1,300 @@
+---
+layout: post
+title: 'Dancing tree fractal with React'
+date: 2016-12-13
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2016-12-corners-match-up.png
+---
+That damn [Pythagorean fractal](https://swizec.com/blog/fractals-react/swizec/7233) from last month wouldn't leave me alone, so I fixed it. Timing may or may not coincide with a commenter giving a solution to the wonky triangle problem.
+
+
+
+![dancing-tree](./img/blog-wp-content-uploads-2016-12-dancing-tree.gif)
+
+
+
+[Here’s the code on Github](https://github.com/Swizec/react-fractals). For the story and explanation, keep reading. :)
+
+
+
+It took _somebody doing the math instead of me_ to kick my arse into gear. Here's Vinicius Ribeiro schooling me on high school trigonometry:
+
+
+
+> You are not applying the Law of Sines correctly. The variable 'd' is the diameter of the triangle's circumcircle, not its perimeter.
+>
+>
+>
+> Tinkering with your code on github, I've managed to accomplish what you were trying to do by doing the following calculations:
+
+
+
+```
+const currentH = 0.2 * w,
+nextLeft = Math.sqrt(currentH*currentH + (0.7*w*0.7*w)),
+nextRight = Math.sqrt(currentH*currentH + (0.3*w*0.3*w)),
+A = Math.deg(Math.atan(currentH / (0.3*w))),
+B = Math.deg(Math.atan(currentH / (0.7*w)));
+```
+
+
+
+> The height of the inner triangle is a fraction of the current 'w'. By doing that, we can infer nextLeft and nextRight using the Pythagorean theorem. The angles can then be calculated using the inverse tangent (atan) and the triangle height.
+>
+>
+>
+> Hope this helps!
+
+
+
+**Help it did!** Thanks, Vinicius.
+
+
+
+## How you too can build a dancing tree fractal
+
+
+
+Equipped with basic trigonometry, you need 3 ingredients to build a dancing tree:
+
+
+
+- a recursive `<Pythagoras>` component
+- a mousemove listener
+- a memoized next-step-props calculation function
+
+
+
+We'll use the `<Pythagoras>` component from November, add a D3 mouse listener, and put Vinicus's math with some tweaks into a memoized function. We need D3 because its mouse listeners automatically calculate mouse position relative to SVG coordinates, and [memoization](https://en.wikipedia.org/wiki/Memoization) helps us keep our code faster.
+
+
+
+The improved `<Pythagoras>` component takes a few more arguments than before, and it uses a function to calculate future props. Like this:
+
+
+
+```
+const Pythagoras = ({ w,x, y, heightFactor, lean, left, right, lvl, maxlvl }) => {
+    if (lvl >= maxlvl || w < 1) {
+        return null;
+    }
+
+    const { nextRight, nextLeft, A, B } = memoizedCalc({
+        w: w,
+        heightFactor: heightFactor,
+        lean: lean
+    });
+
+    let rotate = '';
+
+    if (left) {
+        rotate = `rotate(${-A} 0 ${w})`;
+    }else if (right) {
+        rotate = `rotate(${B} ${w} ${w})`;
+    }
+
+    return (
+        
+            
+
+            
+
+            
+
+        
+    );
+};
+```
+
+
+
+We break recursion whenever we try to draw an invisible square or have reached too deep into the tree. Then we:
+
+
+
+- use `memoizedCalc` to do the mathematics
+- define different `rotate()` transforms for the `left` and `right` branches
+- and return an SVG `<rect>` for the current rectangle, and two `<Pythagoras>` elements for each branch.
+
+
+
+Most of this code deals with passing arguments onwards to children. It’s not the most elegant approach, but it works. The rest is about positioning branches so corners match up.
+
+
+
+![corners-match-up](./img/blog-wp-content-uploads-2016-12-corners-match-up.png)
+
+
+
+## The maths
+
+
+
+I don't _really_ understand this math, but I sort of know where it's coming from. It's the [sine law](https://en.wikipedia.org/wiki/Law_of_sines) applied correctly. You know, the part I failed at miserably last time ?
+
+
+
+```
+const memoizedCalc = function () {
+    const memo = {};
+
+    const key = ({ w, heightFactor, lean }) => [w,heightFactor, lean].join('-');
+
+    return (args) => {
+        const memoKey = key(args);
+
+        if (memo[memoKey]) {
+            return memo[memoKey];
+        }else{
+            const { w, heightFactor, lean } = args;
+
+            const trigH = heightFactor*w;
+
+            const result = {
+                nextRight: Math.sqrt(trigH**2 + (w * (.5+lean))**2),
+                nextLeft: Math.sqrt(trigH**2 + (w * (.5-lean))**2),
+                A: Math.deg(Math.atan(trigH / ((.5-lean) * w))),
+                B: Math.deg(Math.atan(trigH / ((.5+lean) * w)))
+            };
+
+            memo[memoKey] = result;
+            return result;
+        }
+    }
+}();
+```
+
+
+
+We added to Vinicius's maths a dynamic `heightFactor` and `lean` adjustment. We'll control those with mouse movement.
+
+
+
+To improve performance, maybe, our `memoizedCalc` function has an internal data store that maintains a hash of every argument tuple and its result. This lets us avoid computation and read from memory instead.
+
+
+
+At 11 levels of depth, `memoizedCalc` gets called 2,048 times and only returns 11 different results. You can't find a better candidate for memoization.
+
+
+
+Of course, a benchmark would be great here. Maybe `sqrt`, `atan`, and `**` aren't _that_ slow, and our real bottleneck is redrawing all those nodes on every mouse move. _Hint: it totally is._
+
+
+
+Now that I spell it out… what the hell was I thinking? I'm impressed it works as well as it does.
+
+
+
+## The mouse listener
+
+
+
+Inside `App.js`, we add a mouse event listener. We use D3's because it gives us the SVG-relative position calculation out of the box. With React’s, we'd have to do the hard work ourselves.
+
+
+
+```
+// App.js
+state = {
+        currentMax: 0,
+        baseW: 80,
+        heightFactor: 0,
+        lean: 0
+    };
+    
+componentDidMount() {
+    d3select(this.refs.svg)
+       .on("mousemove", this.onMouseMove.bind(this));
+}
+
+onMouseMove(event) {
+    const [x, y] = d3mouse(this.refs.svg),
+
+    scaleFactor = scaleLinear().domain([this.svg.height, 0])
+                                                         .range([0, .8]),
+
+    scaleLean = scaleLinear().domain([0, this.svg.width/2, this.svg.width])
+                                                     .range([.5, 0, -.5]);
+
+    this.setState({
+        heightFactor: scaleFactor(y),
+        lean: scaleLean(x)
+    });
+}
+
+// ...
+
+render() {
+    // ...
+     //...
+    
+}
+```
+
+
+
+A couple of things happen here:
+
+
+
+- we set initial `lean` and `heightFactor` to `0`
+- in `componentDidMount`, we use `d3.select` and `.on` to add a mouse listener
+- we define an `onMouseMove` method as the listener
+- we render the first `<Pythagoras>` using values from `state`
+
+
+
+The `lean` parameter tells us which way the tree is leaning and by how much; the `heightFactor` tells us how high those triangles should be. We control both with the mouse position.
+
+
+
+That happens in `onMouseMove`:
+
+
+
+```
+onMouseMove(event) {
+    const [x, y] = d3mouse(this.refs.svg),
+
+    scaleFactor = scaleLinear().domain([this.svg.height, 0])
+                                                         .range([0, .8]),
+
+    scaleLean = scaleLinear().domain([0, this.svg.width/2, this.svg.width])
+                                                     .range([.5, 0, -.5]);
+
+    this.setState({
+        heightFactor: scaleFactor(y),
+        lean: scaleLean(x)
+    });
+}
+```
+
+
+
+`d3mouse` – which is an \\imported `mouse` function from `d3-selection` – gives us cursor position relative to the SVG element. Two linear scales give us `scaleFactor` and `scalelean` values, which we put into component state.
+
+
+
+If you're not used to D3 scales, this reads as:
+
+
+
+- map vertical coordinates between `height` and `0` evenly to somewhere between `0` and `.8`
+- map horizontal coordinates between `0` and `width/2` evenly to somewhere between `.5` and `0`, and coordinates between `width/2` and `width` to `0` and `-.5`
+
+
+
+When we feed a change to `this.setState`, it triggers a re-render of the entire tree, our `memoizedCalc` function returns new values, and the final result is a dancing tree.
+
+
+
+![dancing-tree](./img/blog-wp-content-uploads-2016-12-dancing-tree.gif)
+
+
+
+Beautious. ?
+
+
+
+PS: last time, I mentioned that recursion stops working when you make a React build optimized for production. That doesn't happen. I don't know what was wrong with the specific case where I saw that behavior. ¯\\_(ツ)_/¯

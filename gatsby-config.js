@@ -57,13 +57,13 @@ module.exports = {
                     {
                         resolve: `gatsby-remark-smartypants`
                     },
-                    {
-                        resolve: 'gatsby-remark-external-links',
-                        options: {
-                            target: '_blank',
-                            rel: 'noreferrer', // eslint-disable-line unicorn/prevent-abbreviations
-                        },
-                    },
+                    // {
+                    //     resolve: 'gatsby-remark-external-links',
+                    //     options: {
+                    //         target: '_blank',
+                    //         rel: 'noreferrer', // eslint-disable-line unicorn/prevent-abbreviations
+                    //     },
+                    // },
                     {
                         resolve: '@raae/gatsby-remark-oembed',
                         options: {
@@ -72,7 +72,13 @@ module.exports = {
                                 exclude: ['Reddit']
                             }
                         }
-                    }
+                    },
+                    {
+                        resolve: require.resolve('./plugins/gatsby-remark-giphy'),
+                        options: {
+                            giphyApiKey: process.env.GIPHY_API_KEY,
+                        },
+                    },
                 ],
                 remarkPlugins: [require(`remark-slug`)], // eslint-disable-line global-require
             },

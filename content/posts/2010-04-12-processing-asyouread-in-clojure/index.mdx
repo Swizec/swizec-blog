@@ -1,0 +1,96 @@
+---
+layout: post
+title: 'Processing as-you-read in clojure'
+date: 2010-04-12
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2010-04-300px-SixHardDriveFormFactors.jpg
+---
+- [![Six hard disk drives with cases opened showing...](./img/blog-wp-content-uploads-2010-04-300px-SixHardDriveFormFactors.jpg "Six hard disk drives with cases opened showing...")](http://commons.wikipedia.org/wiki/Image:SixHardDriveFormFactors.jpg)
+
+  Image via [Wikipedia](http://commons.wikipedia.org/wiki/Image:SixHardDriveFormFactors.jpg)
+
+Sometimes we're given a stupid [algorithm](http://en.wikipedia.org/wiki/Algorithm "Algorithm") or two to implement at this or that course at uni. This time 'round they wanted us to implement something called external [matrix](http://en.wikipedia.org/wiki/Matrix_%28mathematics%29 "Matrix (mathematics)") transposition ... the idea is that you have to [transpose](http://en.wikipedia.org/wiki/Transpose "Transpose") a matrix live from the [hard drive](http://en.wikipedia.org/wiki/Hard_disk_drive "Hard disk drive") because it is potentially so bloody huge you can't store a single row in memory.
+
+
+
+Which is a bit silly, who's got 60+ gig huge matrixes these days? You're doing it wrong if you need that many dimensions! VERY wrong!
+
+
+
+But anyway, what really struck me as a bit silly is that they were big nazis when it comes to how we're supposed to do this. Needs to compile with their specific command, can only be done in [Java](http://java.sun.com "Java (programming language)") or C/C++ ... yeah fuck you and fuck your grade, let's _learn_ something.
+
+
+
+So I went and did it in [Clojure](http://clojure.org "Clojure") ... well not really since I didn't finish, but I came close.
+
+
+
+Surprisingly, it is in fact very _very_ hard to process data live as it's being read in a functional environment. Every library that's already out there open-read-closes the file, at best you get something that can read lines and allows you to work on every line as it's being read, but oh no, not characters. Nope, what sort of bloody idiot would want _that_?
+
+
+
+Well ... me.
+
+
+
+So here is my implementation, probably not the most elegant thing out there since I'm new to this, of what Java people call "nextInt". It returns the next integer in a file as a proper integer and so on.
+
+```
+(ns io (:require [clojure.contrib.io :as io]))
+
+(defn read-char [rdr]
+   (char (.read rdr)))
+
+(defn delimiter? [c]
+  (if (or (< (int c) (int '\0)) (> (int c) (int '\9)) (= c nil)) true false))
+
+(defn digit [c place]
+  (* (- (int c) 48) (Math/pow 10 (- place 1))))
+
+(defn numify [seq acc]
+  (if (= seq nil)
+    (int acc)
+    (numify (next seq)
+	    (+ acc (digit (first seq) (count seq))))))
+
+(defn read-number [rdr acc]
+  (let [c (read-char rdr)]
+    (if (delimiter? c)
+      (numify acc 0)
+      (read-number rdr (concat acc [c])))))
+```
+
+You call it with an open reader and an empty \[] thingy because, the latter because I couldn't figure out optional [function](http://en.wikipedia.org/wiki/Function_%28mathematics%29 "Function (mathematics)") arguments.
+
+
+
+And if anyone's interested, here's the rest of the code that opens a file where the first number denotes the number of columns in the matrix and then contains the rest of it delimited with spaces or tabs or anything non-numerical, and copies every row into a separate file so a transposition can then be done (didn't quite get to this part)
+
+```
+(defn copy-number [rdr writer]
+  (.write writer (str (read-number rdr []) " ")))
+
+(defn copy-row [rdr writer i]
+  (copy-number rdr writer)
+  (if (> i 1) (copy-row rdr writer (dec i))))
+
+(defn break-row [rdr i columns]
+  (try
+   (with-open [writer (io/writer (str "podatki-0-" i))]
+     (copy-row rdr writer columns))
+   (break-row rdr (inc i) columns)
+  (catch Exception e
+    nil)))
+
+(defn transpose-matrix [file-name]
+  (with-open [rdr (io/reader file-name)]
+    (let [columns (read-number rdr [])]
+      (break-row rdr 0 columns))))
+
+(transpose-matrix "/home/swizec/Documents/APS2/input.txt")
+```
+
+PS: that try/catch in there is fugly, but I didn't know how else to check for EOF \*blush\*
+
+[![Reblog this post \[with Zemanta\]](http://img.zemanta.com/reblog_e.png?x-id=40a33885-b638-42dc-8b23-c0933a1af6bb)](http://reblog.zemanta.com/zemified/40a33885-b638-42dc-8b23-c0933a1af6bb/ "Reblog this post \[with Zemanta]")

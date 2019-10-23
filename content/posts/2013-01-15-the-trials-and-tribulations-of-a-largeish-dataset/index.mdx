@@ -1,0 +1,148 @@
+---
+layout: post
+title: 'The trials and tribulations of a large-ish dataset'
+date: 2013-01-15
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2013-01-commit-histogram.png
+---
+Last week I wrote a little script in node.js.
+
+
+
+Its goal? GET ALL THE DATA!
+
+
+
+[![Commit time histogram](./img/blog-wp-content-uploads-2013-01-commit-histogram.png "Commit time histogram")](http://nightowls.swizec.com/histogram/hours)
+
+
+
+The plan was to scrape a massive [dataset](http://en.wikipedia.org/wiki/Data_set "Data set") off [Github](http://github.com "GitHub") and do some analysis of programmers' working habits, at least the ones using Github that is. As such, the script was fairly simple - run a search query via the API, get page 1, 2, 3 ...
+
+
+
+At 100 repositories per page with a round-trip of a few seconds and having to wait for an hour before being allowed to do more requests after every couple of hundred pages, the scraping job took the bigger part of a week. Occasionally the script would hang without getting a _403 error_ so I changed the query. That fixed it.
+
+
+
+Sometimes it would crash - right after I'd gone to bed of course.
+
+
+
+On Saturday morning I had a mongo database with a list of _513,900_ repositories on a small EC2 instance. They were not guaranteed to be unique.
+
+## When N becomes a problem
+
+The next step was going through the list of repositories and fetching punchcard data for each.
+
+
+
+\[caption id="attachment_5855" align="alignnone" width="650"][![This is a punchcard](http://swizec.com/blog/wp-content/uploads/2013/01/swizec-punchcard.png "This is a punchcard")](./img/blog-wp-content-uploads-2013-01-swizec-punchcard.png) This is a punchcard\[/caption]
+
+
+
+A core saying of practical computer science goes something like _"Our O(N^5) algorithm sucks for large N, but N is usually less than 10"_
+
+
+
+Although not a very big dataset by most means, at half a million, it was enough to thwart my original approach of using [Mongoose](http://mongoosejs.com/) to handle my mongodb connection.
+
+
+
+While Mongoose was great for writing, it failed completely at reading. Not exactly certain where the problem was, but running this sort of code quickly made my EC2 instance run out of memory:
+
+```
+models.repo.find({}, function (err, repos) {
+   repos.forEach(do_something);
+});
+```
+
+Where _models.repo_ is the Schema for a repository.
+
+
+
+So I was forced to ditch the relative comforts afforded by Mongoose and read my data the old fashioned way:
+
+```
+mongo.Db.connect(
+        format("mongodb://%s:%s/github-nightowls?w=1", 'localhost', 27017),
+        function(err, _db) {
+
+            var repos = _db.collection('repos'),
+                punchcards = _db.collection('punchcards');
+
+            repos.find().each(function (err, repo) {
+// ...
+```
+
+A lot more work, but it doesn't even show up as a blip on memory usage. My guess is that Mongoose was doing the wrong thing and didn't stream data right out of the database into my [callback function](http://en.wikipedia.org/wiki/Callback_%28computer_programming%29 "Callback (computer programming)"), but was trying to keep it all in memory. Silly Mongoose.
+
+
+
+There was one more step! Ensuring I only fetch punchcard data for unique repositories.
+
+
+
+My first attempt was going through the data, adding each repository's username/name combination to a redis set, then following that set when fetching the punchcards. Remember, sets guarantee each member only shows up once.
+
+
+
+Alas. After running a script for a few minutes - oh yes, did I mention it takes about 3 minutes just to read through the entire list of repositories? - it turns out the [Redis](http://redis.io/ "Redis (data store)") set was so massive my attempts at reading it were to no avail. Ran out of memory before even doing anything serious.
+
+
+
+This time I'm not sure it's [node_redis](https://github.com/mranney/node_redis)'s fault or Redis really cannot stream data out of sets as is reading them.
+
+
+
+Eventually the algorithm to fetch punchards worked like this:
+
+1. Read object from Mongo
+2. Check Redis set if object already processed
+3. Fetch punchard
+4. Store punchcard
+5. Add new member to Redis set marking we've done this
+
+Because of some inconsistencies in Github responses the first time I ran this, it crashed 5 minutes after I had gone to sleep.
+
+
+
+Next run went much better!
+
+
+
+Except the instance ran out of disk space after processing some 110k repositories and I only noticed after waiting 14 hours for everything to process. Kids, print your errors!
+
+
+
+Third time is a charm and on Monday morning I had all the punchcards in a roughly 6 gigabyte mongo database. All _504,015_ of them.
+
+
+
+Luckily I had spent the previous day coding up a script calculating histograms - takes about _3 minutes_ to munch through the dataset - and playing with d3.js to make it look good.
+
+
+
+In all, the dataset contains _164,509,270_ commits. Only in punchcard form for now. This means I only have a 7x24 grid of buckets saying how many commits happened at that time.
+
+
+
+Next step - finding a way to distinguish hobby and work projects to see if that affects the distribution of commit times. Wish me luck.
+
+
+
+PS: If you want the dataset, send me an email and we can arrange something
+
+
+
+PPS: for those interested, all the code for fetching [my dataset is on github](https://github.com/Swizec/github-nightowls)
+
+###### Related articles
+
+- [![](http://i.zemanta.com/noimg_110_80_80.jpg)](http://stackoverflow.com/questions/14164108/deploying-an-mvc4-c-sharp-application-to-azure-via-github-what-should-be-in-my)[Deploying an MVC4 C# application to Azure via GitHub. What should be in my .gitignore?](http://stackoverflow.com/questions/14164108/deploying-an-mvc4-c-sharp-application-to-azure-via-github-what-should-be-in-my)
+- [![](http://i.zemanta.com/138108576_80_80.jpg)](http://pypi.python.org/pypi/BigJob/0.4.122)[BigJob 0.4.122](http://pypi.python.org/pypi/BigJob/0.4.122)
+- [![](http://i.zemanta.com/noimg_96_80_80.jpg)](http://stackoverflow.com/questions/14262433/large-data-work-flows-using-pandas)["Large data" work flows using pandas](http://stackoverflow.com/questions/14262433/large-data-work-flows-using-pandas)
+- [![](http://i.zemanta.com/134901638_80_80.jpg)](http://port3000.co.uk/imageoptimiser-post-mortem-of-a-github-bot)[imageoptimiser: Post mortem of a GitHub bot](http://port3000.co.uk/imageoptimiser-post-mortem-of-a-github-bot)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=b124a913-ba09-45d1-84c3-ff52995f95e1)](http://www.zemanta.com/?px "Enhanced by Zemanta")

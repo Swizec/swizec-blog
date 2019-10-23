@@ -1,0 +1,174 @@
+---
+layout: post
+title: 'Writing modular Backbone with Backbone.SubRoute'
+date: 2013-07-31
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+Working on a complicated frontend web app, Backbone soon becomes unwieldy. Routes definitions grow and grow, views steal each other's actions and parts of the code try to become independent modules.
+
+
+
+This is the problem I faced a few weeks ago while working on the fanciest signup funnel I ever helped create. Visitors would see the splash page, create their cart, revise it, sign up, add billing and shipping info, and finally checkout without ever refreshing the page.
+
+
+
+A daunting challenge only made worse by the complexity of components involved. We needed a full-blown inventory listing, a full-blown cart editor and we even added some shiny bits to the billing and shipping forms. The funnel changes into an accordion after the first step.
+
+
+
+Oh and the user can refresh at any point in the funnel without losing their place.
+
+
+
+To divide work among the team, we took a straight-forward modular approach: a module handles the whole funnel, submodules take care of each step. This way everyone can focus on their own piece of the funnel and the javascript code can be reused when making the standalone versions of each step for signed-in users.
+
+## The skeleton
+
+[Backbone.SubRoute](http://geekdave.com/2012/04/05/module-specific-subroutes-in-backbone/) makes this approach possible by letting you create Backbone routers attached at a certain path in the URL. By doing something like `var bla = new SubBla("/bla", …)` you create a self-contained Backbone app that handles everything under `/bla` and doesn't care about the outside world.
+
+
+
+We didn't like how the official docs recommend going about this, so we made it automagical-er.
+
+
+
+A simple `app_skeleton.js` file holds the entire application together and loads modules when they're needed.
+
+```
+var YourApp = window.YourApp = {Routers: {}};
+
+YourApp.Router = Backbone.Router.extend({
+    routes: {
+        "": "invokeRootModule",
+        ":module(/*subroute)" : "invokeModule"
+    },
+
+    invokeRootModule: function () {
+        this.invokeModule("root");
+    },
+
+    invokeModule: function (module, subroute) {
+        module = module.toLowerCase().capitalize();
+
+        if (!YourApp.Routers[module]) {
+            YourApp.Routers[module] = 
+                new YourApp[module].Router(module.toLowerCase()+"/",
+                                           {createTrailingSlashRoutes: true});
+        }
+    }
+});
+```
+
+We agree to register all our modules as `window.YourApp.Module.Router`. This lets us put every module in its own file and creates a predictable interface for creating instances of sub routers.
+
+
+
+That was easy, now all we need is a submodule.
+
+## A module
+
+Modules work the same as standalone Backbone applications. They have views and collections and models and everything is held together by a router. You just have to conform to what app skeleton expects.
+
+
+
+A simple module might look like this:
+
+```
+(function ($) {
+    YourApp.Root = {};
+
+    YourApp.Root.Router = Backbone.SubRoute.extend({
+        routes: {
+            "(:step)": "step"
+        },
+
+        initialize: function () {
+            // do stuff
+        },
+
+        step: function () {
+            // something for this step
+        }
+    });
+
+})(jQuery);
+```
+
+`Router` is the only necessary part. Everything else is added to taste. We rely on the router's initialize function as the entry point into the module, so all initialization should happen in there.
+
+## Sub sub modules
+
+Let's make things interesting; the module is called `Root` because it's going to handle submodules of its own - funnel steps in our case. `Root` loads them on the home page, `app_skeleton` loads them on standalone pages.
+
+
+
+For some reason dynamically instantiating submodules was not an option in this case. Not sure why, but it probably had to do with listening to events between submodules. Yes, unclean, but there's no reason to go overboard with architecture principles. Sometimes you just have to get shit done.
+
+
+
+Root's initialize becomes something like this:
+
+```
+        initialize: function () {
+            this.subrouters = {};
+
+            this.subrouters.step1 = new YourApp.Step1.Router("base/step1/");
+            this.subrouters.step2 = new YourApp.Step2.Router("base/step2/");
+            // ...
+
+            this.__listenToSubrouters();
+
+            // other stuff
+        },
+```
+
+Every subrouter is instantiated on initialize. If we want to change our views when particular submodules are active, we have to listen to their `route` events because they steal routing from their parent. For instance, we had to make sure the accordion was visible, splash step was hidden and so on.
+
+```
+        __listenToSubrouters: function () {
+            _.keys(this.subrouters).map(_.bind(function (router) {
+                this.listenTo(this.subrouters[router], 
+                              "route", 
+                              _.bind(function () { 
+                                  this.step(router, "", 
+                                                 {dont_navigate: true}); 
+                              }, this));
+            }, this));
+        },
+```
+
+`__listenToSubrouters` goes through all the instantiated routers and makes sure to call the `step` function when a submodule does something.
+
+
+
+The `step` function becomes something like this:
+
+```
+        step: function(step, subpath, options) {
+            // do view stuff here
+
+            subpath = subpath || "";
+
+            if (this.subrouters[step] && !(options && options.dont_navigate)) {
+                this.subrouters[step].navigate(subpath, {trigger: true});
+            }
+        }
+```
+
+This makes sure to `.navigate` subrouters when it's appropriate and avoid doing so when the code is reacting to a subrouter's `route` event. I've left out the view stuff because that isn't very interesting.
+
+## Win
+
+And there you go. Backbone with a modular design that keeps modules neat, encapsulated and reusable.
+
+
+
+To make things even smoother I also added an event that triggers only when a certain step is fully visible. This helps submodules activate/deactivate their views properly because things like [jQuery Waypoints](http://imakewebthings.com/jquery-waypoints/) don't initialize well when elements aren't at their final positions.
+
+
+
+As for the super fancy signup process - you'll be able to see it when [Dwellers](http://www.dwellers.com/) launches. It's pretty great.
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=80eafc50-068a-4f40-acaf-a20b7ce2ed15)](http://www.zemanta.com/?px "Enhanced by Zemanta")

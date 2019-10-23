@@ -1,0 +1,240 @@
+---
+layout: post
+title: 'Livecoding Recap 47: Webpack build progress indicator for Mac Touchbar'
+date: 2017-09-18
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+_This is a Livecoding Recap – an almost-weekly post about interesting things discovered while livecoding. Usually shorter than 500 words. Often with pictures. Livecoding happens almost **every Sunday at 2pm PDT** on multiple channels. You should follow [My Youtube](https://www.youtube.com/TheSwizec) channel to catch me live._
+
+
+
+https&#x3A;//www.youtube.com/watch?v=cwNlRu5Dy-Y
+
+
+
+Today, we made history! Webpack progress indicator for the Mac Touchbar! Finally, even web developers can admit that thing is useful 😁
+
+
+
+Here it is in action on my day job project 👇
+
+
+
+https&#x3A;//twitter.com/Swizec/status/909565004642316288
+
+
+
+## Here's how you set it up
+
+
+
+You can start using it right now. All you need is an expensive laptop, my [Touchbar Nyancat Webpack Progress app](https://github.com/Swizec/touchbar_webpack_progress), and my fork of [nyan-progress-webpack-plugin](https://github.com/Swizec/nyan-progress-webpack-plugin/tree/send-progress-to-touchbar). Both are on Github.
+
+
+
+- [Download the app](https://github.com/Swizec/touchbar_webpack_progress), run it. Set it up to run at startup, if you want to be fancy.
+- Add my nyan-progress-webpack-plugin to your `package.json`. I'll try to convince @alexkuz to merge it into his published package. When that happens, this step will be easier.
+
+
+
+```
+// package.json
+"dependencies" {
+    // ...
+    "nyan-progress-webpack-plugin": "git://github.com/Swizec/nyan-progress-webpack-plugin#send-progress-to-touchbar",
+}
+```
+
+
+
+Then run installation:
+
+
+
+```
+$ npm install
+```
+
+
+
+Now you have my progress indicator. It can talk to your Touchbar when the app from step 1 is running.
+
+
+
+- Update your Webpack config.
+
+
+
+```
+// webpack.config.js
+
+plugins: [
+    // ...
+    new require('nyan-progress-webpack-plugin')({
+        sendProgressToTouchbar: true
+    })
+]
+```
+
+
+
+This enables a Nyan Cat webpack progress indicator in your terminal and tells it to send progress to the touchbar as well. It's behind a feature flag so @alexkuz doesn't get too upset when I make a pull request. Kind of a silly feature :)
+
+
+
+- Voilà! Enjoy your Touchbar Progress indicator.
+
+
+
+## Here's how it works
+
+
+
+This joyful hack stands on the shoulders of giants. We used two pieces of open source software and made them work together:
+
+
+
+1. Alexkuz's [nyan-webpack-progress-indicator](https://github.com/alexkuz/nyan-progress-webpack-plugin) provided all the logic to take Webpack's build progress and do something
+2. Avatsaev's [touchbar nyancat](https://github.com/avatsaev/touchbar_nyancat) provided the Touchbar integration because I don't know much about native development.
+
+
+
+We took those two Nyan Cat… things… and added an HTTP server. That's right. They talk to each other via HTTP because that was the easiest to implement. 😇
+
+
+
+The native app runs a web server built with [Swifter](https://github.com/httpswift/swifter). This part was hard because documentation is scarce and because I've never done Swift code before.
+
+
+
+We added these lines to what looks like the most \\important Nyan cat file – `NyanCatCanvas.swift`.
+
+
+
+```
+// NyanCatCanvas.swift
+
+func downloadImage() {
+    // stuff that downloads nyan gif
+
+    server["/progress/:progress"] = updateProgress()
+    do {
+        try server.start(12345)
+    } catch {
+        print(error)
+    }
+}
+
+func updateProgress() -> ((HttpRequest) -> HttpResponse) {
+    return { r in
+    let progress : NSNumber? = NumberFormatter().number(from: r.params.first!.value)
+
+    if progress != nil {
+        self.xPosition = -680 + 6.8 * CGFloat(progress!)
+
+        return .ok(.html("Progress: \(self.xPosition)"))
+    }else{
+        return .ok(.html("No progress"))
+    }
+    }
+}
+```
+
+
+
+We start the server listening on port `12345` with `server.start(12345)` and add a route for `/progress/:progress`. We're listening to GET request on `localhost:12345/progress/<number>`. Those call `updateProgress()`.
+
+
+
+The `updateProgress` function does a lot of confusing work to convert a maybe string into a computable number. Then it updates `self.xPosition` with the new position based on progress percentage.
+
+
+
+Updating `xPosition` automatically triggers a redraw… somehow. _shrug_
+
+
+
+That's all the machinery we need to update our Touchbar from anywhere. Next step is to add an HTTP call to the Webpack progress plugin.
+
+
+
+Like this 👇
+
+
+
+```
+// index.js
+function onProgress(...) {
+    // ...
+  if (options.sendProgressToTouchbar) {
+      sendProgressToTouchbar(progress, options);
+  }
+ 
+    // ...
+}
+
+function sendProgressToTouchbar(progress, options) {
+    var http = require('http');
+    var req = http.request({
+        port: options.touchbarPort,
+        hostname: '127.0.0.1',
+        method: 'GET',
+        path: '/progress/'+Math.round(progress*100)
+    });
+    req.end();
+
+}
+```
+
+
+
+`nyan-progress-webpack-plugin` already has a function hooked into `onProgress` updates from Webpack's machinery. We added an HTTP call to our Touchbar app via `sendProgressToTouchbar`.
+
+
+
+`sendProgressToTouchbar` uses node's built-in HTTP client to make a GET request and update the touchbar. There is no error handling because we're lazy and don't care enough.
+
+
+
+That's all the code it took. Thank you, open source community, for making hacks like this easy to build 😁
+
+
+
+## Here's why this is impractical
+
+
+
+Apple has decided that the Touchbar should only be controlled by the application that's currently in focus. That means you can only use your Touchbar to see Webpack progress when you're actively focusing on [touchbar_webpack_progress](https://github.com/Swizec/touchbar_webpack_progress).
+
+
+
+This makes it useless. ☹️
+
+
+
+Here's where I hope the open source community will step in. Take your favorite editor and add this as a plugin. If your editor is running this sort of code, it can show Webpack progress while you continue to write code.
+
+
+
+This is the recipe I envision:
+
+
+
+1. Be an editor, use Touchbar integration maybe (iA Writer has formatting, Emacs ignores my Touchbar)
+2. Start server, listen on `12345`
+3. When progress request comes, switch Touchbar to the progress indicator
+4. Keep updating until 100%
+5. Switch back to normal Touchbar functionality
+
+
+
+Can you help make that? Please make it.
+
+
+
+Here's all the code: [the macOS app](https://github.com/Swizec/touchbar_webpack_progress) and [the Webpack plugin](https://github.com/Swizec/nyan-progress-webpack-plugin/tree/send-progress-to-touchbar)
+
+
+
+🤘

@@ -1,0 +1,147 @@
+---
+layout: post
+title: 'Livecoding Recap 48: JavaScript async/await and Morty''s Mindblowers'
+date: 2017-10-02
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2017-10-mortystill-1024x577.png
+---
+_This is a Livecoding Recap – an almost-weekly post about interesting things discovered while livecoding. Usually shorter than 500 words. Often with pictures. Livecoding happens almost **every Sunday at 2pm PDT** on multiple channels. You should follow [My Youtube](https://www.youtube.com/TheSwizec) channel to catch me live._
+
+
+
+https&#x3A;//www.youtube.com/watch?v=a4g81widnGM
+
+
+
+This Sunday, I created an excuse to learn JavaScript async/await: [Morty's Mindblowers](http://mortysmindblowers.fun).
+
+
+
+Async/await is meant to be the bestest way to deal with asynchronous code in JavaScript. Even better than promises. And since the web is littered with async/await tutorials, it must be really hard, right?
+
+
+
+¯\\\_(ツ)\_/¯
+
+
+
+No… [just like Promises](https://swizec.com/blog/javascript-promises-monads/swizec/7814), it's nothing but a monad. A nice syntax sugarified monad, but still a monad. You can learn how to use async/await in 10 seconds.
+
+
+
+https&#x3A;//twitter.com/Swizec/status/914613801785319425
+
+
+
+[Watch](https://youtu.be/a4g81widnGM?t=2070). Read 👇
+
+
+
+If you know Promises, you know async/await. Congratz! 👏
+
+
+
+Let's say you want to fetch a list of images from Imgur and narrow it down to videos. With Promises, it looks like this:
+
+
+
+```
+class Imgur {
+    static URL = 'https://api.imgur.com/3/';
+    static CLIENT_ID = 'c848e36012571f2';
+    
+    static gifs(page) {
+         return fetch(`${Imgur.URL}gallery/hot/rising/${page}`,
+                     {headers: { Authorization: `Client-ID ${Imgur.CLIENT_ID}`}}
+        ).then(res => res.json())
+         .then(json => {
+             if (json.success) {
+                 return json.data.filter(({ type }) => type === 'video/mp4');
+             }else{
+                 throw new Error(json.data.error);
+             }
+         })
+    }
+}
+```
+
+
+
+We have a static `gifs()` method that uses `fetch` to talk to Imgur and return a Promise. The promise resolves with either a list of Imgur videos, or it rejects with an API error.
+
+
+
+Using `static` lets us call this API without instantiating an object. `Imgur.gifs()` for instance. Great for when you're using classes to group stuff and don't need objects.
+
+
+
+Ok, so this code is pretty readable, right? Fetch data, then parse it, then do things.
+
+
+
+With async/await, that same code looks like this:
+
+
+
+```
+class Imgur {
+    static URL = 'https://api.imgur.com/3/';
+    static CLIENT_ID = '';
+
+    static async gifs(page) {
+        const res = await fetch(`${Imgur.URL}gallery/hot/rising/${page}`,
+                                {headers: { Authorization: `Client-ID ${Imgur.CLIENT_ID}`}}),
+              json = await res.json();
+
+        if (json.success) {
+            return json.data.filter(({ type }) => type === 'video/mp4');
+        }else{
+            throw new Error(json.data.error);
+        }
+    }
+}
+```
+
+
+
+I don't know if that's more readable, but I can see the appeal. Your code looks just like any other code. No need to think about async stuff at all.
+
+
+
+You have to put `async` in front of your function name. That wraps it in a Promise. Anything you return is in a Promise monad. Time bubble to use the metaphor from my [JavaScript Promises in 2 minutes](https://swizec.com/blog/javascript-promises-monads/swizec/7814) article.
+
+
+
+You peek into that monad using the `await` keyword. It's like wrapping your code in a `.then` callback.
+
+
+
+That's really all there is to it. Once you say `json = await res.json()`, anything that uses that `json` variable gets wrapped in a `.then()` call.
+
+
+
+![](./img/blog-wp-content-uploads-2017-10-This-subreddits-reaction-when-asked-how-we-make-our-gifs-look-so-damn-good-Imgur.gif)
+
+
+
+Any time you use the `Imgur.gifs()` method, you have to say `await` and your function must be wrapped in `async`.
+
+
+
+Oh, and you can wrap built-in React lifecycle hooks in `async` and it works as expected. That part is neat. However, you can't have async getters. That would be cool.
+
+
+
+So yeah, we got the JavaScript async/await stuff working in a couple minutes, then we spent some half an hour figuring out how Imgur's API works, and an hour or two trying to use flexbox to make the `<video>` tag shrink and grow.
+
+
+
+And in the end, we got [Morty's Mindblowers](http://mortysmindblowers.fun). It uses cut scenes from an episode of Rick & Morty to show you random gifs from Imgur's frontpage.
+
+
+
+Enjoy 🤘
+
+
+
+[![](./img/blog-wp-content-uploads-2017-10-mortystill-1024x577.png)](http://mortysmindblowers.fun)

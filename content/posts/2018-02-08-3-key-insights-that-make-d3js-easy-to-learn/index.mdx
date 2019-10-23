@@ -1,0 +1,235 @@
+---
+layout: post
+title: '3 key insights that make D3.js easy to learn'
+date: 2018-02-08
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2018-02-barchartcode.png
+---
+The other day somebody asked me how to learn D3.js from scratch. I quipped that it took me writing a book to really learn it. It's one hell ofa library.
+
+
+
+Most people don't go that far. They don't have to. Most people start with a problem, find similar examples, do some copy pasta, tweak until it works and end up with a working visualization they don't understand. You'd be surprised how few people actually understand how their D3 dataviz works.
+
+
+
+> Anecdata: I wrote a book on it to learn it.  
+>   
+> Normal curve is like this 👇  
+>   
+> 1) have problem/idea  
+> 2) find similar example  
+> 3) tweak until solve  
+> 4) repeat  
+> 5) get frustrated  
+> 6) learn 1 or 2 basic concepts  
+> 7) epiphany  
+> 8) lose touch with why it felt hard at first  
+> 9) teach
+>
+> — Swizec (@Swizec) [February 8, 2018](https://twitter.com/Swizec/status/961448920600604672?ref_src=twsrc%5Etfw)
+
+
+
+That was a funny tweet. It delighted 3 people, that's my bar for success.
+
+
+
+But the idea that there's only 1 or 2, maybe 3, key concepts you have to grok to understand every D3 example out there ... it kept me up at night. What _are_ those 3 key insights into D3?
+
+
+
+## 1) Data manipulation vs. DOM manipulation
+
+
+
+All D3 examples are split into two parts: Data manipulation and DOM manipulation. First you prep your values, then you render.
+
+
+
+You have to go through many examples to notice what's going on. Inference learning is hard. Most beginners miss this pattern and it makes D3 look more confusing than it is.
+
+
+
+Let's take an example from [D3's docs](https://github.com/d3/d3/wiki/Gallery), a bar chart with a hover effect.
+
+
+
+
+
+Mike Bostock, the creator of D3, built this chart in 43 lines of code. Here they are 👇
+
+
+
+![Bar Chart codea](./img/blog-wp-content-uploads-2018-02-barchartcode.png)
+
+
+
+There are two parts to this code: Data manipulation and DOM manipulation.
+
+
+
+[![Bar chart data manipulation code](./img/blog-wp-content-uploads-2018-02-barchartcode-data.png)](Bar)
+
+
+
+Bostock here first prepares his data:
+
+
+
+- some sizing variables (margin, width, height)
+- two scales to help with data-to-coordinates conversion (x, y)
+- loads his dataset (d3.tsv) and updates his scales' domains
+- uses scales to calculate attributes during DOM manipulation
+
+
+
+In the DOM manipulation part, he puts shapes and objects into an SVG. This is the part you then see in the browser.
+
+
+
+![Bar chart DOM manipulation code](./img/blog-wp-content-uploads-2018-02-barchart-dom.png)
+
+
+
+DOM manipulation in D3 happens via D3 selections. They're a lot like jQuery `$(something)`. Personally I like to do this part with React as described in my book, [React+D3v4](https://swizec.com/reactd3js).
+
+
+
+Here Bostock does a few things
+
+
+
+- selects the `<svg>` node (d3.select)
+- appends a grouping `<g>` node (.append) with an SVG positioning attribute (translate)
+- adds a bottom axis by appending a `<g>`, moving it, then calling `d3.axisBottom` on it. D3 has built-in axis generators
+- adds a left axis using the same approach but rotating the ticks
+- appends a text label "Frequency" to the left axis
+- uses `selectAll.data` to make a virtual selection of `.bar` nodes and attach some data, then for every new data value (.enter), appends a `<rect>` node and gives it attributes
+
+
+
+That last part is where people get lost. It looks like magic. I've been using D3 for years and it still looks like magic.
+
+
+
+It's a declarative approach to rendering data. Works great, hard to understand. That's why I do it in React instead :)
+
+
+
+You can think of `.enter` as a loop over your data and everything chained after `.enter` is your loop's body. Sort of like doing `data.map(d => append(rect).setManyAttributes())`
+
+
+
+Savvy?
+
+
+
+## 2) Scales
+
+
+
+Scales are D3's most versatile concept. They help you translate between two different spaces. Like, mathematical spaces.
+
+
+
+They're like the mathematical functions you learned about in school. A domain maps to a range using some sort of formula.
+
+
+
+![](./img/wikipedia-commons-thumb-d-df-Function_color_example_3.svg-440px-Function_color_example_3.svg.png)
+
+
+
+Colored shapes in the domain map to colors in the range. No formula for this one, which makes it an ordinal scale.
+
+
+
+```
+let shapes = d3.scaleOrdinal()
+                 .domain(['red triangle', 'orange rectangle', ...)
+                 .range(['red', 'orange', ...)
+```
+
+
+
+Once you have this scale, you can use it to translate from shapes to colors. `shapes('red triangle')` returns `'red'` for example.
+
+
+
+Many different types of scales exist. Linear, logarithmic, quantize, etc. Any basic transformation you can think of exists. The rest you can create by writing custom scales.
+
+
+
+You're most often going to use scales to turn your data values into coordinates. But other usecases exist.
+
+
+
+## 3) D3 layouts
+
+
+
+Sure `.enter.append` looks like magic, but D3 layouts are the real mind=blown of the D3 ecosystem. They take your input data and return a full-featured visualization thing.
+
+
+
+Like a force layout using forces between nodes to place them on the screen.
+
+
+
+
+
+Or a circle packing layout that neatly packs circles.
+
+
+
+
+
+I don't know how these work internally. I've yet to try building one for others to use.
+
+
+
+But here's a key insight about the magic of layouts: They're the data part.
+
+
+
+You take a `forceLayout` for example and feed it your data. It returns an object with a `tick` event callback.
+
+
+
+```
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) { return d.id; }))
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2));
+```
+
+
+
+This `simulation` now handles everything about rendering nodes. Changes their positions on every `tick` callback.
+
+
+
+But it is up to you to render them. A layout handles your dataviz in the abstract. You're still the one in control of rendering.
+
+
+
+For a force layout, you have to update the DOM on every tick of the animation. For circle packing, you render it once.
+
+
+
+It took me a while to get this and once I did, all the fancy looking visualizations started to make sense.
+
+
+
+## Fin
+
+
+
+To summarize, you need to grok 3 key insights for D3 to make sense. Once they click, a whole new world opens up.
+
+
+
+1. Code is split into data and DOM manipulation
+2. Scales are great and used a lot
+3. You're always in control of rendering
