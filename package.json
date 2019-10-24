@@ -11,6 +11,7 @@
         "copyPosts": "rm -rf content/posts/* && cp -rf ../wordpress-to-markdown/out/* ./content/posts"
     },
     "dependencies": {
+        "@agentofuser/remark-giphy": "^1.0.1",
         "@narative/gatsby-theme-novela": "^0.9.5",
         "@raae/gatsby-remark-oembed": "^0.1.1",
         "babel-plugin-styled-components": "^1.10.6",
