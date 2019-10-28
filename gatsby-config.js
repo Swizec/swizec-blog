@@ -6,23 +6,25 @@ module.exports = {
         description: `This is where I write thing.`,
         hero: {
             heading: `Want to become a better web engineer? Indie hacker? Entrepreneur? Keep reading.`,
-            maxWidth: 652,
+            maxWidth: 652
         },
-        social: [{
+        social: [
+            {
                 name: `twitter`,
-                url: `https://twitter.com/swizec`,
+                url: `https://twitter.com/swizec`
             },
             {
                 name: `github`,
-                url: `https://github.com/swizec`,
+                url: `https://github.com/swizec`
             },
             {
                 name: `instagram`,
-                url: `https://instagram.com/swizec`,
-            },
-        ],
+                url: `https://instagram.com/swizec`
+            }
+        ]
     },
-    plugins: [{
+    plugins: [
+        {
             resolve: "@narative/gatsby-theme-novela",
             options: {
                 contentPosts: "content/posts",
@@ -33,20 +35,22 @@ module.exports = {
                     local: true,
                     contentful: false
                 }
-            },
+            }
         },
+        "gatsby-plugin-twitter",
         {
             resolve: `gatsby-plugin-mdx`,
             options: {
                 extensions: [`.mdx`, `.md`],
-                gatsbyRemarkPlugins: [{
+                gatsbyRemarkPlugins: [
+                    {
                         resolve: `gatsby-remark-images`,
                         options: {
                             maxWidth: 10000,
                             linkImagesToOriginal: false,
                             quality: 80,
-                            withWebp: true,
-                        },
+                            withWebp: true
+                        }
                     },
                     {
                         resolve: `gatsby-remark-copy-linked-files`
@@ -57,31 +61,33 @@ module.exports = {
                     {
                         resolve: `gatsby-remark-smartypants`
                     },
-                    // {
-                    //     resolve: 'gatsby-remark-external-links',
-                    //     options: {
-                    //         target: '_blank',
-                    //         rel: 'noreferrer', // eslint-disable-line unicorn/prevent-abbreviations
-                    //     },
-                    // },
                     {
-                        resolve: '@raae/gatsby-remark-oembed',
+                        resolve: "@raae/gatsby-remark-oembed",
                         options: {
                             usePrefix: false,
                             providers: {
-                                exclude: ['Reddit']
+                                exclude: ["Reddit"]
                             }
                         }
                     },
                     {
-                        resolve: require.resolve('./plugins/gatsby-remark-giphy'),
+                        resolve: "gatsby-remark-external-links",
                         options: {
-                            giphyApiKey: process.env.GIPHY_API_KEY,
-                        },
+                            target: "_blank",
+                            rel: "noreferrer" // eslint-disable-line unicorn/prevent-abbreviations
+                        }
                     },
+                    {
+                        resolve: require.resolve(
+                            "./plugins/gatsby-remark-giphy"
+                        ),
+                        options: {
+                            giphyApiKey: process.env.GIPHY_API_KEY
+                        }
+                    }
                 ],
-                remarkPlugins: [require(`remark-slug`)], // eslint-disable-line global-require
-            },
+                remarkPlugins: [require(`remark-slug`)] // eslint-disable-line global-require
+            }
         },
         {
             resolve: `gatsby-plugin-manifest`,
@@ -92,21 +98,21 @@ module.exports = {
                 background_color: `#fff`,
                 theme_color: `#fff`,
                 display: `standalone`,
-                icon: `src/assets/favicon.png`,
-            },
+                icon: `src/assets/favicon.png`
+            }
         },
-        'gatsby-plugin-styled-components',
+        "gatsby-plugin-styled-components",
         {
             resolve: `gatsby-plugin-google-analytics`,
             options: {
-                trackingId: "UA-1464315-1",
-            },
+                trackingId: "UA-1464315-1"
+            }
         },
         {
-            resolve: 'gatsby-plugin-facebook-pixel',
+            resolve: "gatsby-plugin-facebook-pixel",
             options: {
-                pixelId: '714190382013726'
+                pixelId: "714190382013726"
             }
         }
-    ],
+    ]
 };
