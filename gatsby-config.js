@@ -66,7 +66,14 @@ module.exports = {
                         options: {
                             usePrefix: false,
                             providers: {
-                                exclude: ["Reddit"]
+                                include: [
+                                    "YouTube",
+                                    "CodeSandbox",
+                                    "Codepen",
+                                    "Twitter",
+                                    "Instagram",
+                                    "Twitch"
+                                ]
                             }
                         }
                     },
