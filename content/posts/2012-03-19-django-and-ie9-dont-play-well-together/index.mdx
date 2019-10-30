@@ -1,0 +1,109 @@
+---
+layout: post
+title: 'Django and IE9 don''t play well together'
+date: 2012-03-19
+redirect_from: 
+            - /blog/django-and-ie9-dont-play-well-together/swizec/4017
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/7054-6935959929_a80f9166c9_m.jpg
+---
+You know those bugs that take_hours_ to debug? And the fix is ... _moving a single line._
+
+
+
+\[caption id="" align="alignright" width="240" caption="filming of the HTML music video (Photo credit: MadLabUK)"][![filming of the HTML music video](./img/7054-6935959929_a80f9166c9_m.jpg "filming of the HTML music video")](http://www.flickr.com/photos/43963088@N03/6935959929)\[/caption]
+
+
+
+That kind of bug is tripped up when you use django's csrf protection and someone comes to your site using [IE9](http://ie9.com "Internet Explorer 9"). It can easily happen that not only will form stylings not affect the elements, the form might even ignore any values entered!
+
+
+
+But it works perfectly on older versions of IE.
+
+
+
+The bug was insanely difficult to pinpoint because I don't have IE9 anywhere - only linux and mac around here, any windows box is so old IE7 is about the extent of its capabilities ... After installing some sort of windows 7 to a [virtual machine](http://en.wikipedia.org/wiki/Virtual_machine "Virtual machine") and getting IE9 working, I set to work.
+
+## Symptoms
+
+1. Form works perfectly in IE7, [Chrome](http://www.google.com/chrome "Google Chrome"), Firefox etc.
+2. Form works perfectly with _[compatibility mode](http://en.wikipedia.org/wiki/Compatibility_mode "Compatibility mode")_ turned on
+3. Form values aren't submitted
+4. Form elements don't respond to form styling
+
+
+
+For some reason IE9 thinks the form is empty. Displays all elements, but they don't behave like they're part of the form ... which is kind of odd. They aren't even selectable through the [javascript console](http://www.mozilla.com/firefox/ "Firefox") or anything.
+
+
+
+## Solution
+
+
+
+After many pointless wanderings and random code changes, I realized the [HTML](http://en.wikipedia.org/wiki/HTML "HTML")doesn't look like something I'd usually write (legacy-ish code).
+
+
+
+```
+
+{% csrf_token %} 
+blah 
+```
+
+
+
+Usually I'd put the {% _csrf_token %}_ at the end. Not sure why, just the way I've always done it ... surely this can't make a difference right?
+
+
+
+It can!
+
+
+
+Putting it at the bottom of the form fixed all bugs. Styling suddenly worked, form was submitted with all data and everything worked everywhere.
+
+## Le huh?
+
+
+
+\[caption id="" align="alignright" width="240" caption="filming of the HTML music video (Photo credit: MadLabUK)"][![filming of the HTML music video](./img/7204-6935959333_484df58faa_m.jpg "filming of the HTML music video")](http://www.flickr.com/photos/43963088@N03/6935959333)\[/caption]
+
+
+
+When the form is rendered that _{% csrf_token %}_ is replaced with an invisible [div tag](http://en.wikipedia.org/wiki/Span_and_div "Span and div"). For some reason this ticks off IE9's strictness and the rest of the form isn't considered to be a part of this element anymore.
+
+
+
+Something like this:
+
+
+
+```
+
+    
+
+    
+    From date:
+    
+    
+```
+
+
+
+I can't find official reference either way, but I think div's inside forms are legal HTML, perhaps not the best looking HTML, but _p_ tags are allowed, even happen in the[form tag example on w3.org](http://www.w3.org/TR/html401/interact/forms.html#h-17.4.2), so I have no idea why IE9 would trip up on this.
+
+
+
+Perhaps someone a bit more knowledgeable of strict HTML can shed some light on this issue? For now, let's all just be aware of this little quirk.
+
+###### Related articles
+
+- [Microsoft Makes Fun of Older IE versions To Promote IE9](http://browserfame.com/543/microsoft-makes-fun-of-internet-explorer-older-versions) (browserfame.com)
+- [IE9 and e-Portal](http://www.edugeek.net/forums/windows-7/91141-ie9-e-portal.html) (edugeek.net)
+- [Chrome, IE9 and Firefox Failed at Pwn2Own 2012](http://browserfame.com/528/pwn2own-2012-pwnium-chrome-ie9-firefox) (browserfame.com)
+- [Rounded corners not working in IE9](http://stackoverflow.com/questions/9298929/rounded-corners-not-working-in-ie9) (stackoverflow.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=5c714ca9-738a-4e4e-afcc-841f303b60b4)](http://www.zemanta.com/ "Enhanced by Zemanta")

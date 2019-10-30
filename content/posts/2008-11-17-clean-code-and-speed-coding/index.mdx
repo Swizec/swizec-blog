@@ -1,0 +1,20 @@
+---
+layout: post
+title: 'Clean Code and speed coding'
+date: 2008-11-17
+redirect_from: 
+            - /blog/clean-code-and-speed-coding/swizec/42
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+Some weeks ago I finished reading [Clean Code by Robert C. Martin](http://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882), which is something I may have spoken about already, but I can't remember. Well it was an amazingly good read and it instantly changed a lot about the way I code and even the way I think about things. At first a lot of what was mentioned in Clean Code made the optimiser in me cringe and whince. Things like putting conditionals into a separate function and so on.
+
+But later I realised that hey, modern computers are fast enough, some wasteful practices like that aren't going to hurt too much and the saved time in development can only do good. See, the thing is that if, for example, you encapsulate conditionals in separate functions you don't only achieve greater code readability, you also get the ability to change an \\important part of algorithm behaviour (when to do something) by changing a single function and the change automatically propagates throughout your code.
+
+I believe that due to my new practices of writing code cleanly I have been able to develop [Twitulater](http://twitulater.com/) as much as I have in the past twelve days. It's reached version 0.3 of all things and is fast becoming useful. So far the version update cycle, starting from 0.1, has on average been 2.5 days and that, if you ask me, is quite astounding - especially taking into account this is the first time ever of me developing in Adobe AIR.
+
+The reason developing can be so quick once you acquire clean code practicess is mostly that, as Uncle Bob says, developers spend much more of their time reading code than they do writing it and when that code is super readable it takes much less time to read. Furthermore, due to many of his advice, the code is also much more searchable and better structured so it doesn't take as long to find what you're looking for - this especially applies to us text editor types who abhor IDE's.
+
+There is another reason that I believe is of even greater weight, now that I keep code clean I find that I can write large chunks of code, without testing, and have it working correctly the first time it's run. With [Twitulater](http://twitulater.com/) it's happened that I wrote a hundred lines of code, ran it, and it just worked, just like that.
+
+Now all that's left for me to do is acquire test driven development practices so I can cut my debugging time in half. Oh and if you didn't glean from the rest of this post: You want this book.

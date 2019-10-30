@@ -1,0 +1,459 @@
+---
+layout: post
+title: 'Delightful state management with hooks and Constate'
+date: 2019-01-16
+redirect_from: 
+            - /blog/delightful-state-management-with-hooks-and-constate/swizec/8876
+author: Swizec Teller
+hero: ./img/techletter.app-screenshot-1547664644055.png
+---
+Wanna get a room full of React engineers talking? Mention state management.
+
+
+
+
+
+Everyone has their favorite library. The Redux camp loves their actions and reducers and sagas and whatnot. The MobX camp loves observers and actions and overwritten object defaults and magic.
+
+
+
+Both say their way is simplest. Both hide many footguns.
+
+
+
+[![https://twitter.com/thekitze/status/1085062217312153600](./img/techletter.app-screenshot-1547664644055.png)](https://twitter.com/thekitze/status/1085062217312153600)
+
+
+
+It's 2019. You probably don't need a state management library.
+
+
+
+🤔
+
+
+
+Got a simple app? A handful of properties shared between a couple components?
+
+
+
+Use local state.
+
+
+
+## Local state is your best friend
+
+
+
+Contrary to popular belief, you don't need complex state management to build a login form with two fields. Something like this will do 👇
+
+
+
+```
+class Field extends React.Component {
+    state = {
+        value: "",
+        error: ""
+    }
+    onChange = event => this.setState({
+        value: event.target.value
+    }, this.validate);
+    validate = () => {
+        const { value } = this.state;
+        if (!someValidationRequirement(value)) {
+            this.setState({
+                error: "My lovely error"
+            })
+        }
+    }
+    render() {
+        const { value, error } = this.state;
+        return (
+            <>
+                
+                {error}
+            
+        )
+    }
+}
+```
+
+
+
+That's a field with a `value` and `error` state. Typing triggers the `onChange` handler and updates state. This triggers a re-render and users can see what they're typing.
+
+
+
+Field validation triggers after state update, checks against some external function, and sets the error. You could use the presence of this error to make your field red or whatever.
+
+
+
+A login form can reuse this field twice.
+
+
+
+```
+class Login extends React.Component {
+    render() {
+        return (
+            
+
+                
+                
+            
+
+        )
+    }
+}
+```
+
+
+
+## Hoisted state is best state
+
+
+
+_"But Swizec, how will my form get those values? How will joint validation work?"_
+
+
+
+Right. It's best to hoist your state into the form. You've just discovered that the _form_ cares about this state, not the fields.
+
+
+
+The magic of asking questions to avoid building things you don't need.
+
+
+
+Something like this, then 👇
+
+
+
+```
+const Field = ({ onChange, value, error }) => (
+    <>
+        
+        {error}
+    
+)
+class Login extends React.Component {
+    state = {
+        user: {
+            value: "",
+            error: ""
+        },
+        pass: {
+            value: "",
+            error: ""
+        },
+        error: ""
+    }
+    validate = () => {
+        const { user, pass } = this.state;
+        if (!someValidation(user.value) || !someValidation(pass.value)) {
+            this.setState({
+                error: "A lovely form error"
+            });
+        }
+    }
+    onChangeUser = event => this.setState({
+        user: {
+            value: event.target.value
+        }
+    }, () => {
+        if (!someValidation(event.target.value)) {
+            this.setState({
+                user: {
+                    value: event.target.value,
+                    error: "A user error oh my"
+                }
+            })
+        }
+    }
+    onChangePass = event => this.setState({
+        pass: {
+            value: event.target.value
+        }
+    }, () => {
+        if (!someValidation(event.target.value)) {
+            this.setState({
+                pass: {
+                    value: event.target.value,
+                    error: "A password error oh my"
+                }
+            })
+        }
+    }
+    render() {
+        const { user, pass, error } = this.state;
+        return (
+            
+                
+                
+                {error}
+            
+        )
+    }
+}
+```
+
+
+
+Pretty repetitive, I agree. But it works and you didn't need no library.
+
+Same concept as before except we moved all the `Field` machinery into our form. Duplicated it twice for two fields and turned fields into fully managed components.
+
+
+
+You can just imagine how this code explodes in complexity the more fields you add.
+
+
+
+## Context to the rescue
+
+
+
+We can think of forms as sections of our app. Contexts.
+
+
+
+The modern context API makes it pretty painless to create ad-hoc contexts that share state among several components. We can use that to move some logic back into our fields.
+
+
+
+```
+const FormContext = React.createContext();
+```
+
+
+
+This creates a `FormContext` We're using it in a contrived way and I'll explain why.
+
+
+
+```
+class Field extends React.Component {
+    state = {
+        value: this.props.value,
+        error: ""
+    }
+    onChange = event => this.setState({
+        value: event.target.value
+    }, this.validate);
+    validate = () => {
+        const { value } = this.state;
+        if (!someValidationRequirement(value)) {
+            this.setState({
+                error: "My lovely error"
+            })
+        } else {
+            this.props.returnValue(this.state.value)
+        }
+    }
+    render() {
+        const { value, error } = this.state;
+        return (
+            <>
+                
+                {error}
+            
+        )
+    }
+}
+const ContextField = ({ name }) => (
+    
+        {(state) => (
+             state.onChange(value, name) />
+        )}
+    
+)
+```
+
+
+
+Same smart form field as we had before. It takes care of validation and temp value keeping internally. When it's happy it returns the verified value to the form with the `this.props.returnValue` method.
+
+
+
+The `returnValue` method and initial field value come from context. That's where the `ContextField` component comes in.
+
+
+
+With a shared context we can render these fields as deep inside our tree as we want, a different file even, and they can all talk to our Login form.
+
+
+
+The Login form then looks like this:
+
+
+
+```
+class Login extends React.Component {
+    state = {
+        user: "",
+        pass: "",
+        error: "",
+        onChange: (value, field) => this.setState({
+            [field]: value
+        }, this.validate)
+    }
+    validate = () => {
+        const { user, pass } = this.state;
+        if (!someValidation(user) || !someValidation(pass)) {
+            this.setState({
+                error: "A lovely form error"
+            });
+        }
+    }
+    render() {
+        const { error } = this.state;
+        return (
+            
+                
+                
+                {error}
+            
+        )
+    }
+}
+```
+
+
+
+We now have a form that keeps valid `user` and `pass` state, provides a change method via context, and renders fields by just giving them a name.
+
+
+
+With this approach you can add as many fields as you want with very little overhead. You could make further improvements by thinking up types of fields, passing validations with props etc.
+
+
+
+But there's still a lot of code to look at.
+
+
+
+## State with hooks, oh my ❤️
+
+
+
+That's where hooks come in. Hooks make stuff like this a breeze.
+
+
+
+Check out that same field implemented with React hooks 👇
+
+
+
+```
+const Field = ({ value, returnValue }) => {
+    const [state, setState] = useState(value);
+    const [error, setError] = useState("");
+    useEffect(() => {
+        if (!someValidationRequirement(state)) {
+            setError("My lovely error");
+        } else {
+            returnValue(state)
+        }
+    }, [state])
+    return (
+        <>
+             setState(event.target.value)} />
+        
+    )
+}
+```
+
+
+
+`useState` creates convenient state management. A getter and a setter. First const is the value, second const sets the value.
+
+
+
+`useEffect` runs our validation method on every change of `state`. It's that second argument that ensures our function runs on changes only.
+
+
+
+You can replicate the rest of our setup with `useContext`. You'll wind up with similar logical complexity and much less code.
+
+
+
+## Constate makes useContext great 👌
+
+
+
+Rather than messing around with `useContext`, I suggest using [Constate](https://github.com/diegohaz/constate). It was already my favorite library a few months ago when it was just for modern React Context.
+
+
+
+\[https&#x3A;//www.youtube.com/watch?v=63UI2nTz1qA]
+
+
+
+With the change to hooks it became truly amaze.
+
+
+
+Something like this 👇
+
+
+
+```
+function useForm() {
+    const [user, setuser] = useState("");
+    const [pass, setpass] = useState("");
+    const [error, setError] = useState("");
+    return { user, pass, error, setUser, setPass, setError };
+}
+const FormContainer = createContainer(userForm);
+const ContextField = ({ name }) => (
+    const state = useContext(FormContainer.Context);
+    return 
+)
+function Error() {
+    const { error, setError, user, pass } = useContext(FormContainer.Context);
+    useEffect(() => {
+        if (!someValidation(user) || !someValidation(pass)) {
+            setError("A lovely form error")
+        }
+    }, [user, pass])
+    return (
+        {error}
+    )
+}
+function Login() {
+    
+        
+        
+        
+    
+}
+```
+
+
+
+😱
+
+
+
+Beautiful!
+
+
+
+Here's how it works:
+
+
+
+1. Custom hook combines all the state handling we need.
+2. Our hook returns its external API as an object.
+3. We use Constate's `createContainer` method to wrap it in a container
+4. Like before, ContextField is our context-based wrapper. It takes a name and uses it to get initial value and returnValue API from state. In this case it dynamically decides which `setX` method to use.
+5. `Error` is a new method. Because of context, we can extract form error handling into a new component. Once more `useEffect` runs our validations when `user` or `pass` change.
+6. The `Login` form is now our simplest component. Renders context, fields, and error.
+
+
+
+Delightful state management with hooks and Constate. QED
+
+
+
+:)

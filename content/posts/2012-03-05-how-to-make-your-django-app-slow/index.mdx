@@ -1,0 +1,139 @@
+---
+layout: post
+title: 'How to make your django app slow'
+date: 2012-03-05
+redirect_from: 
+            - /blog/how-to-make-your-django-app-slow/swizec/3825
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2012-03-3188032449_1e8783552a_m5.jpg
+---
+The task every developer fears _"Hey, I sometimes get a timeout when I want to see the last gazillion days of activity in the [dashboard](http://en.wikipedia.org/wiki/Dashboard "Dashboard"). What gives?"_
+
+
+
+\[caption id="" align="alignright" width="159" caption="Nikon GP-1 GPS Unit Test (Photo credit: AndyRamdin / ND-Photo.nl)"][![Nikon GP-1 GPS Unit Test](./img/blog-wp-content-uploads-2012-03-3188032449_1e8783552a_m5.jpg "Nikon GP-1 GPS Unit Test")](http://www.flickr.com/photos/20676353@N00/3188032449)\[/caption]
+
+
+
+This problem started happening for a project I work on a few months ago. Through a lucky sequence of events I was able to push the problem back a couple of months ... mostly just a beefier VPS on amazon with a bit more memory.
+
+
+
+Yesterday I finally cleaned up _everything_ _else_ from pivotal tracker and was left with only that one dreaded item. That ... slowness thing. Have you ever tried speeding up the execution of something when 80% of the codebase isn't yours?
+
+## Context! I need context!
+
+Let me give you a bit of context for what's going on:
+
+- the project lets customers have many users
+- users enter events when they do stuff
+- the entries can be checked in a dashboard
+- there is a date-range picker to see more than just today's events
+
+And that's where it all gets ever so slightly weird. When you choose anything other than _today_ things start becoming increasingly slow and sometimes certain browsers decide that it's just too slow and timeout.
+
+
+
+No, it isn't slow enough to cause the 30 second socket timeout.
+
+
+
+No, caching wouldn't really benefit this activity either.
+
+## A simple benchmark
+
+In light of what I've learned about [unit testing being for lazy people](http://swizec.com/blog/unit-testing-is-for-lazy-people/swizec/3752 "Unit testing is for lazy people") last week, I decided to set up a [unit test](http://en.wikipedia.org/wiki/Unit_testing "Unit testing") that is actually an [integration test](http://en.wikipedia.org/wiki/Integration_testing "Integration testing") and most likely isn't either of those since it's some sort of benchmark.
+
+
+
+But it goes in [django](http://www.djangoproject.com "Django (Web framework)")'s testing framework, the python module behind that is called unittest, so I'm calling it a unit test.
+
+```
+    def test_date_range(self):
+        t1 = datetime.now()
+        response = self.c.post('/accounts/dashboard/',
+                               {'dateFrom': (datetime.now()-timedelta(days=356)).strftime("%m/%d/%Y")})
+
+        t2 = datetime.now()
+
+        self.assert_((t2-t1).seconds < 2, "Too slow")
+```
+
+See, simple test. All it needed was exporting the whole production database into a fixture so django loads it up every time the test is run and then cleans up after itself.
+
+
+
+The results are abominable! To return a dashboard with 250 rows of entries, this django app takes between **5 and 8** seconds. Clearly way way too much time!
+
+## The fix?
+
+Indexes! Yes, adding an index where appropriate should speed things up _immensely_. Right?
+
+
+
+\[caption id="" align="alignright" width="300" caption="Image via Wikipedia"][![U.S. Marine Corps SSgt. R. McIntosh, an engine...](./img/blog-wp-content-uploads-2012-03-300px-Allison_T56_mobile_test_unit_MCAS_Futenma_19823.jpg "U.S. Marine Corps SSgt. R. McIntosh, an engine...")](http://commons.wikipedia.org/wiki/File:Allison_T56_mobile_test_unit_MCAS_Futenma_1982.JPEG)\[/caption]
+
+
+
+Nope.
+
+
+
+Creating indexes didn't even put a dint in that benchmark. There was more fluctuation from the effect of memory pages on mysql's performance. And anyway ... what was I thinking really, indexes helping queries with less than 1000 rows of results? Don't be silly Swizec.
+
+
+
+Now what?
+
+
+
+Added a bunch of "spent time" prints in the code and realized that even though it takes less than a second to make everything ready it then takes five seconds to render the template.
+
+
+
+Wait what! Five seconds to render the template!?
+
+
+
+Oh right ... django's querysets are lazy. That would probably explain it. The template is where those querysets get evaluated, they ping the database and that's the explanation I'm looking for. It must be!
+
+
+
+Except it wasn't. Due to the way the _view_ is written all the querysets get iterated over before the template is rendered. And they all have that magical _select_related_ so all the fields getting accessed inside the template can't possibly be triggering more db queries can it?
+
+
+
+Well ... no.
+
+
+
+The main module has a function added that returns _the latest related object._ This function, correctly, only gets called once per rendering for every model.
+
+
+
+But the function returns a queryset.
+
+
+
+That queryset is lazy and it gets evaluated _every single time_ that related object is used, which turns out to be _**30 times**_ per displayed row. But can 30 queries explain the slowness in rendering? Or should it be even slower if my theory was in fact correct?
+
+
+
+I don't know, but right now I'm working on a fix to make sure that object is solidified and is not a lazy queryset before it gets pushed to the template. If it works, great ... otherwise I have no idea what I'll try next.
+
+
+
+_user.get_profile()_ also gets called awfully often. Wonder how that baby works ...
+
+###### Related articles
+
+- [Unit testing is for lazy people](http://swizec.com/blog/unit-testing-is-for-lazy-people/swizec/3752) (swizec.com)
+- [Simple trick for testing forms full of checkboxes with django](http://swizec.com/blog/simple-trick-for-testing-forms-full-of-checkboxes-with-django/swizec/3098) (swizec.com)
+- ["architect": we have big refactors to do on out architecture but first we need to unit test everything me: I'm all for finally](http://www.devsigh.com/sigh/424) (devsigh.com)
+- [Django charfield queryset filter without escaping the MYSQL wildcard](http://stackoverflow.com/questions/8664551/django-charfield-queryset-filter-without-escaping-the-mysql-wildcard) (stackoverflow.com)
+- [Do we still need django-nonrel now that GAE (allegedly) supports Django out of the box?](http://stackoverflow.com/questions/9065371/do-we-still-need-django-nonrel-now-that-gae-allegedly-supports-django-out-of-t) (stackoverflow.com)
+- [Retrieving only the date part of a datetime column in Django](http://stackoverflow.com/questions/8698794/retrieving-only-the-date-part-of-a-datetime-column-in-django) (stackoverflow.com)
+- [15 Key Resources to Learn Django](http://css.dzone.com/articles/15-key-resources-learn-django-0) (css.dzone.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=fee7947c-17cc-4d31-b348-c7a8b425b12c)](http://www.zemanta.com/ "Enhanced by Zemanta")

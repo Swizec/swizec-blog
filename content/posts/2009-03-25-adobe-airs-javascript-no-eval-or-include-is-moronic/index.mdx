@@ -1,0 +1,109 @@
+---
+layout: post
+title: 'Adobe AIR''s javascript no eval or include is moronic'
+date: 2009-03-25
+redirect_from: 
+            - /blog/adobe-airs-javascript-no-eval-or-include-is-moronic/swizec/456
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+- [![Adobe AIR](http://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Adobe_AIR_icon.png/202px-Adobe_AIR_icon.png "Adobe AIR")](http://en.wikipedia.org/wiki/Image:Adobe_AIR_icon.png)
+
+  Image via [Wikipedia](http://en.wikipedia.org/wiki/Image:Adobe_AIR_icon.png)
+
+Some days ago when I was developing a plugin interface for [Twitulater](http://twitulater.com) I came upon an interesting and seemingly unsolvable problem in the way [Adobe AIR](http://www.adobe.com/products/air/ "Adobe Integrated Runtime") brainlessly tries to make everything more secure - eval function simply doesn't work. Even if you use it, nothing happens.
+
+
+
+Alright so there is no eval for evaluating dynamically created javascript. No problem, I'll just use some sort of include function Adobe has surely implemented since AIR is supposed to be this awesome development platform and we all know the ability to include files is somewhat paramount to serious development.
+
+
+
+But what's this? Even in AIR 1.5 there STILL isn't an include? What the fuck! Ok, sure, I do realise that they provide an include with Flex, but to be honest Flex isn't exactly something I want to use because the way variable types are postfixed to the variable name fucks with my brain and makes me feel dyslexic. Seriously Adobe, what WERE you thinking there?
+
+
+
+Anyhow, back to lack of eval. Adobe claims that eval is an evil funciton people use to evaluate unverified code from third party API's and thus make their applications superbly vulnerable to an injection attack. Naturally this is a very valid reservation, but I think the solution is severely flawed since it introduces more problems than it's worth.
+
+
+
+Basically everything they've done is force bad developers to use a [JSON](http://en.wikipedia.org/wiki/JSON "JSON") interpreter of some sort for their third-party stuff. Which makes sense, it's a little bit slower than eval, but at least no code gets executed since functions and objects produce errors. Great, no executable third-party code. But did this really solve anything? Oh no wait, bad developers will still open their application up to many security flaws and everyone else is more than slightly inconvenienced.
+
+
+
+I could understand if Adobe at least put a JSON compiler or some sort of dumbed down eval into their javascript API, but no, they just leave us out to dry. And, surprisingly, none of the [jQuery](http://jquery.com/ "JQuery") include plugins out there actually work, neither does javascript MVC's include function. At least I haven't been able to make them work.
+
+
+
+But there is in fact a way to include all files from a certain dir, it's a very fucking ugly hack and using it made my programming heart convulse in pain. See for yourself:
+
+```
+	PluginLoader.prototype.loadPlugin = function ( pluginDir )
+
+	{
+
+	        if ( this.shouldLoadPlugin( pluginDir ) )
+
+	        {
+
+	                var files = pluginDir.getDirectoryListing();
+
+	                for ( var i in files )
+
+	                {
+
+	                        var file = files[ i ];
+
+	                        if ( file.extension == "js" )
+
+	                        {
+
+	                                this.loadFile( file );
+
+	                        }
+
+	                }
+
+	                this.addLoadedPlugin( pluginDir.name );
+
+	        }
+
+	}
+
+	PluginLoader.prototype.shouldLoadPlugin = function ( dir )
+
+	{
+
+	        return dir.isDirectory && dir.name[0] != '.';
+
+	}
+
+	PluginLoader.prototype.loadFile = function ( file )
+
+	{
+
+	        var stream = new air.FileStream();
+
+	        stream.open( file, air.FileMode.Read );
+
+	        var script = stream.readUTFBytes( stream.bytesAvailable );
+
+	        stream.close();
+
+	        document.write( "" );
+
+	}
+
+	PluginLoader.prototype.addLoadedPlugin = function ( pluginName )
+
+	{
+
+	        document.write( "" );
+
+	}
+```
+
+As you can see it relies on injecting HTML javascript inclusion into the head after itself and thus ensuring AIR evaluates it. If you try injecting in any sort of nicer way like with appendChild or whatnot, it doesn't work. And the catch is this code has to be run before the document is loaded beyond the head and I think it actually makes AIR spout an error of some sort. But it works.
+
+[![Reblog this post \[with Zemanta\]](http://img.zemanta.com/reblog_e.png?x-id=e663b415-5f5f-4f6c-ab8f-5d2dbab27a68)](http://reblog.zemanta.com/zemified/e663b415-5f5f-4f6c-ab8f-5d2dbab27a68/ "Zemified by Zemanta")

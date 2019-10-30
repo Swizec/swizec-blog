@@ -1,0 +1,151 @@
+---
+layout: post
+title: 'Blackbox testing node.js apps'
+date: 2012-07-23
+redirect_from: 
+            - /blog/blackbox-testing-node-js-apps/swizec/4884
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+One of the best features in [Django](http://www.djangoproject.com "Django (Web framework)")is the test client that comes with the test framework -> blackbox testing baby, yeah!
+
+
+
+\[caption id="" align="alignright" width="240" caption="Black box flight recorder (Photo credit: edvvc)"][![Black box flight recorder](http://farm3.static.flickr.com/2215/1972546648_e63db0846e_m.jpg "Black box flight recorder")](http://www.flickr.com/photos/23739231@N00/1972546648)\[/caption]
+
+
+
+[Blackbox testing](http://en.wikipedia.org/wiki/Black-box_testing "Black-box testing") is my favourite kind of testing. Much more useful than [unit tests](http://en.wikipedia.org/wiki/Unit_testing "Unit testing") and generally a lot easier to write, maintain and deal with. And that's because rather than making sure all your functions and deep internals are behaving like they should, you only test what really matters in a web app.
+
+
+
+_Does the right output happen for this specific input?_
+
+
+
+Your users don't care that you have full unit test coverage. They will never see the output of all your internal functions and methods and database drivers and whatnot. All they care is that if they put in _X_ they get the correct _Y_ out.
+
+
+
+The two main benefits of blackbox testing for a developer are:
+
+1. Low maintenance tests - you don't have to rewrite the whole [test suite](http://en.wikipedia.org/wiki/Test_suite "Test suite") when refactoring the deep internals of your app
+2. Integration tests - since you're only matching input to output you are testing your whole chain, everything from routing, to database connections and the business logic of the app itself
+
+Although it's still prudent to write enough of these tests to check for correctly returning errors, making sure your app doesn't crash on strange inputs and so on.
+
+
+
+It's also \\important not to forget unit tests for core business logic. That's algorithmic stuff, algorithms should have unit tests attached to them. But in general, web apps aren't algorithms, they're systems. And systems need blackbox tests.
+
+## Doing it in node.js
+
+Ok so blackbox testing is an awesome fit for web apps. But how do you do them?
+
+
+
+In django this is simple, when in a test you just say something like
+
+```
+response = self.client.get("/my/url")
+self.assertEqual(response.status, 200)
+```
+
+and check the response is what you expected. The test client automagically ensures there is a fake server running, that it takes requests, responds and is then torn down when you're done testing.
+
+
+
+Until recently the only way I knew of doing this with node.js has been to run the server and send it requests. But that's a bit lame, after all, I want to just run the tests. Of course I'm going to forget to run the server every single time.
+
+
+
+Not to mention you have to keep restarting it when you change the code.
+
+
+
+Enter [Supertest](https://github.com/visionmedia/supertest), stage left.
+
+
+
+Supertest is a high-level http test library based on superagent, which in turn is a high-level abstraction thingy for doing http requests.
+
+
+
+It takes any type of server object and lets you run requests and check for expected results in a very simple manner. If need be, you can even drop down to the low-level API's for http requests.
+
+
+
+A simple (mocha) test might look something like this:
+
+```
+var app = require('../app.js');
+
+describe('GET /users', function(){
+  it('respond with json', function(done){
+    request(app)
+      .get('/user')
+      .set('Accept', 'application/json')
+      .expect('Content-Type', /json/)
+      .expect(200, done);
+  })
+})
+```
+
+Where _app_ is, for example, an express.js server - _request_ is our test client. We are just checking that sending a [GET request](http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol "Hypertext Transfer Protocol") to _/user_ will return some sort of json and that the status code will be 200.
+
+
+
+If the server isn't running when doing that _require_ then supertest will make sure it is bound to an ephemereal port and then brought back down after the tests are done.
+
+
+
+Oh and because of [superagent](https://github.com/visionmedia/superagent) you can send any type of request and check for any type of response.
+
+
+
+Awesome.
+
+###### Related articles
+
+- [![](http://i.zemanta.com/93336637_80_80.jpg)](http://stackoverflow.com/questions/10960502/foreman-nodejs-mongoskin-how-to-connect-to-mongodb-from-mongo-cli)[Foreman + NodeJS + MongoSkin: How to connect to mongodb from mongo cli?](http://stackoverflow.com/questions/10960502/foreman-nodejs-mongoskin-how-to-connect-to-mongodb-from-mongo-cli)
+
+
+
+  * * *
+
+
+
+- [![](http://i.zemanta.com/101387271_80_80.jpg)](http://stackoverflow.com/questions/11546715/node-js-api-choking-with-concurrent-connections)[Node.js API choking with concurrent connections](http://stackoverflow.com/questions/11546715/node-js-api-choking-with-concurrent-connections)
+
+
+
+  * * *
+
+
+
+- [![](http://i.zemanta.com/101502577_80_80.jpg)](http://www.joezimjs.com/javascript/node-js-for-true-beginners/)[Node.js for True Beginners](http://www.joezimjs.com/javascript/node-js-for-true-beginners/)
+
+
+
+  * * *
+
+
+
+- [![](http://i.zemanta.com/noimg_06_80_80.jpg)](http://architects.dzone.com/articles/when-net-dev-decides-its-time)[When a .NET Dev Decides It's Time for Node.js](http://architects.dzone.com/articles/when-net-dev-decides-its-time)
+
+
+
+  * * *
+
+
+
+- [![](http://i.zemanta.com/89920188_80_80.jpg)](http://stackoverflow.com/questions/2353818/how-do-i-get-started-with-node-js/9629682)[Answer by Nevir for How do I get started with Node.js](http://stackoverflow.com/questions/2353818/how-do-i-get-started-with-node-js/9629682)
+
+
+
+  * * *
+
+
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=bdac80da-9a78-4071-ac4b-f2d10e0a4b65)](http://www.zemanta.com/?px "Enhanced by Zemanta")

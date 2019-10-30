@@ -1,0 +1,220 @@
+---
+layout: post
+title: 'Webdevs, you have no idea how much you know'
+date: 2012-03-12
+redirect_from: 
+            - /blog/webdevs-you-have-no-idea-how-much-you-know/swizec/3891
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2012-03-Book_of_Knowledge2.jpg
+---
+A few weeks ago I decided I need a [web designer](http://en.wikipedia.org/wiki/Web_design "Web design") in my close friends circle - someone to slap together designs for my half-baked weekend project ideas.
+
+
+
+\[caption id="" align="alignright" width="155" caption="Image via Wikipedia"][![English: Book of Knowledge](./img/blog-wp-content-uploads-2012-03-Book_of_Knowledge2.jpg "English: Book of Knowledge")](http://commons.wikipedia.org/wiki/File:Book_of_Knowledge.jpg)\[/caption]
+
+
+
+So I took the [nearest person with an eye for design](http://twitter.com/ponywithhiccups) and convinced her she'd be perfect for redesigning my blog. Completely out of her depth (is usually an architecture student), but after two days she learned enough [inDesign](http://www.adobe.com/products/indesign/main.html "Adobe InDesign") to produce something we were both happy with.
+
+
+
+Even made it all interactive and stuff!
+
+
+
+But as every good designer _guy who turns a pdf into html+[css](http://en.wikipedia.org/wiki/Cascading_Style_Sheets "Cascading Style Sheets")+js_ knows, the tough part isn't drawing pretty pictures and making the information architecture work - the hard part is making browsers understand this stuff, possibly in a cross-platform way, with a touch of responsiveness thrown in the mix.
+
+
+
+My days of being _that guy_ ended towards the final throes of the War Against [Tables for Layout](http://en.wikipedia.org/wiki/Tableless_web_design "Tableless web design"). Back when _:after { content: ":" }_ and _:first-child_ were the state of the art and [jQuery](http://jquery.com/ "JQuery") was gaining widespread popularity.
+
+
+
+I can implement a half-baked [frontend](http://en.wikipedia.org/wiki/Front_and_back_ends "Front and back ends"), but turning designers' work into code is something I vowed never to do again! Soul crushingly maddening stuff that.
+
+
+
+Time to teach my fledgling webdesigner all about html and css.
+
+## The Web, from scratch
+
+Until I started teaching [@ponywithhiccups](http://twitter.com/ponywithhiccups) I had no idea web development was _this_ complex. It's insane!
+
+
+
+\[caption id="" align="alignright" width="256" caption="Image via Wikipedia"][![English: Icon for Notepad++](./img/blog-wp-content-uploads-2012-03-Notepad_plus_plus2.png "English: Icon for Notepad++")](http://commons.wikipedia.org/wiki/File:Notepad_plus_plus.png)\[/caption]
+
+
+
+_"Ok, so you use html for layout and then css styles it"_
+
+
+
+"Uhm ..."
+
+
+
+_"Right, well, html is an xml-like markup language; the website is organized into tags that semantically tell the browser how things fit together"_
+
+
+
+"What's [a tag](http://en.wikipedia.org/wiki/HTML_element "HTML element")?"
+
+
+
+_"Oh ... hmm ... it's just this &lt;something>content&lt;/something> thing."_
+
+
+
+"And what does it do?"
+
+
+
+_"Well, it tells the browser whether something is a paragraph or a header ... and how things fit together ... and under certain conditions it also tells the browser what something looks like ... unless you have a css reset, then it doesn't ... oh and block elements always break into a new line, whereas inline elements do not ..."_
+
+
+
+"Bwuh ... what's a css reset?"
+
+
+
+_"Right ... well, css tells the browser how to render the page. Colours, fonts, even layout"_
+
+
+
+"But you just said html is for layout"
+
+
+
+_"Yes, well, css can rearrange that layout completely; html is really more about semantic stuff these days, but it used to be mostly for layout"_
+
+
+
+"Okay ... then what's an inline or a block element?"
+
+
+
+_"Oh you know, things like a and span are inline, but divs and headers are blocks. Blocks just mean it breaks into a new line if it needs to."_
+
+
+
+"Maybe you should just show me ..."
+
+
+
+_"Okay, just fire up a [text editor](http://en.wikipedia.org/wiki/Text_editor "Text editor") ... no not notepad ... no, not wordpad either. Right ... what's a good text editor for windows anyway ..."_
+
+
+
+We settled on [notepad++](http://www.notepad-plus-plus.org/ "Notepad++"), I've used it before and it's got pretty good syntax highlighting for everything. Didn't want to plunge her into emacs or something :P
+
+
+
+_"Right, so now you just write some html in here ... oh and I should teach you about [source control](http://en.wikipedia.org/wiki/Revision_control "Revision control")"_
+
+
+
+"What's source control?"
+
+
+
+_"Oh, that's just so you never lose your history, so you can jump back if something gets really messed up."_
+
+
+
+"Awesome! Wow, developers really think of everything, I wish I used some sort of source control elsewhere"
+
+
+
+(I might be embelishing, but that's the gist)
+
+## To the github
+
+[Git](http://git-scm.com "Git (software)") is this super simple thing right? Everyone who does any serious work with code can think in branches and pushing and pulling and commiting and merging ... it's second nature. Muscle memory almost.
+
+
+
+\[caption id="attachment_3914" align="alignright" width="300" caption="An octocat"][![An octocat](./img/blog-wp-content-uploads-2012-03-4325726291_7535aa8037-300x199.jpg "An octocat")](http://swizec.com/blog/wp-content/uploads/2012/03/4325726291_7535aa8037.jpg)\[/caption]
+
+
+
+Turns out this is a pretty damn complicated part of the process.
+
+
+
+First you need a github account (you don't, but it's the easiest way to teach a newbie about offsite backups without telling them that's what they are) ... I mean, just teach these freshlings best practices from the get go. No need to explain _too many_ details :)
+
+
+
+She got a github account and groked the basics of using git pretty quickly. After every few characters you press _ctrl+s_, after a unit of work you _rescan, stage changes, commit_ (in a gui) and when something works you _push_.
+
+
+
+Simple stuff.
+
+
+
+A few days later I sent her the first pull request - now she knows all about social coding. She understands the value of [Github](http://github.com "GitHub") is that people can see what you're doing and pitch in to help when they want to. You have to _pull_ their code to your local repository, then you get to play with _merge conflicts_ and finally push it all back to Github.
+
+
+
+She can even use _gh-pages_!
+
+
+
+Although in retrospect, maybe I should have told her she can check out the html locally and doesn't need to update gh-pages every time ...
+
+## Teaching afresh
+
+The best thing about teaching someone all this stuff from scratch, is that she is a completely clean slate. No preconceptions of how code works, no idea that tables used to be for layout, no _&lt;font>_ tag or anything else that is absolutely atrocious.
+
+
+
+\[caption id="" align="alignright" width="300" caption="Image via Wikipedia"][![Teaching in Thekchen Choling](./img/blog-wp-content-uploads-2012-03-300px-Teaching-8001.jpg "Teaching in Thekchen Choling")](http://en.wikipedia.org/wiki/File:Teaching-800.jpg)\[/caption]
+
+
+
+Here is a designer that will never know the world before html5 and css3, that considers this stuff as normal, not as something new and somewhat scary.
+
+
+
+That's a good thing!
+
+
+
+Back when I was learning webdev the best advice for using table-less design was _display: table-cell;_ Yup, it was!
+
+
+
+Furthermore, I had no-one to teach me cleanly. To tell me about how the web works, that it's a stateless protocol, that you have a frontend and a backend.
+
+
+
+Perhaps back then it wasn't even so cleanly separated, MVC backends were still an exciting new technology and [AJAX](http://en.wikipedia.org/wiki/Ajax_%28programming%29 "Ajax (programming)") only came into existence when I was already in the game for a few years.
+
+## Barely scratching the surface
+
+You might think html and css are that simple thing anyone can do ... that they're just something everyone is born with at least a functioning knowledge of.
+
+
+
+But here's the truth, _that shit is **hard**._ And that's not even getting into nginx servers, caching, http protocols, MVC backends, MVC frontends, databases, event-based stuff, multithreading and so on and on ad nauseum.
+
+
+
+The average web developer's brain contains so much knowledge it's absolutely mindboggling! ... and a lot of companies want to pay them peanuts, because hey, that neighbour kid "does websites" and he'd do it for free.
+
+###### Related articles
+
+- [Demystifying CSS](http://stevenscottstudio.wordpress.com/2012/03/08/demystifying-css/) (stevenscottstudio.wordpress.com)
+- [Mozilla Web Development: Better Know a WebDev: Luke Crouch (aka groovecoder)](http://blog.mozilla.com/webdev/2012/03/09/better-know-a-webdev-luke-crouch-aka-groovecoder/) (mozilla.com)
+- [16 Useful Boilerplates to Start Your Project Quickly](http://bjconquest.com/2012/03/06/16-useful-boilerplates-to-start-your-project-quickly/) (bjconquest.com)
+- [CSS Tables and Responsive Design](http://www.nofluffjuststuff.com/blog/terry_ryan/2012/01/css_tables_and_responsive_design) (nofluffjuststuff.com)
+- [Webapplications with node.js - Jade](http://blog.iprofs.nl/2012/03/05/webapplications-with-node-js-jade/) (iprofs.nl)
+- [Backbone.js and Chrome Extensions](https://zapier.com/blog/2012/02/23/backbonejs-within-chrome-extension/) (zapier.com)
+- [Musings of a has-been web designer](http://discoveringmuse.wordpress.com/2012/03/09/musings-of-a-has-been-web-designer/) (discoveringmuse.wordpress.com)
+- [Projects " How-To's " Git Hub Octocat](http://www.cutoutandkeep.net//projects/github-octocat) (cutoutandkeep.net)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=d1ac8b4a-0336-49c7-aca6-e7b68618ae29)](http://www.zemanta.com/ "Enhanced by Zemanta")

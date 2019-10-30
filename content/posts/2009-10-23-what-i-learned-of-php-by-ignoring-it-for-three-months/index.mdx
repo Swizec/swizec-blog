@@ -1,0 +1,39 @@
+---
+layout: post
+title: 'What I learned of PHP by ignoring it for three months'
+date: 2009-10-23
+redirect_from: 
+            - /blog/what-i-learned-of-php-by-ignoring-it-for-three-months/swizec/782
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+When I took a break from php three months ago I'd been up to my shoulders in the technology for about five years - I remember my first interactions with the language were figuring out whether I need to use .php3 or .php4 or just .php file extensions. But that's not very interesting.
+
+
+
+A more interesting tale to tell is perhaps how for the last few months I was growing increasingly frustrated with my job, my work environment, my skills toolkit and simply the whole [LAMP](http://en.wikipedia.org/wiki/LAMP_%28software_bundle%29 "LAMP (software bundle)") [web development](http://en.wikipedia.org/wiki/Web_development "Web development") stack. It was time to take a break ... it was a lot later that I discovered a cool TEDtalk on the topic, watch: 
+
+
+
+But anyway, onwards to what I'd learned.
+
+### Lessons that can only be learned by staying the fuck away
+
+This week my [PHP](http://en.wikipedia.org/wiki/PHP "PHP") hiatus saw the beginning of its end, I had to get a freelancing job to pay bills and other such nuissance - since PHP and [Javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") seem to be what I'm most popular for in the community that's the easiest thing to get a job for. And to be honest, I'm not really fluent enough with anything else to do it for real money.
+
+
+
+So earlier this week I had a meeting with the team lead of the project to give me a short tour of their, dare I say it, very well designed framework, and I realised how much extra work needs to be done by the framework just because PHP is such an incredibly lame language.
+
+1. PHP doesn't have support for that thing where you can use objects right out of a function. So we need a getScalar, getString, getRows, getRow function instead of a lovely getValue, ""+getValue(), getRows() and getRows()\[0] system. Why php, WHY don't you support this?
+2. PHP also can't do inline arrays, objects and [tuples](http://en.wikipedia.org/wiki/Tuple "Tuple"). This is great for passing data around in a descriptive way and PHP fails completely. Why can't I do a return { x: 0, y: 100 }? Or something like that? It's silly that I'd have to create a whole new Vector class that doesn't do anything other than hold two values.
+3. Another thing PHP desperately needs are [keyword arguments](http://en.wikipedia.org/wiki/Named_parameter "Named parameter"), or whatever they're called. It should be possible to call a function that has default values and define specific arguments without having to define all the other arguments because the one I need to set happens to be last. Seriously, what if the defaults suddenly change? Do I go through all the code to pass the correct defaults for that one argument I actually need? This could be solved by passing an object around but what's this? Objects are a pain to create? Right ...
+
+So I guess that makes for almost one thing I've learned per a month of abstinence. Not the best ratio by all means, but it's silly to find that such a modern language used by so many people would be such an utter failure on many points others, not unlike Lisp, have solved half a century ago. What the flying fuck!?
+
+
+
+Did I miss anything? What else does PHP do well and what does it do poorly?
+
+[![Reblog this post \[with Zemanta\]](http://img.zemanta.com/reblog_e.png?x-id=f73732bc-0b95-4fab-9868-7484a0ee6556)](http://reblog.zemanta.com/zemified/f73732bc-0b95-4fab-9868-7484a0ee6556/ "Reblog this post \[with Zemanta]")

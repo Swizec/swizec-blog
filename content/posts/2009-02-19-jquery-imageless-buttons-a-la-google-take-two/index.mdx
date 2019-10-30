@@ -1,0 +1,40 @@
+---
+layout: post
+title: 'jQuery imageless buttons a la Google take two'
+date: 2009-02-19
+redirect_from: 
+            - /blog/jquery-imageless-buttons-a-la-google-take-two/swizec/5
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+On Monday I released these buttons and as many of you noted I seriously didn't do nearly enough testing and what's worse, I even bragged about the fact. But some of you perhaps noticed my edits to the blogpost where I said I'd make it all better. Well, here's Wednesday and I made it all better while still, as promised, spending much less time than Google probably did. Think I've spent under 20 hours for the whole thing from inception to finish (now). If you're lazy just head over to the [jQuery imageless buttons a la Google examples/documentation](http://swizec.com/code/styledButton) page.
+
+Let's start off with a screenshot of what the buttons look like on modern browsers
+
+![Imageless buttons on proper browsers](http://swizec.com/code/styledButton/normal_example.png "Imageless buttons on proper browsers")
+
+I spent a good deal of last night making sure they also look like this on many older browsers, in fact these are now officially supported:  
+Opera 9.6x  
+Firefox 3  
+Firefox 2  
+Safari 3  
+Safari 2  
+Internet Explorer 8 beta  
+Internet Explorer 7  
+Internet Explorer 6  
+Chrome
+
+And I seriously hope that's enough for your needs, if supporting all of those isn't enough for you then I'm not certainit's even possible to satisfy your needs. Personally I must admit I've learned a lot in getting all of these browsers to work. Most of all that Firefox 2 doesn't have an inline-block, but rather a -moz-inline-block for some strange reason. It's also interesting to not that Safari 2 and IE break when you have trailing commas in your lists of properties, which I'm used to so it's easier to add stuff.
+
+Anyhow, here's what the buttons look like in Firefox 2
+
+![Imageless buttons in Firefox 2](http://swizec.com/code/styledButton/FF2_example.png "Imageless buttons in Firefox 2")
+
+And what they're like Internet Explorer 6
+
+![Imageless buttons in IE6](http://swizec.com/code/styledButton/ie6_example.png "Imageless buttons in IE6")
+
+I should probably also note that there are two known issues with the buttons. Namely that in Internet Explorer onchange events don't work since it doesn't allow firing them on noninput elements and that in IE the darker border on the right vanishes on activated buttons for some reason, I was simply too tired to hunt this one down and you know what, I can live with a minor glitch such as that.
+
+Since you're still reading, please head over to the [jQuery imageless buttons a la Google](http://swizec.com/code/styledButton) examples now.

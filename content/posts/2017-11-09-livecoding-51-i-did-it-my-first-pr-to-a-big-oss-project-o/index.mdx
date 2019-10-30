@@ -1,0 +1,128 @@
+---
+layout: post
+title: 'Livecoding 51: I did it! My first PR to a big OSS project \o/'
+date: 2017-11-09
+redirect_from: 
+            - /blog/livecoding-51-first-pr-big-oss-project/swizec/7914
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+_This is a Livecoding Recap – an almost-weekly post about interesting things discovered while livecoding. Usually shorter than 500 words. Often with pictures. Livecoding happens almost **every Sunday at 2pm PDT** on multiple channels. You should follow [My Youtube](https://www.youtube.com/TheSwizec) channel to catch me live._
+
+
+
+https&#x3A;//www.youtube.com/watch?v=DFz5tHyhkw0
+
+
+
+I did it! The `gatsby-transform-remark` bug I've been working on for a month yields to my assault o/
+
+
+
+Not because it's _that_ difficult of a bug. Oh no. Because I was doing dumb things and jumping into a large project like Gatsby is hard.
+
+
+
+Previous attempts failed first because I couldn't get my dev environment to work and then because I made a newbie mistake with `yarn.lock` and got frustrated. 😅
+
+
+
+👉 <https://swizec.com/blog/livecoding-recap-48-why-contributing-to-big-opensource-projects/swizec/7848> 👉 <https://swizec.com/blog/livecoding-recap-50-how-newbie-mistakes-kill-flow/swizec/7901>
+
+
+
+The bug was more of a feature, really. When Remark generates a table of contents out of your markdown headers, it uses relative links. Like this 👇
+
+
+
+```
+# Heading
+
+## Subheading 1
+
+## Subheading 2
+
+### Subsubheading
+
+## Subheading 3
+```
+
+
+
+That turns into an HTML list with `#heading`, `#subheading-1` (etc) links. Nesting at all.
+
+
+
+```
+- Heading (#heading)
+  - Subheading 1 (#subheading-1)
+  - Subheading 2 (#subheading-2)
+    - Subsubheading (#subsubheading)
+  - Subheading 3 (#subheading-3)
+```
+
+
+
+Imagine all of that is HTML with `<ul>` and `<li>` and `<a>` tags. Laying it out like this is easier to read.
+
+
+
+This works great when you're only putting tables of contents on each individual page. Render a markdown document, put a TOC on top. Perfect.
+
+
+
+But it stops working if you want to make a main table of contents for all your documents. All those relative links stop working. `Subheading` is on an actual path now.
+
+
+
+The fix was to prepend slugs to every URL that [`mdast-util-toc`](https://github.com/BarryThePenguin/mdast-util-toc) generates. Best place to do that was deep inside `gatsby-transform-remark`, in a file called `extend-node-type.js`.
+
+
+
+As far as I can tell, that file is the whole of the markdown transformer. It takes a markdown GraphQL node (flat text at this point) and extends it into something Gatsby can read to make a React-based HTML page.
+
+
+
+Our fix went into the aptly named `getTableOfContents` function.
+
+
+
+```
+  const addSlugToUrl = function(node) {
+    if (node.url) {
+      node.url = withPrefix(`${markdownNode.fields.slug}${node.url}`)
+    }
+    if (node.children) {
+      node.children = node.children.map(node => addSlugToUrl(node))
+    }
+
+    return node
+  }
+  tocAst.map = addSlugToUrl(tocAst.map)
+```
+
+
+
+This happens after all the processing that turns a markdown file into an [abstract syntax tree (AST)](https://en.wikipedia.org/wiki/Abstract_syntax_tree). Basic recursion 👇
+
+
+
+- get node
+- if node has `url`, change it
+- if node has children, call `addSlugToUrl` to each
+
+
+
+Done 😁
+
+
+
+Looks simple now that it works, but it sure took a while. Large codebases are fun like that.
+
+
+
+Now just gotta figure out how to get _absolute_ absolute paths working. You know, when you're not deploying your site to `/` but to `/something/`. Something to do with the `--prefix-paths` flag when compiling.
+
+
+
+Thanks to [@lukeed05](https://twitter.com/lukeed05) for rubber ducking, and thanks to [@kylemathews](https://twitter.com/kylemathews) for answering questions when I got stuck. ❤️

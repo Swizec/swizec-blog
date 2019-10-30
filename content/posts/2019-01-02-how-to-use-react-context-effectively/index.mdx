@@ -1,0 +1,379 @@
+---
+layout: post
+title: 'How to use React Context effectively'
+date: 2019-01-02
+redirect_from: 
+            - /blog/react-context-effectively/swizec/8844
+author: Swizec Teller
+hero: ./img/profile_images-834049142515187713-cOtVTgLm_400x400.jpg
+---
+Modern React Context has been with us for a while but I still see a lot of confusion about how to use it effectively.
+
+
+
+https&#x3A;//twitter.com/pugson/status/1079241306487091200
+
+
+
+A lot of people feel that no matter what, you still need _some_ form of state management. Either an existing library or you end up building your own anyway.
+
+
+
+Yes, sort of. But not in the way you think.
+
+
+
+[Redux](https://redux.js.org/) and [MobX](https://github.com/mobxjs/mobx) have always used context behind the scenes. They're familiar, you can use them right away, and your workflow doesn't have to change. Congratz, you're using React Context effectively.
+
+
+
+Maybe you don't like or need the complexity of Redux and MobX. Overhead, bundle sizes, indirection and separation of concerns way beyond what your tiny app needs. Lots of reasons.
+
+
+
+That's where modern React Context comes in.
+
+
+
+## Work with context directly
+
+
+
+Here's a video of mine explaining React Context in 2 minutes 👇
+
+
+
+https&#x3A;//www.youtube.com/watch?v=2WXUyMJmF2Q
+
+
+
+To use context effectively you need 3 things:
+
+
+
+1. A state object
+2. A way to change state from consumers
+3. A way to communicate state changes to your provider
+
+
+
+That is all.
+
+
+
+A state object is where you hold your state tree. Many ways to build one, I prefer plain JavaScript objects. A reducer-like approach is also popular.
+
+
+
+Then you need some way to change said state. I like to use functions attached to the state object itself. That way anyone who has access to state also has the ability to change values. Functions are best. Think of them as actions.
+
+
+
+Finally, you need a way for your Provider to know that state changed. This is \\important because React uses the same props-changed tree diffing algorithm to update context as it does for reconciliation and re-rendering.
+
+
+
+JavaScript uses shallow object comparisons, so relying on component state is best. React comes with all necessary machinery built-in.
+
+
+
+Here's a bug you can run into if you're not careful:
+
+
+
+```
+let obj = {
+    pugson: {
+        greet: "Hello"
+    }
+}
+
+let obj2 = { ...obj }
+
+obj2 == obj // false
+obj2.pugson == obj.pugson // true
+```
+
+
+
+Even though we made a copy of `obj`, their internal properties remained equal. The `pugson` object is shared between both.
+
+
+
+So if you're passing deep properties into your context or your props, your app is going to break.
+
+
+
+## An example CodeSandbox
+
+
+
+Okay, so you're gonna need some state, a way to change it, and a way to communicate changes. Here's what that would look like in code 👇
+
+
+
+
+
+You can say hi to Pugson. Type into the input box and see what you're typing right away.
+
+
+
+It's a little contrived, but that makes it easier to explain. There are a few moving pieces.
+
+
+
+### 1. The Context itself
+
+
+
+I like to define the context itself in its own file. You could have a file with multiple context definitions for different parts of your app.
+
+
+
+This creates a convenient way for different components to share the same context via `\import` statements.
+
+
+
+```
+// GreetContext.js
+\import React from "react";
+
+const { Provider, Consumer } = React.createContext();
+
+export { Provider, Consumer };
+```
+
+
+
+Create context and export its `Provider` and `Consumer`. Providers pass values down the tree of components, and consumers use them to do stuff.
+
+
+
+### 2. The App component holds and provides state
+
+
+
+Like I said, the simplest way to keep state that communicates changes is with component state. You should have a single source of truth for your entire app like always.
+
+
+
+```
+// App.js
+class App extends React.Component {
+  state = {
+    greeting: "",
+    setGreeting: ({ value }) => this.setState({ greeting: value })
+  };
+  render() {
+    return (
+      
+
+        
+          
+          
+        
+      
+
+    );
+  }
+}
+```
+
+
+
+The `state` object has both values and setters. `greeting` is the string you're typing with a default value of `""`, and `setGreeting` is the setter any component can use to change the greeting.
+
+
+
+Since we're using component state, the setter can call `setState` and let React figure out the rest.
+
+
+
+My favorite side-effect of this approach is that \\important parts of your code are close together. You can start thinking of your state as a [state machine](https://en.wikipedia.org/wiki/State_machine) because states and their transitions are next to each other.
+
+
+
+As your state grows in complexity, you might want to move this machinery out of `App.js` into its own file. Just make sure your App component knows when something changes.
+
+
+
+When rendering we use `Provide` to pass this component state as a context value down to our entire component tree.
+
+
+
+### 3. Consuming context state
+
+
+
+Consuming your state is a matter of rendering a `` and using the values it provides.
+
+
+
+```
+// Greeting.js
+\import React from "react";
+
+\import { Consumer } from "./GreetContext";
+
+export default () => (
+  
+    {({ greeting }) => (
+      
+
+        
+Your greeting 👋
+
+        {greeting}
+      
+
+    )}
+  
+);
+```
+
+
+
+See how keeping the context definition in a separate file makes it more convenient to use?
+
+
+
+We \\import the `Consumer`, render it as the root of our `Greeting` component, and pass-in a function as children. The good old render props approach but with children.
+
+
+
+Since our context value is an object, we can destructure it right away and take out just what we need: `greeting`. Then render as usual.
+
+
+
+Whenever the `greeting` value changes, our component will automatically re-render and show the new value.
+
+
+
+### 4. Changing context state
+
+
+
+Changing our `greeting` value works in a similar way. We render a consumer, take out the setter, and pass it as a prop into a component that does the changes.
+
+
+
+> But there’s no way to access it outside of render, is there?
+>
+>
+>
+> @swizec waiting for your expert answer. Maybe I’ve been doing unstated wrong the whole time
+
+
+
+This also lets you solve the problem that you can't access context value outside of the render method. It's true, you cannot, and that's why you pass them into child components and use it there.
+
+
+
+```
+// Form.js
+\import React from "react";
+
+\import { Consumer } from "./GreetContext";
+
+const Input = ({ value, onChange }) => (
+   onChange({ value: event.target.value })}
+    style={{ width: "100%", fontSize: "1.5em" }}
+  />
+);
+
+export default () => (
+  
+    {({ greeting, setGreeting }) => (
+      
+
+        
+Say hi to Pugson
+
+        
+        
+      
+
+    )}
+  
+);
+```
+
+
+
+Once more, we \\import that same shared context `Consumer`, render, and use a function as children approach. This time, we take both the `greeting` and `setGreeting` out of our context value.
+
+
+
+We pass those into the `Input` component as `value` and the `onChange` callback. This allows `Input` to be as complex or as simple as it wants, makes it a fully controlled component, and most \\importantly, _it doesn't rely on context._
+
+
+
+A common foot-gun is to make your components so tied to context or state management that you can't reuse them. Always a good idea to make your basic components rely on props alone.
+
+
+
+## Some modern context-based libraries
+
+
+
+_"But that's an awful lot like re-inventing your own state management"_, I hear you say.
+
+
+
+Kind of? You're using out-of-the-box React tools. No wheel reinventing required.
+
+
+
+But yes, as complexity grows, you start moving this machinery out of your main component into its own files, and start running into a lot of similar problems as you would with building your own state management library.
+
+
+
+When that happens, I recommend splitting your context into subcontexts. Have a new context with a new state object for every section of your app.
+
+
+
+A form could have its own state and context, for example, use it to communicate between all the fields, then communicate its end result to the parent context. Much like nested redux reducers or something.
+
+
+
+You can also make some of this stuff easier with modern state management libraries like [Constate](https://github.com/diegohaz/constate) or [Unstated](https://github.com/jamiebuilds/unstated).
+
+
+
+I won't go into detail on those, so here's two videos:
+
+
+
+https&#x3A;//www.youtube.com/watch?v=63UI2nTz1qA
+
+
+
+https&#x3A;//www.youtube.com/watch?v=MhmhfaJn0_U
+
+
+
+## What about hooks?
+
+
+
+Yes, this approach works with hooks. Replace `` with `useContext`. Everything else stays the same.
+
+
+
+```
+\import GreetingContext from './GreetingContext'
+export default () => {
+    const { greeting } = useContext(GreetingContext);
+    
+  return (
+      
+
+        
+Your greeting 👋
+
+        {greeting}
+      
+
+    )
+}
+```

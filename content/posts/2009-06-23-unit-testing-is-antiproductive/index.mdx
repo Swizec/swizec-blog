@@ -1,0 +1,35 @@
+---
+layout: post
+title: 'Unit testing is anti-productive'
+date: 2009-06-23
+redirect_from: 
+            - /blog/unit-testing-is-anti-productive/swizec/610
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/3121-3652816293_3853125da9_m.jpg
+---
+- [![Salish Mist](./img/3121-3652816293_3853125da9_m.jpg "Salish Mist")](http://www.flickr.com/photos/41864721@N00/3652816293/)
+
+  Image by [ecstaticist](http://www.flickr.com/photos/41864721@N00/3652816293/) via Flickr
+
+Today I finally got my feet wet with something I've been meaning to try on for size ever since reading Clean Code, during my trip to [Vienna](<http://maps.google.com/maps?ll=48.20875,16.3725833333&spn=0.1,0.1&q=48.20875,16.3725833333 (Vienna)&t=h> "Vienna") last autumn; wow has it really been that long already, where'd winter and spring hide?
+
+
+
+Anyway, so at about midnight last night I finally embarked on the process of coding up a new feature for [Twitulater](http://twitulater.com "Twitulater"), or at least its server-side bits, after some prep work. Now since this is a rather [mission critical](http://en.wikipedia.org/wiki/Mission_critical "Mission critical") system that I'd very much like to be somewhat reliable and rock-solid, [unit testing](http://en.wikipedia.org/wiki/Unit_testing "Unit testing") seemed to be the way to go.
+
+
+
+Downloading [PHPUnit](http://www.phpunit.de "PHPUnit") gave me some headaches, because ubuntu's package managers fucked something up. Why is it I can't install Pear if there are broken packages for something completely different? Then came the figuring out of how to actually do unit testing and I must say, it was incredibly simple. Of course I did have eight months' time for the principles grokked from Clean Code to seep in, but still.
+
+
+
+Mostly I was suprised to finally confirm that I have been doing [test driven development](http://en.wikipedia.org/wiki/Test-driven_development "Test-driven development") (TDD for you acronym junkies) for a long while. Just in reverse. Whereas now, with automated unit tests, I first write a test, then the code, I used to write the code then test the hell out of it. With PHPUnit testing has become much less of a hassle - run a command, make sure everything works. Nice!
+
+
+
+However, unit testing has one large drawback. It took me a solid six hours of coding to produce ... nothing. I have in my possession now 200 lines of real code that doesn't implement much other than making sure users exist and authenticating them, and a bunch of tests taking up a full ... 170 lines of code. This is of course after some [refactoring](http://en.wikipedia.org/wiki/Code_refactoring "Code refactoring") and whatnot, the original ratio was always that there were twice as many tests as there was actual code. Yummie.
+
+
+
+Now I'm sure many of you will bash me for being such a dirty little blasphemer, but fuck it. Despite all the headaches saved with testing, despite making testing a lot simpler and quicker. It still took me SIX BLOODY HOURS to create some functionality that never used to take more than two hours to code and debug.

@@ -1,0 +1,171 @@
+---
+layout: post
+title: 'It ain''t stupid if it works'
+date: 2017-02-01
+redirect_from: 
+            - /blog/aint-stupid-works/swizec/7408
+author: Swizec Teller
+hero: ./img/WPQMsys.jpg
+---
+How do you send your friendly neighborhood data scientist 1,571,043 messages to play with?
+
+
+
+?
+
+
+
+Well, the easiest would be something like this:
+
+
+
+```
+username: MR_SCIENTIST
+password: PLEASE_DONT_FUCK_UP_OUR_PRODUCTION_DATABASE
+url: postgres://user:pass@ec2-54-225-230-243.compute-1.amazonaws.com:5432/somepath
+```
+
+
+
+Excellent! It took you 30 seconds to find the credentials and 2 minutes to write an email. Now all The Scientist has to do is connect to your database, learn an undocumented schema of 114 tables, run some queries, and make absolutely certain that he doesn't mess anything up. He also have to be careful because this is production data and if something goes wrong here, the latest untested backup is 8 hours old.
+
+
+
+Ok, the "access to production" part is bad.
+
+
+
+Surely there's a slave database somewhere that has a copy of all data!? Lol, nope.
+
+
+
+A-ha! Send the latest binary dump. That way The Scientist can load it up locally and fetch whatever he needs.
+
+
+
+That's 21GB of data. 1.8GB compressed. It's not _that_ big for a production DB, but it sure sucks whenever you load it on your laptop. It takes forever to download from the server and upload back to another server.
+
+
+
+No, no, that won't work. The analysis doesn't need everything you have, and The Scientist sure as hell doesn't wanna learn your crazy 100+ table schema.
+
+
+
+Not like you understand the whole thing yourself. Just the parts you built.
+
+
+
+![](./img/WPQMsys.jpg)
+
+
+
+CSV! Comma separated values. It's plaintext, it's easy to build, easy to read, it's from the 70's, it works.
+
+
+
+> Comma-separated values is a data format that pre-dates personal computers by more than a decade: the IBM Fortran (level H extended) compiler under OS/360 supported them in 1972.\[5] List-directed ("free form") input/output was defined in FORTRAN 77, approved in 1978. /.../ Comma-separated value lists are easier to type (for example into punched cards) than fixed-column-aligned data, /.../
+
+
+
+That's right. CSV is so old that it was designed to make writing **punch-cards** easier. Possibly by hand.
+
+
+
+And yet, it was first [standardized in 2005](https://en.wikipedia.org/wiki/Comma-separated_values#History). How hard is it to write `value1,value2,value3` consistently across systems?
+
+
+
+¯\\_\_(ツ)\_/¯_
+
+
+
+Great! You're going to send The Scientist a CSV plaintext file. But how do you get it?
+
+
+
+Well, you're gonna have to connect to the server. That's where connecting to the database is easier. And because you're me, you're running Rails there.
+
+
+
+You can do something like this:
+
+
+
+```
+timespan = many_days_ago.beginning_of_day .. 1.day.ago.end_of_day
+puts "session_id,created_at,sent_from,sent_to,content_type,text"
+Message.where(created_at: timespan).find_each { |msg|
+  puts [
+        msg.chat_id,
+        msg.created_at,
+        msg.sent_from,
+        msg.sent_to,
+        msg.content_type,
+        msg.text
+       ].to_csv
+} ; 0
+```
+
+
+
+That selects all messages from a `timespan`, walks through them 1000 at a time, and prints a new line of CSV to standard output for each message. Add a `puts` for the header, and hey presto, a CSV file is born!
+
+
+
+So how do you get all this data off your server?
+
+
+
+You run the commands, pipe output to a file using `> epic_data.csv`, then [scp](https://en.wikipedia.org/wiki/Secure_copy) the file from your server to your laptop. Lol, nope.
+
+
+
+You're on Heroku. Every time you connect to The Server, you're actually creating a new one-off dyno that exists only for the lifetime of your connection. All the same basic state as when you deployed, none of the new state.
+
+
+
+You can dump files into `/tmp` or `/home/whatever` all day, but you'll never get them off.
+
+
+
+_"Ah!"_, you say, _"But I can make my dumper script upload the CSV to S3 or something and give me a link"_
+
+
+
+Yes. Yes, you can. And then you have to deal with all that.
+
+
+
+**_OR_** you could spin up a rails console with `heroku run rails c`, run the code above, watch a million and a half lines of CSV fly by on your terminal then…
+
+
+
+...
+
+
+
+... copy-paste the whole thing into a text editor.
+
+
+
+?
+
+
+
+That's exactly what I did. It worked, too.
+
+
+
+Run command. Drag-select the first few characters. Scroll to bottom. Wait until text stops flying. Took about 30min. Computer starting to get jittery as Terminal ate RAM like crazy.
+
+
+
+Shift-click at the bottom of the output. Cmd+C. Click into Emacs. Cmd+V. Beach ball of death.
+
+
+
+3 minutes later, a 160MB CSV shows up. Cmd+S. Computers are amazing.
+
+
+
+It ain't stupid if it works™.

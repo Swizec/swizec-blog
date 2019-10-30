@@ -1,0 +1,118 @@
+---
+layout: post
+title: 'Livecoding #13: rendering React components with canvas'
+date: 2016-06-28
+redirect_from: 
+            - /blog/livecoding-13-rendering-react-components-with-canvas/swizec/6784
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+_This is a Livecoding Recap – an almost-weekly post about interesting things discovered while livecoding. It’s shorter than 500 words, and there are pictures! You can follow my channel [here](https://livecoding.tv/swizec). New content almost **every Sunday at 2pm PDT**. There’s live chat. Come hang out._ ?
+
+
+
+
+
+This Sunday was all about rendering React components with canvas and smoothly animating 10k+ circles.
+
+
+
+We did it! Well, the canvas part. The smooth animation part … not so much. Turns out that part’s hard.
+
+
+
+It all started with some tedious coding to update the [React particles experiment](https://github.com/Swizec/react-particles-experiment) to D3 v4. Some idiot (me) had had the bright idea of changing that and not finishing the transition.
+
+
+
+With the release candidate version of D3v4, \\importing the entire library no longer works. From now on, you have to do something like `\import { randomNormal } from 'd3'` to get specific bits and pieces. This is tedious, but it produces smaller bundles in the end. All in all, it’s better this way.
+
+
+
+Our slow implementation was back. \\o/
+
+
+
+\[embed]http&#x3A;//imgur.com/w7nSJGI\[/embed]
+
+
+
+Then we turned to [react-konva](https://github.com/lavrton/react-konva), _“a JavaScript library for drawing complex canvas graphics using React.”_ In theory, we should be able to render our particles using HTML5 canvas without changing our code too much.
+
+
+
+It’s based on the [Konva](http://konvajs.github.io/) library, which looks like a sort of D3 for canvas. It gives you a bunch of useful abstractions to make 2d graphicsing easier.
+
+
+
+To my surprise, the conversion _was_ simple.
+
+
+
+We had to change our main render method to use a Konva `Stage` instead of an `<svg>` node:
+
+
+
+```
+
+    
+       
+    
+```
+
+
+
+We also wrapped it in a big `<div>` to help D3 detect the mouse events we need for particle generation. Yes, we could have moved away from D3 for those, but it was already coded up, so why change?
+
+
+
+We had to change the `Particles` render method to use Konva’s `Circle` component.
+
+
+
+```
+
+   {particles.map(particle =>
+      
+   )}
+```
+
+
+
+Things Just Worked™. Kind of. Our animation looked less than smooth, even with just 200 particles. With a few thousand, it was comically bad.
+
+
+
+\[embed]http&#x3A;//imgur.com/X9a7hzp\[/embed]
+
+
+
+Not cool, React. Not cool. Canvas is supposed to be super fast! Maybe this _is_ a bit faster than the SVG approach? It’s hard to tell.
+
+
+
+We did some profiling and discovered that calculating a new frame takes only 7 milliseconds. Flushing those changes to React components … heh … that took anywhere from 200ms to 980ms.
+
+
+
+?
+
+
+
+Yikes.
+
+
+
+The culprit seems to be a function called `updateChildren` deep in the bowels of React.
+
+
+
+We’ll find a workaround on Sunday the 10th of July. There are several promising venues to explore, anything from using better Konva components (FastLayer is a thing) to avoiding prop updates as the driver of our animation. Somehow. We’ll figure it out.
+
+
+
+See you next time.
+
+
+
+PS: the edited and improved versions of these videos are becoming a video course. Readers of the engineer package of [React+d3js ES6](http://swizec.com/reactd3js/) get the video course for free when it’s ready.

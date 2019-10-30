@@ -1,0 +1,67 @@
+---
+layout: post
+title: 'Experienced developers can''t solve this problem'
+date: 2012-11-02
+redirect_from: 
+            - /blog/experienced-developers-cant-solve-this-problem/swizec/5496
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+> In 8 or less characters of [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") write an expression that evaluates to **-265**. You are not allowed to use "-265" as the solution or use the \* character.
+
+The other day someone asked this on [IRC](http://en.wikipedia.org/wiki/Internet_Relay_Chat "Internet Relay Chat").
+
+
+
+Everyone pounced on the problem and after a lot of discussion about how strange the 265 number is and whether he didn't mean 256 we decided it was impossible to solve in just eight characters.
+
+
+
+The shortest solution I could come up with was this:
+
+```
+~(1<<8)-8
+```
+
+Shifting left for eight places gives you 257, negating gives -257, then you just subtract 8 and voila, you have -265.
+
+
+
+Except it's **9 characters** long ... not a solution.
+
+
+
+But I did learn about [javascript bitwise operations](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/Bitwise_Operators), so this exercise in futility was not a total waste. Not sure what I'm going to use them for, but it can't hurt :)
+
+
+
+So, come up with the answer yet?
+
+
+
+![Trollface](http://cache.ohinternet.com/images/thumb/2/2d/Trollface_HD.png/618px-Trollface_HD.png "Trollface")
+
+
+
+Here's some solutions:
+
+- _-1060/4_ is just 7 characters
+- _-256-9_ is just 6 characters
+- _-530/2_is only 6 characters as well
+- _~264_ is just 4 characters (by [@zidarsk8](http://twitter.com/zidarsk8))
+
+And so on, you get the picture. Shameful as it is, I couldn't come up with an answer _at all_. Never even occurred to me. I think this happens to a lot of developers who have been in the game for too long, we immediately try creating elegant solutions where simple ones will do.
+
+
+
+If you solved this on your own, congratulations. You are better than me.
+
+###### Related articles
+
+- [![](http://i.zemanta.com/noimg_98_80_80.jpg)](http://tuts.pinehead.tv/2012/09/13/ten-things-i-wish-i-knew-earlier-about-the-linux-command-line-2/)[Ten things I wish I knew earlier about the Linux command line](http://tuts.pinehead.tv/2012/09/13/ten-things-i-wish-i-knew-earlier-about-the-linux-command-line-2/)
+- [![](http://i.zemanta.com/noimg_20_80_80.jpg)](http://www.yesodweb.com/blog/2012/10/yesod-fay-js)[Yesod, AngularJS and Fay](http://www.yesodweb.com/blog/2012/10/yesod-fay-js)
+- [![](http://i.zemanta.com/noimg_81_80_80.jpg)](http://cs.stackexchange.com/questions/3484/converting-function-to-bitwise-only)[Converting function to bitwise only?](http://cs.stackexchange.com/questions/3484/converting-function-to-bitwise-only)
+- [![](http://i.zemanta.com/noimg_102_80_80.jpg)](http://www.nczonline.net/blog/2012/08/01/a-critical-review-of-ecmascript-6-quasi-literals/)[A critical review of ECMAScript 6 template strings](http://www.nczonline.net/blog/2012/08/01/a-critical-review-of-ecmascript-6-quasi-literals/)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=c50c54c5-8990-4d50-8b07-b47dc0450779)](http://www.zemanta.com/?px "Enhanced by Zemanta")

@@ -1,0 +1,91 @@
+---
+layout: post
+title: 'This Haskell is wrong. Why?'
+date: 2012-01-20
+redirect_from: 
+            - /blog/this-haskell-is-wrong-why/swizec/3489
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2012-01-300px-5-cube_scrambled2.png
+---
+\[caption id="" align="alignright" width="300" caption="Image via Wikipedia"][![English: 5D virtual 3^5 sequential move puzzle...](./img/blog-wp-content-uploads-2012-01-300px-5-cube_scrambled2.png "English: 5D virtual 3^5 sequential move puzzle...")](http://en.wikipedia.org/wiki/File:5-cube_scrambled.png)\[/caption]
+
+
+
+The problem I'm trying to solve is the simple but lovely [euler 62](http://projecteuler.net/problem=62).
+
+
+
+> The cube, 41063625 (3453), can be permuted to produce two other cubes: 56623104 (3843) and 66430125 (4053). In fact, 41063625 is the smallest cube which has exactly three permutations of its digits which are also cube.
+>
+>
+>
+> Find the smallest cube for which exactly five permutations of its digits are cube.
+
+A bit of fun coding after a statistics midterm last night and the solution should be in the bag. Except it isn't, I am doing something wrong somehow and I can't figure out what! Hopefully someone a bit better than me can shed some light whether my proposed solution is wrong or I just suck at [Haskell](http://haskell.org "Haskell (programming language)").
+
+
+
+## Algorithm
+
+
+
+1. Generate cubes up to 10,000
+2. Every cube is a pair of a digit-ordered string _n^3_ and _n,_for instance _("279",9)_
+3. Order cubes by the string number presentation
+4. Group together all cubes with the same _n^3_
+5. Pick out groups with the size of 5
+6. Sort by _n_
+7. Pick the smallest number
+
+Should work in principle right? So why doesn't the website accept my answer _(5027)_? My guess is I'm doing something wrong in the sorting and grouping department and I was hoping someone with a bit more knowledge of Haskell could point out where I'm being stupid.
+
+
+
+## Code
+
+
+
+```
+\import Data.List
+
+cubes::(Num a) => a -> [(String, a)]
+cubes 1 = [(show 1, 1)]
+cubes n = (sort$show(n^3), n):(cubes $ n-1)
+
+sortStrNum (s1, n1) (s2, n2)
+  | length s1 == length s2 = compare s1 s2
+  | otherwise = compare (length s1) (length s2)
+
+permuted_cubes n =
+  groupBy (\a b -> fst a == fst b) $ sortBy sortStrNum $ cubes n
+
+fives n =
+  filter (\xs -> length xs == 5) $ permuted_cubes n
+
+comparing p x y = compare (p x) (p y)
+
+smallest =
+  head $ sortBy (comparing snd) $ head $ fives 100000
+```
+
+
+
+The whole thing looks kind of alright to me, no matter how much I poke around it doesn't seem like something is misbehaving ... but it still is.
+
+
+
+Ideas?
+
+
+
+###### Related articles
+
+- [Collatz, Haskell and Memoization](http://swizec.com/blog/collatz-haskell-and-memoization/swizec/3382) (swizec.com)
+- [Learning me a Haskell](http://swizec.com/blog/learning-me-a-haskell/swizec/3272) (swizec.com)
+- [Converting Haskell Polymorphic Cosine function to F#](http://stackoverflow.com/questions/8905037/converting-haskell-polymorphic-cosine-function-to-f) (stackoverflow.com)
+- [Mutable, (possibly parallel) Haskell code and performance tuning](http://stackoverflow.com/questions/8155929/mutable-possibly-parallel-haskell-code-and-performance-tuning) (stackoverflow.com)
+- [Will this Haskell code take too much memory?](http://stackoverflow.com/questions/8275171/will-this-haskell-code-take-too-much-memory) (stackoverflow.com)
+- [Exceptions in Haskell](http://stackoverflow.com/questions/8751188/exceptions-in-haskell) (stackoverflow.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=727c4e4d-a97d-47a9-a6d5-d7017d2e3bfe)](http://www.zemanta.com/ "Enhanced by Zemanta")

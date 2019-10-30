@@ -1,0 +1,85 @@
+---
+layout: post
+title: 'How to tell a phone your website is an app'
+date: 2012-11-05
+redirect_from: 
+            - /blog/how-to-tell-a-phone-your-website-is-an-app/swizec/5503
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2012-11-default-bootstrap-example.png
+---
+I don't always get to work on mobile projects, but when I do they're websites pretending to be apps.
+
+
+
+\[caption id="attachment_5506" align="alignright" width="184"][![Default bootstrap example - zoomable etc.](http://swizec.com/blog/wp-content/uploads/2012/11/default-bootstrap-example.png "Default bootstrap example - zoomable etc.")](./img/blog-wp-content-uploads-2012-11-default-bootstrap-example.png) Default bootstrap example - zoomable etc.\[/caption]
+
+
+
+So the question is: If your schedule is too tight to get a simple phonegap application through the approval process, how do you deliver a great mobile experience to users on launch day?
+
+
+
+Responsive design will only get you so far. Which is to say not very far at all.
+
+
+
+Take Bootstrap, use all the responsive features and you are left with a website that looks a bit different on a phone than it does on a computer or a tablet. But it's no app.
+
+- renders super small despite the _initial-scale=1.0_ [meta tag](http://en.wikipedia.org/wiki/Meta_element "Meta element")
+- scrolls all over the place
+
+First step to fixing things is disabling user scalability:
+
+
+
+```
+
+```
+
+
+
+Default zooming is okay now and users can't [pinch-to-zoom](http://en.wikipedia.org/wiki/Multi-touch_gestures "Multi-touch gestures") anymore. But they can still do plenty of strange side-scrolling and bouncing around. Something apps don't usually do.
+
+
+
+Adding another meta tag fixes that problem.
+
+
+
+```
+
+```
+
+
+
+Our only problem now is that pesky [address bar](http://en.wikipedia.org/wiki/Address_bar "Address bar") on the top. Apps don't have that! This can be solved with a bit of simple javascript:
+
+```
+// When ready...
+window.addEventListener("load",function() {
+  // Set a timeout...
+  setTimeout(function(){
+    // Hide the address bar!
+    window.scrollTo(0, 1);
+  }, 0);
+});
+```
+
+Marvelous! You even get an extra 60 pixels of room to play with.
+
+
+
+Just keep in mind that you _must_ use those 60 pixels, otherwise the address bar won't hide because there's nothing to scroll up.
+
+
+
+\[caption id="attachment_5509" align="alignnone" width="269"][![Final result - an app-like website](http://swizec.com/blog/wp-content/uploads/2012/11/app-like-bootstrap-example.png "Final result - an app-like website")](./img/blog-wp-content-uploads-2012-11-app-like-bootstrap-example.png) Final result - an app-like website\[/caption]
+
+###### Related articles
+
+- [![](http://i.zemanta.com/noimg_34_80_80.jpg)](http://www.covario.com/2012/10/a-revival-of-the-meta-tag/)[A Revival of the Meta Tag](http://www.covario.com/2012/10/a-revival-of-the-meta-tag/)
+- [![](http://i.zemanta.com/119697768_80_80.jpg)](http://blog.markedup.com/2012/10/making-the-connection-lighting-up-metro-ies-ability-direct-link-to-an-app-in-the-windows-store/)[Making the Connection: Lighting up Metro IE's Ability Direct Link to an App in the Windows Store](http://blog.markedup.com/2012/10/making-the-connection-lighting-up-metro-ies-ability-direct-link-to-an-app-in-the-windows-store/)
+- [![](http://i.zemanta.com/122040643_80_80.jpg)](http://www.cultofmac.com/198658/view-more-of-a-webpage-on-your-iphone-with-full-screen-safari-ios-tips/)[View More Of A Webpage On Your iPhone With Full Screen Safari \[iOS Tips\]](http://www.cultofmac.com/198658/view-more-of-a-webpage-on-your-iphone-with-full-screen-safari-ios-tips/)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=88ec1abc-870f-41cc-b147-79fc75c1796b)](http://www.zemanta.com/?px "Enhanced by Zemanta")

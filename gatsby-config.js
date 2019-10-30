@@ -5,11 +5,10 @@ module.exports = {
         siteUrl: `https://swizec.com/blog`,
         description: `This is where I write thing.`,
         hero: {
-            heading: `Want to become a better web engineer? Indie hacker? Entrepreneur? Keep reading.`,
-            maxWidth: 652
+            heading: `Hi I'm Swizec 👋 I write about JavaScript, bootstrapping, and improving your tech career`,
+            maxWidth: 752
         },
-        social: [
-            {
+        social: [{
                 name: `twitter`,
                 url: `https://twitter.com/swizec`
             },
@@ -23,14 +22,15 @@ module.exports = {
             }
         ]
     },
-    plugins: [
-        {
+    plugins: [{
             resolve: "@narative/gatsby-theme-novela",
             options: {
                 contentPosts: "content/posts",
                 contentAuthors: "content/authors",
-                basePath: "/",
+                basePath: "/blog/",
+                rootPath: "/",
                 mailchimp: false,
+                authorsPage: true,
                 sources: {
                     local: true,
                     contentful: false
@@ -42,8 +42,7 @@ module.exports = {
             resolve: `gatsby-plugin-mdx`,
             options: {
                 extensions: [`.mdx`, `.md`],
-                gatsbyRemarkPlugins: [
-                    {
+                gatsbyRemarkPlugins: [{
                         resolve: `gatsby-remark-images`,
                         options: {
                             maxWidth: 10000,
@@ -91,9 +90,11 @@ module.exports = {
                         options: {
                             giphyApiKey: process.env.GIPHY_API_KEY
                         }
+                    },
+                    {
+                        resolve: 'gatsby-remark-slug',
                     }
-                ],
-                remarkPlugins: [require(`remark-slug`)] // eslint-disable-line global-require
+                ] // eslint-disable-line global-require
             }
         },
         {
@@ -120,6 +121,7 @@ module.exports = {
             options: {
                 pixelId: "714190382013726"
             }
-        }
+        },
+        'gatsby-plugin-meta-redirect'
     ]
 };

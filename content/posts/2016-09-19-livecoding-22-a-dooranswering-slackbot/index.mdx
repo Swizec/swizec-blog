@@ -1,0 +1,159 @@
+---
+layout: post
+title: 'Livecoding #22: A door-answering Slackbot'
+date: 2016-09-19
+redirect_from: 
+            - /blog/livecoding-22-a-door-answering-slackbot/swizec/7038
+author: Swizec Teller
+hero: ./img/E5JakQs.png
+---
+_This is a Livecoding Recap – an almost-weekly post about interesting things discovered while livecoding ?. Always under 500 words and with pictures. You can follow my channel, [here](https://livecoding.tv/swizec). New streams almost **every Sunday at 2pm PDT**. There’s live chat, come say hai ?_
+
+
+
+
+
+Aaaaaalmost hacked together a Slack bot that can answer the door. There’s one last step to figure out and then we are ready to rock. ??
+
+
+
+Buildings in the US, or at least in San Francisco, have buzzers that connect to a phone rather than a purpose-built wall-mounted device. You set it up with your phone, and whenever someone wants to come visit, your phone rings, you say Hello, and buzz them in.
+
+
+
+It’s perfect for the home. It’s _really_ annoying for anyone stuck with buzzer duty at the office.
+
+
+
+A Slack bot can do that for us. Here’s the idea:
+
+
+
+- give the buzzer a Twilio phone number
+- build a small node.js server to answer the phone
+- send Slack message with an _“I am so and so”_ audio clip
+- offer `Deny` and `Let them in` buttons
+- anyone can buzz anyone in
+- profit.
+
+
+
+The profit part comes if Slack lets me release this as a, say, $10/month service. We’ll see. ?
+
+
+
+You can also play with it as an [open source project on Github](https://github.com/Swizec/door-answer-slackbot). But it’s not really ready for prime-time yet. The code is a mess, and there’s no README file to tell you how to set it up.
+
+
+
+The bright side is that you can see all my API keys in the livecoding video. I’m going to change those. Probably.
+
+
+
+When Twilio receives a phone call, it posts to our webhook on `<server>/call`. This is the start of our user experience. We reply with `Hello! State your name, then press anything`. Like this:
+
+
+
+```
+router.post('/call', function (req, res, next) {
+    const caller = req.body.Caller;
+    const callSid = req.body.CallSid;
+
+    let twiml = new twilio.TwimlResponse();
+
+    twiml.say('Hello! State your name, then press any key.', {voice: 'alice'});
+
+    twiml.record({
+        action: `/call/recording/${callSid}`,
+        //transcribe: true,
+        //transcribeCallback: `/call/recording/${callSid}`,
+        maxLength: 60
+    });
+
+    res.type('text/xml');
+    res.send(twiml.toString());
+});
+```
+
+
+
+That `twiml` stuff constructs a response using TwiML, a Twilio-extended XML language. Twilio can turn `<Say>text</Say>` commands into spoken dialogue using various voice synthesizers. You’ve gotta use proper punctuation though. It sounds weird otherwise.
+
+
+
+We ask Twilio to record a response and send the audio clip to our `/call/recording/<id>` API. In that API, we send a Slack text and put the caller on hold.
+
+
+
+```
+router.post('/call/recording/:callSid', (req, res, next) => {
+    const callSid = req.params.callSid;
+    const twiml = new twilio.TwimlResponse();
+    const recordingUrl = req.body.RecordingUrl;
+
+    let data = {
+        attachments: [{
+            fallback: 'Somebody is at the door',
+            title: 'Somebody is at the door',
+            title_link: recordingUrl,
+            text: 'Click link to hear the recording',
+            callback_id: `door_open:${callSid}`,
+            actions: [
+                {
+                    name: 'open_door',
+                    text: 'Let them in',
+                    type: 'button',
+                    value: 'open_door'
+                },
+                {
+                    name: 'deny_access',
+                    text: 'No.',
+                    type: 'button',
+                    value: 'deny_access'
+                }
+            ]
+        }]
+    };
+
+    webSlack.chat.postMessage('#bot-testing', '', data, () => {
+        twiml.say('Thank you. Please hold.', {voice: 'alice'});
+        twiml.pause(240);
+
+        res.type('text/xml');
+        res.send(twiml.toString());
+    });
+});
+```
+
+
+
+We get the audio clip as a URL, and we post to Slack using their Web client thingy. The real-time-messaging client can’t do complex messages.
+
+
+
+This is what you get on Slack:
+
+
+
+![](./img/E5JakQs.png)
+
+
+
+Now comes the part I haven’t figured out yet:
+
+
+
+1. Build the API for those Slack buttons – it always throws an error ?
+2. Figure out how to continue sending to a Twilio call outside of the original webhoook, if I know the original call ID.
+
+
+
+The first bit is just a matter of figuring out my config. Slack gives clear instructions for doing that; I just gave up too soon.
+
+
+
+The second bit, though… that’s hard. I can’t find any documentation for it, and I haven’t had any luck Googling for it either.
+
+
+
+Gonna talk to Twilio’s help team and finish this up next Sunday. Don’t forget to come watch.

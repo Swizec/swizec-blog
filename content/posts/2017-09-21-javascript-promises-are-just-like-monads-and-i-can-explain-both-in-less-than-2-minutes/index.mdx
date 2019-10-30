@@ -1,0 +1,180 @@
+---
+layout: post
+title: 'JavaScript promises are just like monads and I can explain both in less than 2 minutes'
+date: 2017-09-21
+redirect_from: 
+            - /blog/javascript-promises-monads/swizec/7814
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+https&#x3A;//youtu.be/KVYm0qC4b1Y
+
+
+
+There's a joke in functional programming that once you understand monads, it becomes impossible to explain them to others. The [amount of monad tutorials on the internet](https://wiki.haskell.org/Monad_tutorials_timeline) is growing almost exponentially 😁
+
+
+
+[Monads](https://en.wikipedia.org/wiki/Monad_(functional_programming)) are a funky concept that's nearly impossible to understand in all of its nuance. Maybe I'm just not smart enough. That's why I'm not going to explain any of that.
+
+
+
+Screw the mathematical definition. Look at this shit 👇
+
+
+
+![continuation monad](https://wikimedia.org/api/rest_v1/media/math/render/svg/9adf49871aefe9b313db56ab037c1a3dc2840c73)
+
+
+
+o.O wat O.o
+
+
+
+Here's a handwavy explanation instead: Monads are like a bubble. They wrap your dirty values and protect the rest of your code from weird effects.
+
+
+
+I used the continuation monad as an example because it is similar to JavaScript Promises. A way to talk about the future. [1](#fn1)
+
+
+
+Let's pretend you're a [mouse looking for the ultimate question to life, the universe, and everything](http://hitchhikers.wikia.com/wiki/Mice). You build a super computer that will calculate the answer, and you call it Earth.
+
+
+
+You know Earth will take around 4.54 billion years to calculate the question. But you're writing the code right now. You can't wait 4.54 billion years to finish your project.
+
+
+
+What do you do? You put Earth in a time bubble.
+
+
+
+Like this:
+
+
+
+```
+function getQuestion() {
+return Earth()
+.then(ArthurDent => ArthurDent.subconscious())
+.then(subconscious => Scrabble.output(subconscious))
+}
+```
+
+
+
+In [The HitchHiker's Guide to The Galaxy](http://hitchhikers.wikia.com/wiki/Ultimate_Question), Arthur Dent was the final result of a 4.54 billion year calculation. He mindlessly picked letters out of a pile of Scrabble™ tiles, and the result produced the ultimate question.
+
+
+
+That means our `getQuestion` function first constructs an Earth, then gets `ArthurDent`, accesses his subconsciousness, and uses Scrabble™ to print the result. 🤙
+
+
+
+## Here's what that looks like in practice:
+
+
+
+Let's compare promises to callbacks. You're likely to have met with callbacks before, JavaScript is full of them.
+
+
+
+```
+let theFuture = function (callback) {
+    setTimeout(callback, 5000);
+}
+
+theFuture(() => {
+    console.log("It is now 5 seconds later");
+});
+```
+
+
+
+We turn `theFuture` into a Promise and trigger its `resolve` method after 5 seconds. The `Promise` wrapped everything inside its body into a protective time bubble.
+
+
+
+With a promise, we can pass `theFuture` around and do all sorts of stuff. But if we want to access the future, we have to use `.then` and give it a function.
+
+
+
+When I first saw this, I thought _"So what's the big deal? This is the same as callbacks.”_
+
+
+
+So here's the big deal: Once you're in a promise, you're always in a promise. Because promises are like monads 😁
+
+
+
+Check out this simplified real world example from my day job.
+
+
+
+```
+makePurchase(){
+    this.paymentView
+          .fetchPaymentInfo()
+          .then(paymentInfo  => this.finishPurchase(paymentInfo))
+      .then(token => this.showSuccessModal())
+      .catch(error => console.error(error));
+}
+
+fetchPaymentInfo(){
+    if (this.paypal) {
+        return this.getPaypalPaymentInfo(); // returns promise
+    }else{
+        return this.getCCPaymentInfo(); // returns promise
+    }
+}
+
+getPaypalPaymentInfo(){
+    return this.brainTreeClient
+                         .tokenizePaypal()
+                         .then(response => {
+                 return response.paymentInfo; 
+                         });
+}
+
+finishPurchase( paymentInfo ) {
+    return fetch('/purchase/path')
+                        .then(response => response.json())
+                        .then(json => {
+                            if (json.token) {
+                                return json.token;
+                            }else{
+                                throw new Error("Purchase failed")
+                            }
+                        });
+}
+```
+
+
+
+Don't worry about the behind-the-scenes details of that code. Here's what you should focus on:
+
+
+
+1. The main `makePurchase` function does everything through Promise access. The `.then` and `.catch` methods are like peeking into the Promise time bubble. You're saying: Once this time bubble resolves, I want to do so and so with the result.
+2. The `fetchPaymentInfo` is the first method in our chain that creates a Promise. From then onwards, we can access returned values only through `.then` and `.catch`. It uses `getPaypalPaymentInfo` and `getCCPaymentInfo` to talk to Braintree, which is an operation that takes some time.
+3. `braintreeClient.tokenizePaypal()` returns a promise. There's no need to wrap this in another Promise inside `fetchPaymentMethod`. You can return it like any normal value.
+4. `getPaypalPaymentInfo` uses `.then` to look into the Braintree response. Since you're in a Promise, you can `return` flat values without worry. They're already wrapped in a Promise.
+5. As a result, we can chain multiple `.then` calls in `makePurchase`. Some methods return a regular value, some return a Promise. JavaScript don't care, it's all the same _because everything returned from a Promise is a Promise_.
+
+
+
+And that's why Promises are just like monads.
+
+
+
+Oh, and error handling. Don't worry about that either. As long as there's a `.catch` call somewhere in the chain, you're good. Errors bubble up through the chain of Promise look-into-s until they encounter a `.catch`.
+
+
+
+Hope that helps, it took me months of practice to grok 🤓
+
+
+
+1. Technically continuations are more similar to callbacks, but bear with me. [↩](#ffn1)

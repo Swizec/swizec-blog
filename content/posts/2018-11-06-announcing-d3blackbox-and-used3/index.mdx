@@ -1,0 +1,132 @@
+---
+layout: post
+title: 'Announcing D3blackbox and useD3'
+date: 2018-11-06
+redirect_from: 
+            - /blog/announcing-d3blackbox-used3/swizec/8703
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+<!-- wp:html -->
+
+_Wrap any code you find in a React component and meet your deadline 🤫_
+
+Ever find some good looking code online that you really want to use, but it just isn't quite React?
+
+This happens a lot with data visualization. You find a great example, you have no idea how it works, you just wanna see how it looks in your React app.
+
+Rewriting it all in React for a quick test is out of the question. You're not even sure how it's doing that thing you love so much.
+
+Enter [`D3blackbox`](https://d3blackbox.com).
+
+Turn your code into a function, pass it into `D3blackbox()`, voila: Self-contained React component.
+
+👉 [d3blackbox.com](https://d3blackbox.com)
+
+👉 [github.com/Swizec/d3blackbox](https://github.com/Swizec/d3blackbox)
+
+## 1. Install `d3blackbox` and `d3`
+
+```
+$ npm install d3blackbox d3
+```
+
+## 2. Wrap D3 code in `D3blackbox`
+
+```
+\import React from "react";
+\import D3blackbox from "d3blackbox";
+\import * as d3 from "d3";
+
+const Barchart = D3blackbox(function(anchor, props) {
+    const svg = d3.select(anchor.current);
+
+    // the rest of your D3 code
+});
+
+export default Barchart;
+```
+
+`D3blackbox` is a higher order component that takes a render function.
+
+It renders an anchor element and gives your renderer a React ref and all the props. You take over that anchor element with D3, or any other library, and do what you want.
+
+`D3blackbox` makes sure to call your renderer on mount and every component update. You're never going to see a stale render, I promise.
+
+## 3. Render your component
+
+```
+
+```
+
+Once you've created a D3blackbox'd React component, render as usual. If you want to change the anchor element, use the `component` prop.
+
+You now have a reusable declarative component. 👌
+
+You can render anything you want. No matter how complex the code you've found, D3blackbox can take it all.
+
+Here's an example of an interactive donut chart with tooltips. Didn't even need to read the D3 code. 😇
+
+
+
+## What about hooks?
+
+Yep, there's a hook version too. `useD3`
+
+Same principle: anchor element, call D3 code on every update. Except with hooks there's less code you have to write.
+
+Works like this 👇
+
+```
+\import { useD3 } from "d3blackbox";
+
+function renderSomeD3(anchor) {
+    d3.select(anchor);
+
+    // ...
+}
+
+const MyD3Component = ({ x, y }) => {
+    const refAnchor = useD3(anchor => renderSomeD3(anchor));
+
+    return ;
+};
+```
+
+You call `useD3`, give it a render function, and receive a React ref. Your render function should take care of all the rendering, and the component where you call the hook needs to render the anchor element.
+
+I recommend always adding a `transform` so you can position your components in an SVG.
+
+The `useD3` hook takes care of setting up a `useRef` and a `useEffect` hook so you don't have to worry about that.
+
+Meet your deadline in 2 minutes :)
+
+## What about other code?
+
+You got it! There's nothing D3-specific in `D3blackbox` and `useD3` at all.
+
+They're generic wrappers for 3rd party code that wants to take over rendering inside a DOM element. React controls the wrapper, 3rd party render function controls the children.
+
+You can even use this to wrap Vue components in React components. Or jQuery plugins. Or Three.js code. Anything your heart desires.
+
+## This feels dirty
+
+It does. It is.
+
+You should use D3blackbox for quick prototypes, using example code that you don't want to rewrite, or small components where the performance hit doesn't matter.
+
+Using D3blackbox you are throwing away and redrawing the entire DOM subtree of your anchor element. The more such components you have and the bigger they are, the more performance will suffer.
+
+This can lead to redraws measured in _seconds_ on large dashboards. When that happens, I recommend [React+D3](https://gumroad.com/l/pMtnZ) where I teach a more scalable approach with deep understanding of what's going on.
+
+But for quick and dirty, this is perfect. 👌
+
+## With love ❤️
+
+Built with love this weekend and open sourced last night.
+
+I've been teaching this method in talks, workshops, books, and courses for 3 years now. Every time, I said: _"Hm, I should open source this. Why am I asking you to copy paste?”_
+
+Now I finally did. Enjoy
+
+<!-- /wp:html -->

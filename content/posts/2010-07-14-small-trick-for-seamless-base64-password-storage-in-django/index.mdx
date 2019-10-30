@@ -1,0 +1,87 @@
+---
+layout: post
+title: 'Small trick for seamless base64 password storage in django'
+date: 2010-07-14
+redirect_from: 
+            - /blog/small-trick-for-seamless-base64-password-storage-in-django/swizec/1378
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2010-08-300px-Oauth_logo.svg_.png
+---
+- [![OAuth logo](./img/blog-wp-content-uploads-2010-08-300px-Oauth_logo.svg_.png "OAuth logo")](http://commons.wikipedia.org/wiki/File:Oauth_logo.svg)
+
+  Image via [Wikipedia](http://commons.wikipedia.org/wiki/File:Oauth_logo.svg)
+
+These days even the noobiest of the noobs know that [passwords](http://en.wikipedia.org/wiki/Password "Password") should never be stored in plain-tect on the [server](http://en.wikipedia.org/wiki/Server_%28computing%29 "Server (computing)"). For various good and bad reasons, but the gist of it is [security through obscurity](http://en.wikipedia.org/wiki/Security_through_obscurity "Security through obscurity").
+
+
+
+What a few less people know is that [base64](http://en.wikipedia.org/wiki/Base64 "Base64") is the same as [plaintext](http://en.wikipedia.org/wiki/Plaintext "Plaintext"). Not only is it a very simple two way hashing function, if it can be called that, it's certainly not [encryption](http://en.wikipedia.org/wiki/Encryption "Encryption"), what's worse is that any coder worth their salt can recognise base64 encoding at a glance. Decoding it is trivial, many tools online can do it.
+
+
+
+On top of all of that, django already stores its user's passwords very securily with one-way hashing AND [salting](http://en.wikipedia.org/wiki/Salt_%28cryptography%29 "Salt (cryptography)").
+
+
+
+So what the fuck am I doing trying to save passwords in base64?
+
+### Problem
+
+The reason is in fact quite simple: External [API](http://en.wikipedia.org/wiki/Application_programming_interface "Application programming interface")'s.
+
+
+
+Here's the problem: what do you do when your service is accessing a third party API, which doesn't support [OAuth](http://oauth.net "OAuth") or OAuth is impractical in your situation for various reasons and the API doesn't support some other means of [logging in](http://en.wikipedia.org/wiki/Login "Login") with a hashed password. Basically, the only way you can access this API is if you know the user's password?
+
+
+
+The obvious solution is to fuck it and store plain-text passwords. Nothing you can do right? Hopefully nobody will hack your database and get to the passwords.
+
+
+
+Sure. But what when you're browsing around for debugging purposes? How do you prevent yourself from accidentally reading someone's password?
+
+### Solution
+
+That's where base64 comes in.
+
+
+
+But since we don't want to make our code silly, here's a simple way of achieving this without ever having to worry about it again.
+
+```
+class PasswordManager(models.Manager):
+    use_for_related_fields = True
+
+    def create(self, *args, **kwargs):
+        try:
+            kwargs['password'] = base64.encodestring(kwargs['password'])
+        except KeyError:
+            pass
+
+        return super(PasswordManager, self).create(*args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        data = super(PasswordManager, self).get(*args, **kwargs)
+        try:
+            data.password = base64.decodestring(data.password)
+        except AttributeError:
+            pass
+        return data
+
+class GoogleAccount(models.Model):
+    user = models.ForeignKey(User, unique=True)
+    email = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+
+    objects = PasswordManager()
+```
+
+Basically we write a module manager that encodes all passwords in insert queries to base64 and decodes them again on select queries. For completeness sake it's also good to define a _filter_ function where we perform the decoding on the whole set of returned entries. But for this sort of thing that's rarely needed because you're rarely going to be performing third party actions for miriads of users at once.
+
+
+
+This way we achieve perfectly seamless base64 storage of passwords. Nice and easy.
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=eded0a7d-aadf-4552-a54d-328c43c8a709)](http://www.zemanta.com/ "Enhanced by Zemanta")

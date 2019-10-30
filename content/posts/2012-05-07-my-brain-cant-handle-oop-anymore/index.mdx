@@ -1,0 +1,138 @@
+---
+layout: post
+title: 'My brain can''t handle OOP anymore'
+date: 2012-05-07
+redirect_from: 
+            - /blog/my-brain-cant-handle-oop-anymore/swizec/4320
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2012-05-Summer_Glau_as_River_Tam_in_Serenity_Wallpaper__yvt2-300x225.jpg
+---
+\[tweet https&#x3A;//twitter.com/Swizec/status/196543519446409216]
+
+
+
+The other week I was working on my compilers homework - the [semantic analysis](http://en.wikipedia.org/wiki/Compiler "Compiler") part is an object-oriented nightmare. Something called the [visitor pattern](http://en.wikipedia.org/wiki/Visitor_pattern "Visitor pattern") to traverse trees and do weird stuff.
+
+
+
+It made me want to curl up in a fetal position in the corner, rocking back and forth in a padded room, while mumbling tongues at myself. As [River Tam](http://en.wikipedia.org/wiki/List_of_Firefly_characters "List of Firefly characters") would say before running out of the room in panic _"Too crowded!"_
+
+## What [OOP](http://en.wikipedia.org/wiki/Object-oriented_programming "Object-oriented programming") feels like
+
+\[caption id="attachment_4326" align="alignright" width="300" caption="Schizophrenic?"][![Schizophrenic?](./img/blog-wp-content-uploads-2012-05-Summer_Glau_as_River_Tam_in_Serenity_Wallpaper__yvt2-300x225.jpg "Schizophrenic?")](http://swizec.com/blog/wp-content/uploads/2012/05/Summer_Glau_as_River_Tam_in_Serenity_Wallpaper__yvt2.jpg)\[/caption]
+
+
+
+In object-oriented programming everything gets muddled together. Functions are bundled with data, everything is codependent and there's no telling what a [function](http://en.wikipedia.org/wiki/Function_%28mathematics%29 "Function (mathematics)") might do when you call it.
+
+
+
+And that's assuming there are no side-effects outside the object monad. Otherwise, who knows, the world might explode!
+
+
+
+This creates software that is _impossible_ to understand. I used to think I could, but after a few months of functional-style programming I realized that I simply don't have the brainpower to understand object oriented code. It's too messy.
+
+
+
+When you put singletons into the picture and objects using other objects it all just gets ... let me give you a simple example:
+
+```
+foo: object {
+   i: private integer = 0;
+   add: function (a:integer) {
+      i += a;
+      return i;
+   }
+}
+
+/* lots of code happens here, foo has been passed around, things happened */
+/* foo is not a singleton though, just used a lot */
+
+a:integer = foo.add(5);
+
+// What is the value of a?
+```
+
+Answering this simple question requires knowing _**everything**_. The whole execution history of _foo_. The whole codebase. You name it, you have to keep it in your head.
+
+
+
+Oh and did I mention class _bar_? It depends on _foo_ for a lot of its stuff. Oh yeah, they got into a little friends with benefits situation last year. It all gets pretty interesting. I think _bar_ cheated on _foo_ with _[baz](http://en.wikipedia.org/wiki/Foobar "Foobar")_ once, though. There's no telling how _foo_ might react to that!
+
+## Functional programming
+
+\[caption id="attachment_4329" align="alignright" width="369" caption="fp, by okeef creations"][![fp, by okeef creations](./img/blog-wp-content-uploads-2012-05-fp1.png "fp, by okeef creations")](http://www.okeefecreations.com/)\[/caption]
+
+
+
+With a lot of gentle poking and prodding from [@sbelak](http://twitter.com/sbelak), I started learning [functional programming](http://en.wikipedia.org/wiki/Functional_programming "Functional programming") about two years ago.
+
+
+
+I was promised easy scalability, working with multiple processors without cost, expressive code, things that Just Work (tm) and software with less bugs that is easier to maintain and shorter/quicker to write.
+
+
+
+I may not have gotten all that, but I _did_ get a whole new way of thinking about my craft. An easier way to _understand._
+
+
+
+At first functional programming felt like performing a lobotomy on myself by sticking hot pokers into my feet. _Are you **sure** I don't need loops? But I do need variables don't I? At least a bit of mutability? Really? I don't? This is some sort of hazing ritual isn't it, any moment now you're all going to jump up, shout "surprise" and start laughing at me._
+
+
+
+__ But I kept at it. And even though my code looked horrible, I fell in love.
+
+
+
+The first attraction of functinal style code was writing python functions that just pass data around. No storing in intermediate variables, just passing one function's result directly into the arguments of the next function in the chain.
+
+
+
+Because who cares about reading intermediate steps? All I care for is that this chunk of code creates _X_. Not that it first does _Y_, then _Z,_ then pulls in _A_ and _B_ and combines them into _X._
+
+
+
+Sure, you could define a function called _X_ that combines _Y, Z, A_and _B,_but why create a new function for something that only gets called once? Much better to just do something like _X = A+B(Y(Z))_ isn't it?
+
+## A waterfall of data
+
+\[caption id="attachment_4322" align="alignright" width="350" caption="Plitvice falls"][![Plitvice falls](http://swizec.com/blog/wp-content/uploads/2012/05/waterfall-of-data.jpg "Plitvice falls")](./img/blog-wp-content-uploads-2012-05-waterfall-of-data.jpg)\[/caption]
+
+
+
+The way I think about code now is a waterfall of data.
+
+
+
+You have data and every function in the chain is a ledge. The data stops falling, changes course a bit, perhaps even changes some properties, and falls onward to the next function.
+
+
+
+In the end you have a pool. This is where your data ends up after falling through many functions and being changed. But then it flows onward to the next function, or wherever you might need it.
+
+
+
+You might say this is really [procedural programming](http://en.wikipedia.org/wiki/Procedural_programming "Procedural programming"), but I don't like side-effects, imperative bits of code and so on. It's still functional programming, but this is how my brain understands code. Your mileage might vary.
+
+## Fin
+
+Whatever way you think about your code, whatever way you visualise execution in your head ... hat's off to you, if you can handle the inherent complexity of object-oriented programming. You are a better man than I am.
+
+
+
+I think you should give "_this functional programming fad"_ a try anyway. You might like it ;)
+
+###### Related articles
+
+- [Functional programming in practice](http://restreaming.wordpress.com/2012/03/16/functional-programming-in-practice/) (restreaming.wordpress.com)
+- [Closure and currying magic for cleaner javascript](http://swizec.com/blog/closure-and-currying-magic-for-cleaner-javascript/swizec/3981) (swizec.com)
+- [Objects and PHP: A brief evolutionary history](http://teknonics.wordpress.com/2012/05/04/objects-and-php-a-brief-evolutionary-history/) (teknonics.wordpress.com)
+- [Still trying to wrap my head around functional programming.](http://normansoven.com/blog/still-trying-to-wrap-my-head-around-functional-programming/) (normansoven.com)
+- [The Old Is New Again](http://bulldozer00.com/2012/05/05/the-old-is-new-again/) (bulldozer00.com)
+- [Functional Programming in C++](http://www.altdevblogaday.com/2012/04/26/functional-programming-in-c/) (altdevblogaday.com)
+- [The genesis of the perfect programming language](http://slidetocode.com/2012/05/06/the-perfect-programming-language/) (slidetocode.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=6209c6cc-944f-4b49-b45c-5467e35073f2)](http://www.zemanta.com/ "Enhanced by Zemanta")

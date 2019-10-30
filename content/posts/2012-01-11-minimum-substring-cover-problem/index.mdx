@@ -1,0 +1,121 @@
+---
+layout: post
+title: 'Minimum substring cover problem'
+date: 2012-01-11
+redirect_from: 
+            - /blog/minimum-substring-cover-problem/swizec/3406
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2012-01-11259239_fe6b60af02_m5.jpg
+---
+A major part of [my thesis](https://github.com/Swizec/Le-Thesis)involves finding an algorithm to discover a good substring cover of text in order to properly syllabify said text. But what is the substring cover problem anyway and what does it entail?
+
+
+
+\[caption id="" align="alignright" width="213" caption="Image by Shreyans Bhansali via Flickr"][![algorithms doodle](./img/blog-wp-content-uploads-2012-01-11259239_fe6b60af02_m5.jpg "algorithms doodle")](http://www.flickr.com/photos/94416001@N00/11259239)\[/caption]
+
+
+
+[The Minimum Substring Cover Problem](http://cs.haifa.ac.il/~dhermeli/Publications/WAOA2007.pdf) paper from Hermelin, Rawitz, Rizzi and Vialette dating back to 2007 (judging by the filename) serves as a good entry point into this topic.
+
+
+
+There are actually a lot of cover problems, the most famous being Minimum [Set Cover](http://en.wikipedia.org/wiki/Set_cover_problem "Set cover problem") and [Minimum Vertex Cover](http://en.wikipedia.org/wiki/Vertex_cover "Vertex cover") problems. In this type of problems we are faced with two sets of elements and we want to cover one of the sets with another, by using the "least" elements from the covering set. I put "least" in quotes because the definition depends on what we want - maybe we want to use the least number of elements, perhaps we want the shortest elements ... whatever.
+
+
+
+For an example consider this:
+
+```
+S = ['a', 'aab', 'aba']
+C(S) = ['a', 'b', 'aa', 'ab', 'ba', 'aab', 'aba']
+```
+
+We can easily see that _C(S)_ is a set of all the possible coverings of S - using a combination of strings from C we can construct every string in S. This part isn't very difficult to calculate.
+
+
+
+Everything gets slightly hairier when you look for minimum covers:
+
+```
+C_1 = ['a', 'b']  # 3-cover (need 3 strings to cover the longest string in S)
+C_2 = ['a', 'ab'] # 2-cover (need 2 strings to cover the longest string in S)
+```
+
+Depending on how you choose the weight, both C_1 and C_2 are _minimum substring covers_ of S. Considering "least" to mean _least amount of strings_ then both are of weight 2, but if you consider "least" to mean _the total length of strings_ then C_1 is better.
+
+
+
+You could easily argue C_2 is better, because it uses the least amount of elements to cover the whole set S. 1+3+3 = 7 for C_1 and 1+2+2 = 5 for C_2.
+
+
+
+Ok, so now we know that finding the minimum substring cover of a set of strings depends a whole lot on what you actually want. Always a good sign, having a well-known problem where people can't even agree on what the best solution looks like.
+
+
+
+The paper goes on to explain in great theoretical detail that, because this problem is similar to minimum vertex cover, minimum set cover and similar problems, it is [NP-hard](http://en.wikipedia.org/wiki/NP-hard "NP-hard") to approximate. This means that the problem is at least as hard as the hardest problems in NP, but it doesn't necessarily mean that there is no polynomial solution - it just hasn't been found yet.
+
+
+
+Luckily, if we constrain some parameters of the problem, it becomes/remains [APX-hard](http://en.wikipedia.org/wiki/APX "APX") - _problems in this class have efficient algorithms that can find an answer within some fixed percentage of the optimal answer._
+
+
+
+The article then proposes two [approximation algorithms](http://en.wikipedia.org/wiki/Approximation_algorithm "Approximation algorithm") for finding minimum substring covers of S.
+
+## Local-Ratio Algorithms
+
+This algorithm follows from the local-ratio lemma, which in the case of substring cover means
+
+> Let C be a cover for S, and let w_1 and w_2 be weight functions for C(S). If C is an alpha-approximate, both with respect to w_1 and with respect to w_2, then C is also alpha-approximate with respect to w_1+w_2.
+
+```
+Data: A set of strings S, a weight function w:C(S) -> Q+, an integer l >= 2
+Result: An l-cover C for S (l is the number of substrings covering the longest s in S)
+begin
+
+C
+```
+
+This algorithm is guaranteed to terminate after a polynomial amount of recursive calls and it returns a (((m+1) binomial 2) - 1)-approximate l-cover of S.
+
+
+
+In sensible terms the algorithm basically does this: Add everything with zero weight to a partial solution, if this isn't the solution, it selects an uncovered substring in S and tries to cover it by examining all substrings in C_s.
+
+## [Linear Programming](http://en.wikipedia.org/wiki/Linear_programming "Linear programming") Rounding
+
+Originally the linear programming rounding algorithm was developed by Hajiaghayi et all. for the Minimum Multicolored Subgraph problem when l=2. It has now been expanded for any constant value of l.
+
+
+
+This section is extremely light on practical results and just shows a bunch of mathematics that supposedly prove how the algorithm can be extended and that the final result is an O(log^(1/l) n \* m^((l/1)^2/l))-approximate algorithm.
+
+
+
+From what I can understand this algorithm approaches the problem with the idea that they are basically looking for l-factorizations of strings.
+
+
+
+According to this section, the minimum substring cover can be formulated using the following integer linear program:
+
+```
+min    SUM_(c in C(s)) w(c)x_c
+s.t.   SUM_(f in F_l(s)) y_f >= 1          every s in S
+       SUM_(c in f in F_l(s)) y_f
+```
+
+Then there are a bunch of proofs that this algorithm works and is indeed very awesome ... but by this time my eyes started glazing over and the September deadline for my thesis started looking _very_ near.
+
+###### Related articles
+
+- [Apply substring on values in LINQ](http://stackoverflow.com/questions/7467186/apply-substring-on-values-in-linq) (stackoverflow.com)
+- [Objective-c Substring Range Exception](http://stackoverflow.com/questions/8046107/objective-c-substring-range-exception) (stackoverflow.com)
+- [Substr and explode in JavaScript](http://stackoverflow.com/questions/7904270/substr-and-explode-in-javascript) (stackoverflow.com)
+- [On linear programming formulations for the TSP polytope](http://spokutta.wordpress.com/2012/01/05/1311/) (spokutta.wordpress.com)
+- [Fuzzy string search](http://ntz-develop.blogspot.com/2011/03/fuzzy-string-search.html) (ntz-develop.blogspot.com)
+- [Top ten algorithms preprints of 2011](http://11011110.livejournal.com/238766.html) (11011110.livejournal.com)
+- [Efficiently replace a fixed position substring with a string of equal or larger length](http://stackoverflow.com/questions/8456010/efficiently-replace-a-fixed-position-substring-with-a-string-of-equal-or-larger) (stackoverflow.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=a0995159-d508-465f-9dd9-b53632d16b06)](http://www.zemanta.com/ "Enhanced by Zemanta")

@@ -1,0 +1,240 @@
+---
+layout: post
+title: 'There''s a "bug" in ES6 modules'
+date: 2015-11-02
+redirect_from: 
+            - /blog/theres-a-bug-in-es6-modules/swizec/6753
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+After playing around with ES6 features, I found a glitch in ES6 modules. You can't re-export your \\imports the way you can in other languages with native \\import/export support.
+
+
+
+Here's what I mean:
+
+```
+// Meta/index.jsx
+\import Title from './Title';
+
+export Title;
+```
+
+Seems reasonable, right? Yet it throws a syntax error.
+
+
+
+Sure, it _could_ be a bug in Babel.js, but I don't think it is. If I 'm reading the [ECMAScript2015 Specification](http://www.ecma-international.org/ecma-262/6.0/#sec-exports) correctly, then you were never meant to do this. Which is even worse.
+
+
+
+After an hour of figuring out why Babel won't compile my code, I spent another hour or two figuring out why I shouldn't have expected my code to compile in the first place. Let's take a look.
+
+
+
+Babel throws a syntax error like this:
+
+```
+Version: webpack 1.11.0
+Time: 662ms
+   [0] multi main 40 bytes {0} [built] [1 error]
+    + 7 hidden modules
+
+ERROR in ./src/components/H1BGraph/Meta/index.jsx
+Module build failed: SyntaxError: /Users/Swizec/Documents/random-coding/react-d3js-experiment/src/components/H1BGraph/Meta/index.jsx: Unexpected token (7:18)
+   5 | \import Title from './Title';
+   6 | 
+>  7 | export Title;
+     |             ^
+   8 |
+```
+
+This is not a helpful error. Not only is this a reasonable thing to do, it's also a very common thing to do in other languages with native module support. For example, when your organize files into a directory.
+
+
+
+In this case, there is a `Title` and a `Description`. Both components inherit from a base component called `BaseMeta`, but are used separately. It makes sense to put these three files and some helpers in a directory called `Meta`.
+
+
+
+Forcing programmers to write `\import Title from './Meta/Title'` breaks the abstraction. You shouldn't have to know how components and classes internal to `Meta` are organized. Writing `\import Title from './Meta’` should be possible.
+
+
+
+Right?
+
+
+
+Sure, one could argue that both of these components fall under a common `Meta` should be used through a parent `<Meta>` component. Then you could use `Meta` and not worry about \\importing either `Title` or `Description`. In many ways that’s true.
+
+
+
+But the `Meta` component _should_ be able to expose any of its internal components for external use. If JavaScript or Babel disagree with the architecture, then they should complain about the architecture and not throw a syntax error.
+
+
+
+To make that work, we need a dirty hack like this:
+
+```
+// Meta/index.jsx
+\import {Title as T} from './Title';
+
+export class Title extends T {};
+```
+
+Ugly, right?
+
+
+
+We use an aliased \\import from `./Title` only to turn around and export a new `Title` component that extends `T`, but adds nothing of its own.
+
+
+
+We have to do this because ES6 \\imports are constants — creating a new class with the same name as already exists would throw an error. Re-exporting `Title` with a different name would spread aliased \\imports through our codebase like a virus.
+
+
+
+I wish none of this silliness was necessary, but it is.
+
+
+
+Maybe the answer lies in what this code compiles to. Perhaps somewhere in the resulting ES5 code there is a deeper reason why JavaScript can't re-export like everyone else.
+
+
+
+When Babel is done, our \\import→export looks like this:
+
+```
+function(module, exports, __webpack_require__) {
+
+    
+    // Ugly but works :D
+
+    'use strict';
+
+    Object.defineProperty(exports, '__esModule', {
+      value: true
+    });
+
+    var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+    function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+    var _Title = __webpack_require__(8);
+
+    var Title = (function (_T) {
+      _inherits(Title, _T);
+
+      function Title() {
+        _classCallCheck(this, Title);
+
+        _get(Object.getPrototypeOf(Title.prototype), 'constructor', this).apply(this, arguments);
+      }
+
+      return Title;
+    })(_Title.Title);
+
+    exports.Title = Title;
+    ;
+/***/ }
+```
+
+Damn, that's a lot of code! Remember writing all of this every time you wanted class inheritance? Me neither, screw class inheritance if this is what it takes. No wonder everyone is so excited about ES6 modules.
+
+
+
+Let's look at the key part: where the `Title` class is defined as a featureless extension of `T`. This part:
+
+```
+    var _Title = __webpack_require__(8);
+
+    var Title = (function (_T) {
+      _inherits(Title, _T);
+
+      function Title() {
+        _classCallCheck(this, Title);
+
+        _get(Object.getPrototypeOf(Title.prototype), 'constructor', this).apply(this, arguments);
+      }
+
+      return Title;
+    })(_Title.Title);
+
+    exports.Title = Title;
+    ;
+```
+
+Ok, that's pretty familiar. If a human wrote the first line, it would be something like `var Foo = require('Foo’)`. `require()` gives a class, and we assign it to a variable.
+
+
+
+Then we create a closure, which wraps a scope around a function. Think of this function as a class factory — it takes a class and creates a new extended class.
+
+
+
+To produce these new classes, the closure creates a function called `Title`. This function acts as an object constructor, just like functions normally do in JavaScript. It uses `_get` to perform some magic that's beyond me. I \*_think_\* it calls the function on itself while also calling the superclass's constructor, but I'm not sure.
+
+
+
+Just to keep things interesting, Babel uses this opportunity to take advantage of JavaScript's hoisting behavior, where functions that aren't assigned to a variable are always global inside the current scope. The code calls `_inherits` on the `Title` function, but before it's created. From the looks of `_inherits`, it can replace the subclass's prototype with the superclass's object instance.
+
+
+
+It’s weird, but it works. Praise the gods of open source that Babel writes this magic for us.
+
+
+
+`class X extends Y` is not only easier to write than this JavaScript soup, but also easier (read: possible) to understand.
+
+
+
+Now we know what `export class X extends Y {}` transpiles into, but we still haven't answered the main question: Why can't we just re-export?
+
+
+
+I don't think it's because JavaScript couldn't handle something like this:
+
+```
+var Title = (function (_T) {
+ // ...
+})(__webpack_require__(8));
+```
+
+While this isn't the cleanest code, it \*_should_\* work. But take a look at the last line in the earlier example, the line that says `exports.Title = Title`.
+
+
+
+If we don’t tell the code what to export as, how will it know? It won't. Without a name, the compiled code would look like this:
+
+```
+exports = __webpack_require__(8);
+```
+
+With that, we can only re-export a single module's worth of code. Which does work by the way, you can always write `export default X`.
+
+
+
+If you want to re-export multiple modules, then you'll have to stick to that ugly workaround. I think it's silly, but it's the best JavaScript can do until gets reflection, and we're finally able to answer the question _"Hey, what did the programmer name this variable?"_
+
+
+
+I think that's coming in ES7. We'll see.
+
+
+
+**PS:** the official way to re-export modules in ES6 looks like this:
+
+```
+// to export a member
+export { encrypt as en } from 'lib/crypto';
+// or to export everything
+export * from 'lib/crypto';
+```
+
+But that still looks weird, doesn't play well with default exports, and doesn't solve the “preserve the name” problem.
+
+
+
+**Thanks** to Jure Čuhalev, Anže Pečar, Will Fanguy, Coletta Teske, and David Baird for reading draft versions of this article

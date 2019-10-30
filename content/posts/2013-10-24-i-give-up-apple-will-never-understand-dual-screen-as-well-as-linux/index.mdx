@@ -1,0 +1,203 @@
+---
+layout: post
+title: 'I give up, Apple will never understand dual screen as well as Linux'
+date: 2013-10-24
+redirect_from: 
+            - /blog/i-give-up-apple-will-never-understand-dual-screen-as-well-as-linux/swizec/6387
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/images-2949.jpg
+---
+\[caption id="" align="alignnone" width="500"]![My workspace with Mountain Lion](./img/images-2949.jpg "My workspace with Mountain Lion") My workspace with Mountain Lion\[/caption]
+
+
+
+_\[Warning: the wallpaper I use has never been a problem in any office I ever visited, but it does feature a human nipple. If you are a prude, please close your eyes when you reach the screenshots instead of bugging me about it. It's just boobs, relax]_
+
+
+
+Setting up dual screen for the first was a pain in the arse. I had just unwrapped my first ever 17" [flat screen](http://en.wikipedia.org/wiki/Flat_panel_display "Flat panel display") [CRT monitor](http://en.wikipedia.org/wiki/Cathode_ray_tube "Cathode ray tube") and noticed my graphics card had two [VGA](http://en.wikipedia.org/wiki/Video_Graphics_Array "Video Graphics Array") outputs. Dual screen time!
+
+
+
+After a day of messing about with xorg.conf I had flawless video output on both the fancy new 17" flat screen and the 14" monitor that came with my first computer in 1995. I was _so_ proud.
+
+
+
+Sure recompiling [KDE](http://kde.org/ "KDE") with [Xinerama](http://en.wikipedia.org/wiki/Xinerama "Xinerama") support took another three days (I was a Gentoo user back then), and launching a hardware accelerated game made the screens become mirrored, but it was amazeballs. I was a hacker just like in the movies! This was some 10 years ago.
+
+
+
+Ever since, I have been guarding that xorg.conf file with my life. It came with me through many linux distro changes, several monitors, and graphics cards, until a few years ago I deleted it.
+
+
+
+Ubuntu had become great enough that my painstakingly crafted configuration was no longer necessary. All I had to do was say _"Yes, I have two screens"_.
+
+
+
+[Linux](http://en.wikipedia.org/wiki/Linux "Linux") gives me exactly what I want from dual screen support:
+
+- launcher opens on screen you are currently working on
+- the same top menu bar is repeated on both screens
+- start menu, or dock, or whatever you call it, can be on both or just one screen depending on config
+- you essentially have one big screen
+- windows can be dragged seamlessly between screens
+- windows can be placed across both screens
+- desktop switching treats the whole workspace as a unit
+- exposé feature shows windows on each screen
+- dialogs open on active screen
+
+This was my setup before I retired the aging linux box a few weeks ago:
+
+
+
+\[caption id="" align="alignnone" width="1024"]![Dual screen on Ubuntu](./img/images-2950.png "Dual screen on Ubuntu") Dual screen on Ubuntu\[/caption]
+
+
+
+
+
+You see, I'm a programmer. I don't have a main screen and a secondary screen. I _need_ a giant workspace so I can fit all my terminals and text editors and browser windows in front of me. One terminal, one emacs, and one browser is the minimum.
+
+
+
+But usually there's two to three terminals, two browsers, two or more emacses and at least one chat program to keep in touch with the team. Before retiring my linux box I actually used the Mac as a dedicated third screen just-for-chats.
+
+## Enter [Apple's](http://www.apple.com "Apple") [Dual Screen](http://en.wikipedia.org/wiki/Multi-monitor "Multi-monitor")
+
+The first time I used dual screen on a Mac was a few years ago. I was shocked and horrified.
+
+
+
+The concept of having a main and a secondary screen was paramount to the experience. One monitor was The One You Are Using. It contained the top menu bar, the dock and whenever an app opened a new window or dialog, that's where it would appear.
+
+
+
+Even Quicksilver always opened there.
+
+
+
+A few months ago I tried again and Apple had greatly improved. Sure they still thought I had a main and secondary screen and would only launch new apps on Main, but at least apps opened new windows and dialogs on the active screen.
+
+
+
+This was the old way.
+
+- menu bar is on main screen
+- dock is on main
+- a Space (desktop) spans both screens and acts as a single workspace
+- new apps only open on main screen
+- disconnecting a screen causes some weirdness
+- active corners are for both screens as a whole
+- windows can be dragged between screens flawlessly
+- windows can span both screens
+- screenshots create two images - one for each screen
+
+The situation has improved since my first try, especially regarding app dialogs and new app windows appearing where I'm actually looking. This system worked very well.
+
+
+
+If only they fixed those issues with new apps, menu bar and the dock ...
+
+## Enter OS X Mavericks
+
+Lo and behold, last night Mavericks came out with the grand promise of Apple finally fixing dual screen support. I updated instantly.
+
+
+
+Dual screen was the only thing I was excited about.
+
+
+
+Who cares about Finder tabs, I've had those on Linux and Windows since forever and never used them. Meh, folder tags are silly, and I guess the Calendar app is kinda prettier than it used to be, and the system behaves much smoother.
+
+
+
+No more glitchy desktop switching animations for the win!
+
+
+
+But damn it, Apple, we need to talk about that dual screen support. What the fuck?
+
+
+
+They fixed the only two features that bothered me - both screens are now main. New apps open on the active screen, both screens have the top menu bar and both have the dock. Perfect.
+
+
+
+But they ruined everything else.
+
+
+
+A desktop no longer spans both screens. You have to switch separately for each screen, which goes right against the idea of having one giant workspace with desktops forming project-based groups of windows.
+
+
+
+In their desire to make dual screen easier, they also made dragging windows from one screen to another feel off and windows can no longer span both screens.
+
+
+
+\[caption id="" align="alignnone" width="840"]![Dual screen exposé](./img/images-2951.png "Dual screen exposé") Dual screen exposé\[/caption]
+
+
+
+
+
+\[caption id="" align="alignnone" width="491"]![Separating active and non-active screen makes sense](./img/images-2952.png "Separating active and non-active screen makes sense") Separating active and non-active screen makes sense\[/caption]
+
+
+
+
+
+\[caption id="" align="alignnone" width="717"]![Dragging window, stage 1](./img/images-2953.png "Dragging window, stage 1") Dragging window, stage 1\[/caption]
+
+
+
+
+
+\[caption id="" align="alignnone" width="717"]![Dragging window, stage 2](./img/images-2954.png "Dragging window, stage 2") Dragging window, stage 2\[/caption]
+
+
+
+
+
+\[caption id="" align="alignnone" width="717"]![Dragging window, stage 3](./img/images-2955.png "Dragging window, stage 3") Dragging window, stage 3\[/caption]
+
+
+
+
+
+As you can see, dragging a window between screens reinforces the idea that both screens are separate entities. The part of the window where you're holding it with the mouse, is active, the other vanishes as soon as you let go.
+
+
+
+In short, this is how dual screen works now:
+
+- both screens are main
+- menu bar on both, dock on both
+- launching apps works the way you expect
+- dialogs and new windows open where you want
+- two screens are no longer a cohesive unit
+- windows can't span screens
+- windows try too hard to show the transition between screens
+- you have to switch each screen's desktop separately
+- active corners on both screens
+- exposé and such affect both screens at once
+- disconnecting a screen doesn't cause weirdness
+
+There is an option on [Mission Control](http://en.wikipedia.org/wiki/Mission_Control_%28OS_X%29 "Mission Control (OS X)") settings to turn off separate desktops for each screen, but that also turns off the new features I do like.
+
+
+
+Apple's new dual screen support is a mixed bag of good and bad. Ideally we could have features from both worlds, but maybe they intend to fix this soon? I sure hope so.
+
+
+
+I'm giving the new way a few more days and if I can't get used to it, I'm switching back to the hell of having a secondary and a main screen.
+
+
+
+But at least Mavericks fixed the bug that disconnected wi-fi every time my screen went to sleep.
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=b0d29892-45bc-407b-b9cb-2a3f0fabda6f)](http://www.zemanta.com/?px "Enhanced by Zemanta")

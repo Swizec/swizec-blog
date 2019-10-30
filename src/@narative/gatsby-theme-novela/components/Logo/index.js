@@ -18,7 +18,7 @@ export default function Logo() {
     return (
         <Div>
             <Img src={logo} alt="Swizec" />
-            Swizec Teller &mdash; creating better engineers
+            Swizec Teller &mdash; a geek with a hat
         </Div>
     );
 }

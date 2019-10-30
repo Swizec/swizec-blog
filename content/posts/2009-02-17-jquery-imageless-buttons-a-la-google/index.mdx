@@ -1,0 +1,34 @@
+---
+layout: post
+title: 'jQuery imageless buttons a la Google'
+date: 2009-02-17
+redirect_from: 
+            - /blog/jquery-imageless-buttons-a-la-google/swizec/6
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+THE BUTTONS NOW WORK! Please go to [jQuery imageless buttons a la Google take two](http://swizec.com/blog/jquery-imageless-buttons-a-la-google-take-two/2/429).
+
+NEXT DAY EDIT: I have been shown the error of my ways and in just how many browsers I never considered the buttons don't work. I will fix this and do another announcement. Until then please move along, there is nothing to see here, but I'm leaving the whole shebang up for the world to see to remind me never again to be as cocky without making sure. Thanks guys, you've been a wonderful crowd.
+
+For the record, the buttons used to work in firefox 3, but then it updated to 3.0.6 and they stopped working for some reason.
+
+
+
+Last week the whole internet was abuzz with Google's reinvention of the button. They've issued numerous press releases about it, or at least it was people who have worked on the project and talked about it on their blogs, whatever really. The buttons we see today on gmail and other google services are, from what I can tell, version 3.1 and are the result of "endless cycles of code revision and quality control" by a whole team of very talented engineers.
+
+Well, dear Google engineers, I've got you beat. I've managed to recreate their results in roughly **six** hours over two days and although I haven't tested all of this in Internet Explorer yet I have good faith that it works there as well as everywhere else (I'm basing this on the fact that lately my stuff works 95% on IE out of the box, practice I say).
+
+Over these few hours I've created a simple to use jQuery plugin and am releasing it under GPL and MIT license so anyone can benefit from what I've come up with in a very simple way. In fact, all it takes is calling a function on an element, any element, and it the plugin injects a bunch of html and css into said element to turn it into a button. Furthermore, I've made it so that buttons can behave as dropdown menus of sorts, select elements or checkbox elements. They mimic these elements to such an extent their values submit together with forms and even an onchange event is fired when the value changes.
+
+I'm afraid my blog won't let me inject css styling and such so here's a screenshot of what it looks like: ![](http://swizec.com/code/styledButton/example.png)
+
+To see a live demo and download the code go to the[jQuery imageless buttons](http://swizec.com/code/styledButton/) page.
+
+## The hubris
+
+I have been informed by many people that I am an idiot. And they're right! What was I thinking putting trust in IE7 and not testing it there even once? My excuse is that I was far too excited about the whole thing, seriously, I've been walking on air all afternoon, and I don't really have access to IE at home. So, Google guys, you're still much awesomer than me! But I **will** prove that I can get this working on stupid browsers and still spend much less time on the whole thing.
+
+While you're all still happily commenting, if I get it working on FF2 and IE7 will that be alright? Or should I go as ancient as IE6 and FF1.5?
+
+EDIT an hour or so later: Alright guys, it's now PERFECT, absolutely perfect in Safari and even FF2 (at least on mac). Tomorrow I'll tackle IE and once I surmount that insourmountable obstacle I shall spam dzone and such yet again in hopes of a more positive response. Hey, you did all say you loved the thing save for the whole browser issues. My role is to serve the users.

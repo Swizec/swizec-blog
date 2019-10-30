@@ -1,0 +1,65 @@
+---
+layout: post
+title: 'Sabbatical week day 1: Toshl and Toggl datasets'
+date: 2011-12-27
+redirect_from: 
+            - /blog/sabbatical-week-day-1-toshl-and-toggl-datasets/swizec/3277
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2011-12-65197v5-max-250x2503.jpg
+---
+_I'm taking a sabbatical week over the holidays. This week's posts will serve as a sort of report of what I got up to the previous day instead of the usual schedule - wish me luck that I achieve even half of what I'd like to._
+
+
+
+\[caption id="" align="alignright" width="250" caption="Image via CrunchBase"][![Image representing Toshl as depicted in CrunchBase](./img/blog-wp-content-uploads-2011-12-65197v5-max-250x2503.jpg "Image representing Toshl as depicted in CrunchBase")](http://www.crunchbase.com/product/toshl)\[/caption]
+
+
+
+[Toshl](http://toshl.com "Toshl") is a cool expense tracking app from Slovenia, that I have been using since November last year as it turns out. I just love collecting data that I never really look at - I think the only times when I actually went back to inspect my Toshl data were those _holy fuck, why am I suddenly out of money, where'd it all go!?_ moments.
+
+
+
+It was never the bank's mistake :(
+
+
+
+[Toggl](http://www.toggl.com "Toggl.com") is perhaps more widely known - possibly the simplest time tracker I have come across. Started using it in early June as a companion app to my [Klok](http://klok.mcgraphix.com/klok/index.htm "Klok") data for tracking productive productive time (the definition for Klok also includes things like exercise and chores for instance). In September or October I tightened up my use a bit further so Toggl only includes my billable time now.
+
+
+
+Combined Toshl and Toggl give me this awesome dataset to play with - a near daily report of my expected income and my actual expenses.
+
+
+
+The next step is obvious - I'm making a service for myself that, once a week:
+
+- fetches toshl and toggl data
+- runs a simple [machine learning algorithm](http://en.wikipedia.org/wiki/Machine_learning "Machine learning")
+- sends me an email along the lines of _Hey dude, you're gonna run out of money in two weeks. Just thought I'd mention that_
+
+Yesterday I made the fetching part in [node.js](http://nodejs.org/ "Node.js") - a surprisingly difficult task when there's no ready-made Toggl library and Toshl doesn't even have an official API - and I'm tackling the learning bit today ... perhaps even in [Haskell](http://haskell.org "Haskell (programming language)"). That should be interesting and couldn't possibly fail right?
+
+
+
+Oh and if you ever find yourself in a situation where you have to reverse engineer an API from web forms make sure to send the _'Content-Type': 'application/x-www-form-urlencoded'_ header. Wasted at least an hour trying to figure out why my requests worked perfectly with Curl but not in Node.js.
+
+
+
+Of course it also helps if your target doesn't have csrf protection; thanks for that Toshl team. You guys are awesome :)
+
+
+
+PS: ping me if you think this sort of service could be useful to you too
+
+###### Related articles
+
+- [Review of expense tracker Toshl](http://markos.gaivo.net/blog/?p=604) (markos.gaivo.net)
+- [Money-saving smartphone apps](http://www.alwayssaving.com/money-saving-smartphone-apps/) (alwayssaving.com)
+- [Toggl Helps You Discover Where Your Time Goes](http://www.makeuseof.com/tag/toggl-helps-discover-time/) (makeuseof.com)
+- [Top 10 Freelance Time Tracking Tools](http://theworkathomewife.com/top-10-freelance-time-tracking-tools/) (theworkathomewife.com)
+- [5 Timekeeping Apps for Your Small Business](http://mashable.com/2011/12/10/time-keeping-apps/) (mashable.com)
+- [node.js - share sockets between processes](http://stackoverflow.com/questions/8490093/node-js-share-sockets-between-processes) (stackoverflow.com)
+- [Mobile expense tracking service Toshl gets a brand new Android app](http://www.intomobile.com/2011/11/04/mobile-expense-tracking-service-toshl-gets-brand-new-android-app/) (intomobile.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=75f5e7d0-daac-4773-870d-c83333331ef0)](http://www.zemanta.com/ "Enhanced by Zemanta")

@@ -1,0 +1,226 @@
+---
+layout: post
+title: 'How to populate react-redux-form with dynamic default values'
+date: 2018-01-25
+redirect_from: 
+            - /blog/populate-react-redux-form-dynamic-default-values/swizec/8158
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+https&#x3A;//youtu.be/O0P7YIiQm4Y?t=3579
+
+
+
+Here's a problem that took me embarrassingly long to solve: How do you populate dynamic values into a [react-redux-form](https://github.com/davidkpiano/react-redux-form)?
+
+
+
+First of all, react-redux-form is not the same as [redux-form](https://github.com/erikras/redux-form). They're similar but not the same. The internet is confused about this issue, and that makes googling hard.
+
+
+
+Second of all, we're talking about a form driven by Redux. Pre-filling it with default values should be as easy as filling out its Redux state. Right?
+
+
+
+Well, forms live in their own reducers that you don't have direct access to. They use a bunch of internal state to mark inputs as dirty and focused and whatnot. It's a mess.
+
+
+
+Let's start at the beginning.
+
+
+
+## A simple react-redux-form
+
+
+
+Here's a simple form built using react-redux-form. It has two input fields. When you Submit, it outputs your values to the console.
+
+
+
+\[codepen_embed height="265" theme_id="0" slug_hash="Wdqgrp" default_tab="js,result" user="swizec"]See the Pen [ReactReduxForm - Quick Start](https://codepen.io/swizec/pen/Wdqgrp/) by Swizec Teller ([@swizec](https://codepen.io/swizec)) on [CodePen](https://codepen.io).\[/codepen_embed]
+
+
+
+Borrowed the code straight from [@davidkpiano's](https://twitter.com/davidkpiano) official Quick Start example.
+
+
+
+Our form starts with a model and a Redux store:
+
+
+
+```
+const initialUserState = {
+  firstName: '',
+  lastName: '',
+};
+
+const store = createStore(combineForms({
+  user: initialUserState,
+}), applyMiddleware(thunk));
+```
+
+
+
+`initialUserState` describes the shape of a user and `combineForms` creates a special reducer. That reducer takes care of driving the UI for our form and storing values.
+
+
+
+You'd think you could add default values to `initialUserState`, and you can. Hold that thought… let's make sure we understand react-redux-form first :)
+
+
+
+The form itself comes in as a React component using `<Control>` elements from react-redux-form.
+
+
+
+```
+class UserForm extends Component {
+  handleSubmit(values) {
+    console.log(values);
+  }
+  render() {
+    return (
+       this.handleSubmit(values)}
+      >
+        
+
+          First name:
+          
+        
+
+        
+
+          Last name:
+          
+        
+
+        
+          Submit
+        
+      
+    )
+  }
+}
+```
+
+
+
+`handleSubmit` is the function we call when a user submits either by pressing the Submit button or hitting Enter. In our case, it prints values to the console.
+
+
+
+The `render` method uses a `<Form>` component from react-redux-form. It comes with all the necessary Redux wiring so we don't have to worry about that.
+
+
+
+We use the children of that component to define how it renders. In our case, that's two `div`s, some labels, a submit button, and two `<Control.text>` components.
+
+
+
+`<Control.X>` components come with all the necessary wiring for our form to work. They'll handle focus, blur, default values, matching to correct parts of our model and so on. Everything we don't want to worry about manually.
+
+
+
+Wonderful 👌
+
+
+
+## Static versus Dynamic default values
+
+
+
+Back to that obvious thought. Why can't you just use `initialUserState` to define default values?
+
+
+
+You can. As long as your default values are static.
+
+
+
+Let me explain.
+
+
+
+Your default form values are static, if you know them in advance. Like when you're writing your code. This is pretty rare.
+
+
+
+What if you're building an edit form? You can't know values for your form until the user chooses what they're editing.
+
+
+
+And that's when trouble begins.
+
+
+
+## Fill react-redux-form with dynamic default values
+
+
+
+[@lukeed05](https://twitter.com/lukeed05) helped me find the solution during livecoding. Thanks, mate.
+
+
+
+Here's how you do it:
+
+
+
+`react-redux-form` comes with a bunch of model actions. Actions its reducer understands. Actions it can use to do special things. Like populate your form.
+
+
+
+\[codepen_embed height="320" theme_id="0" slug_hash="wpLEEq" default_tab="js,result" user="swizec"]See the Pen [ReactReduxForm - Dynamic Default Values](https://codepen.io/swizec/pen/wpLEEq/) by Swizec Teller ([@swizec](https://codepen.io/swizec)) on [CodePen](https://codepen.io).\[/codepen_embed]
+
+
+
+Tap the "Change Defaults" button to pick a new random user. Its name will populate the form, and you can edit to your heart's content.
+
+
+
+To make that work, we used a Redux action generator called `actions.merge`. It lets us merge the form model with a new set of default values.
+
+
+
+First we connect our `UserForm` component to Redux.
+
+
+
+```
+const mapDispatchToProps = {
+  setDefaultUser: (values) => actions.merge('user', values)
+}
+const ConnectedForm = connect(null, mapDispatchToProps)(UserForm);
+```
+
+
+
+The usual stuff. Use `connect` to connect to Redux, there's no props we need from state, and we use `mapDispatchToProps` to add a dispatch function called `setDefaultUser`.
+
+
+
+`setDefaultUser` is a curried application of `actions.merge`. Takes a value object and merges it with the `user` model in our store.
+
+
+
+I wired it to an `onClick` callback in this example so you can try it multiple times.
+
+
+
+```
+  changeUser() {
+    this.props.setDefaultUser(
+       randomUsers[Math.floor(Math.random()*randomUsers.length)]
+    )
+  }
+```
+
+
+
+Another approach you can use is to call this action in `componentDidMount`. That gives you true defaults – a form populated as soon as a user sees it.
+
+
+
+Happy hacking 🤓

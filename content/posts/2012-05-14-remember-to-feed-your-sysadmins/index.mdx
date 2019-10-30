@@ -1,0 +1,131 @@
+---
+layout: post
+title: 'Remember to feed your sysadmins'
+date: 2012-05-14
+redirect_from: 
+            - /blog/remember-to-feed-your-sysadmins/swizec/4332
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/wikipedia-commons-thumb-d-d8-Strucla_%28cake%29.JPG-300px-Strucla_%28cake%29.jpg
+---
+My blog has been down for the better part of a week. It's now back ... almost ... well mostly ... it's somewhat back!
+
+
+
+\[caption id="" align="alignright" width="300" caption="Strucla (cake) (Photo credit: Wikipedia)"][![Strucla (cake)](./img/wikipedia-commons-thumb-d-d8-Strucla_%28cake%29.JPG-300px-Strucla_%28cake%29.jpg "Strucla (cake)")](http://commons.wikipedia.org/wiki/File:Strucla_%28cake%29.JPG)\[/caption]
+
+
+
+Before I tell you the story, let me pre-emptively deal with all the "advice" that starts flying in everytime there's a problem with my blog:
+
+- moving to not-[wordpress](http://wordpress.org "WordPress") is a problem because I'd have to migrate plugins, the layout, and so on
+- on using _static page generator_ ... my wordpress is configured to do just that, all you see are static pages
+- my hosting is free, I like [free stuff](http://FreeStuff4Free.com "Free Stuff")
+- this host has withstood traffic of _500 **visitors**_ a second (each visitor translates into 10+ requests)
+- I don't like doing sysadmining
+
+## The Story of Being a Free User and Not Buying Enough [Cakes](http://en.wikipedia.org/wiki/Cake "Cake")
+
+Everything started last Monday when I said that _[My brain can't handle OOP anymore](http://swizec.com/blog/my-brain-cant-handle-oop-anymore/swizec/4320 "My brain can’t handle OOP anymore")._[Reddit](http://reddit.com/ "Reddit") hated the post, mostly resorting to calling me an idiot, but [HackerNews](http://news.ycombinator.com/ "Hacker News") was a far more receptive crowd with 53 upvotes and 53 comments. There was a bit of activity on twitter as well.
+
+
+
+What I'm saying is the post was generally taking off a little bit.
+
+
+
+Then everything went wrong.
+
+
+
+A friend said _"Hey, uhm, I'm trying to read your blog, but it's taking a bit of time to open"_.
+
+
+
+Meh, that sort of stuff happens sometimes. You can never quite pinpoint it and not like I can do anything about it anyway since I have to rush off to class.
+
+
+
+Then the tweets started. _"Hey dude, your blog is down!" "LoL, your site just says It works!"_ and so on.
+
+
+
+Well ... fuck.
+
+
+
+How could this be? The post wasn't even that popular? Somewhere near the bottom of hackernews, nothing but hate from reddit ... impossible!
+
+
+
+Way possible!
+
+
+
+One of the fonts was 404-ing. This results in a request that does not get cached and servers go down. Or rather, servers don't go down but one of the lesser sysadmins goes _"You know what, the whole environment is getting a bit slow, and it's all due to this guy's blog ... I'm sure nobody will mind if I just shut it down for now."_
+
+
+
+I minded.
+
+
+
+Then the real fun begins. Later that night the main sysadmin decided that it was finally time to perform that migration to a new server we've been planning for months and he'll do it in the morning since he's been working on a project 'round the clock and is Too Tired Right Now (tm).
+
+
+
+Next morning, joy! Bliss! Heaven! He started, ran rsyinc, I switched around some [IP addresses](http://en.wikipedia.org/wiki/IP_address "IP address") and off we go to greener pastures!
+
+
+
+In a few minutes accessing the raw domain produced a _[403 error](http://en.wikipedia.org/wiki/HTTP_403 "HTTP 403")_ and going to /blog gave you a lovely _Error establishing database connection._
+
+
+
+\[caption id="" align="alignright" width="240" caption="Sunday (Photo credit: ex.libris)"][![Sunday](./img/2270-1800816503_6147f638fd_m.jpg "Sunday")](http://www.flickr.com/photos/10229241@N04/1800816503)\[/caption]
+
+
+
+Progress! The blog is running happily under nginx now and soon enough eveyrthing will be back to normal with just a day's worth of traffic gone. Not too shabby really, could've been much worse.
+
+
+
+Then the main sysadmin vanished.
+
+
+
+And I couldn't get him back until Sunday.
+
+
+
+I'm just a lowly freeloader with a blog that often brings down whole servers. I don't even bring him cake or anything! He has better things to do.
+
+
+
+Finally, on Sunday, rejoicment and glory and heaven and everything that is nice and lovely and sweet. He says _Hello, sorry for the delay._ on irc and promptly brings the database over to the new server and hooks it up to the wordpress installation.
+
+
+
+Yay my blog is back!
+
+
+
+_"Okay, everything works, let me just hook up the redirects and page caching back up"_
+
+
+
+That was the last I've heard from him. I can only hope it doesn't take another week for him to get back to me again. That would suck since this blog is totally vulnerable without a functioning page caching mechanism. There's just too much traffic when I post anything remotely interesting.
+
+
+
+Wish me luck.
+
+###### Related articles
+
+- [Archie the cake eating dog.](http://mertonmick.wordpress.com/2012/05/10/archie-the-cake-eating-dog/) (mertonmick.wordpress.com)
+- [Sysadmin Sunday 78](http://blog.serverdensity.com/2012/05/06/sysadmin-sunday-78/) (serverdensity.com)
+- [The Most Important things for running a Reliable Internet Service](http://etbe.coker.com.au/2012/04/17/reliable-internet-service/) (etbe.coker.com.au)
+- [The Best-Laid Plans of SysAdmins, or Trading Off Capital Vs. Labor](http://smallshoptechheavy.wordpress.com/2012/04/16/the-best-laid-plans-of-sysadmins-or-trading-off-capital-vs-labor/) (smallshoptechheavy.wordpress.com)
+- [Fighting boredom at a sysadmin job by writing a binary grabber](http://rachelbythebay.com/w/2012/03/07/nb/) (rachelbythebay.com)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=a5f67f2f-69ec-487c-b09a-07778bf5a1c3)](http://www.zemanta.com/?px "Enhanced by Zemanta")

@@ -1,0 +1,185 @@
+---
+layout: post
+title: 'Flotr2 - my favorite javascript graph library'
+date: 2012-06-01
+redirect_from: 
+            - /blog/flotr2-my-favorite-javascript-graph-library/swizec/4558
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2012-06-Screen-Shot-2012-06-01-at-2.41.59-PM.png
+---
+The more I look at it, the more it seems drawing graphs in javascript+html is the only viable option to get anything decent and useful.
+
+
+
+[Gnuplot](http://www.gnuplot.info/ "Gnuplot")'s graphs work, but they're not all that pleasant to look at. Same goes for the graphing tools I've seen in python. [Mathematica](http://www.wolfram.com/products/mathematica/ "Mathematica"), I'm told, does a very decent job, but I haven't used that much.
+
+
+
+A big advantage for javascript graphing is shareability. Put up a github page, give people a link, voila. Everyone can see up to date graphs, often even interact with them.
+
+## The world of javascript graphs
+
+Plenty graphing libraries exist for javascript ranging from extremeley simplistic to magnificently complex.
+
+
+
+The most popular are probably [d3.js](http://d3js.org/) and [Raphael](http://raphaeljs.com/), both of which can get _extremely_ complicated to use, but produce arguably the shiniest and most advanced data visualisations you can imagine.
+
+
+
+Raphael is mostly a general vector library for the web. Appropriately beautiful as well.
+
+
+
+\[caption id="attachment_4564" align="alignnone" width="554" caption="An analytics graph in Raphael"][![An analytics graph in Raphael](http://swizec.com/blog/wp-content/uploads/2012/06/Screen-Shot-2012-06-01-at-2.41.59-PM.png "An analytics graph in Raphael")](./img/blog-wp-content-uploads-2012-06-Screen-Shot-2012-06-01-at-2.41.59-PM.png)\[/caption]
+
+
+
+\[caption id="attachment_4565" align="alignnone" width="573" caption="Bubble graph in Raphael"][![Bubble graph in Raphael](http://swizec.com/blog/wp-content/uploads/2012/06/Screen-Shot-2012-06-01-at-2.42.12-PM.png "Bubble graph in Raphael")](./img/blog-wp-content-uploads-2012-06-Screen-Shot-2012-06-01-at-2.42.12-PM.png)\[/caption]
+
+
+
+\[caption id="attachment_4566" align="alignnone" width="323" caption="A clock made with Raphael"][![A clock made with Raphael](http://swizec.com/blog/wp-content/uploads/2012/06/Screen-Shot-2012-06-01-at-2.42.31-PM.png "A clock made with Raphael")](./img/blog-wp-content-uploads-2012-06-Screen-Shot-2012-06-01-at-2.42.31-PM.png)\[/caption]
+
+
+
+D3.js will make your life somewhat easier in that it's at least aimed specifically at making data visualisations, but there's plenty of rope to hang yourself with.
+
+
+
+\[caption id="attachment_4568" align="alignnone" width="704" caption="HN top titles visualisation in d3.js"][![HN top titles visualisation in d3.js](http://swizec.com/blog/wp-content/uploads/2012/06/Screen-Shot-2012-06-01-at-3.03.35-PM.png "HN top titles visualisation in d3.js")](./img/blog-wp-content-uploads-2012-06-Screen-Shot-2012-06-01-at-3.03.35-PM.png)\[/caption]
+
+
+
+\[caption id="attachment_4569" align="alignnone" width="664" caption="House hunting in d3.js"][![House hunting in d3.js](http://swizec.com/blog/wp-content/uploads/2012/06/Screen-Shot-2012-06-01-at-2.46.31-PM.png "House hunting in d3.js")](./img/blog-wp-content-uploads-2012-06-Screen-Shot-2012-06-01-at-2.46.31-PM.png)\[/caption]
+
+
+
+\[caption id="attachment_4570" align="alignnone" width="686" caption="Scatterplots made with d3.js"][![Scatterplots made with d3.js](http://swizec.com/blog/wp-content/uploads/2012/06/Screen-Shot-2012-06-01-at-2.46.53-PM.png "Scatterplots made with d3.js")](./img/blog-wp-content-uploads-2012-06-Screen-Shot-2012-06-01-at-2.46.53-PM.png)\[/caption]
+
+## Flotr2
+
+Those visualisations, while incredibly shiny, are _difficult_ to make. It can take ages, trust me. I've tried and nothing I could come up with came even close. Most of all, using raphael and d3 is usually overkill - sometimes you just want a graph.
+
+
+
+To visualize [my past year of 750words](http://swizec.com/blog/a-year-of-750words-com-with-shiny-graphs/swizec/4378 "A year of 750words.com – with shiny graphs") I used [Flotr2](http://humblesoftware.com/flotr2/) - it took me ten minutes to go from parsed data dumps to shiny graphs. And that was because I had to come up with a javascript function to mangle my data into something Flotr2 will understand.
+
+
+
+The best feature is that there isn't enough rope to hang yourself with. Nor does it make you want to over-engineer a simple graph.
+
+
+
+Essentially, the code just sets up some data and a label or two:
+
+```
+function draw_time(container, data, title) {
+    var
+    start = new Date(DATA[0].date).getTime(),
+    options,
+    graph,
+    i, x, o;
+
+    options = {
+        xaxis : {
+            mode : 'time',
+            labelsAngle : 45
+        },
+        selection : {
+            mode : 'x'
+        },
+        legend: {
+            position: 'se'
+        },
+        HtmlText : false,
+        title : title
+    };
+
+    // Draw graph with default options, overwriting with passed options
+    function drawGraph (opts) {
+
+        // Clone the options, so the 'options' variable always keeps intact.
+        o = Flotr._.extend(Flotr._.clone(options), opts || {});
+
+        // Return a new graph.
+        return Flotr.draw(
+            container,
+            data,
+            options
+        );
+    }
+
+    graph = drawGraph();
+
+    Flotr.EventAdapter.observe(container, 'flotr:select', function(area){
+        // Draw selected area
+        graph = drawGraph({
+            xaxis : { min : area.x1, max : area.x2, mode : 'time', labelsAngle : 45 },
+            yaxis : { min : area.y1, max : area.y2 }
+        });
+    });
+
+    // When graph is clicked, draw the graph with default area.
+    Flotr.EventAdapter.observe(container, 'flotr:click', function () { graph = drawGraph();});
+}
+```
+
+And what you get is a graph:
+
+
+
+\[caption id="attachment_4571" align="alignnone" width="604" caption="A graph in Flotr2"][![A graph in Flotr2](http://swizec.com/blog/wp-content/uploads/2012/06/Screen-Shot-2012-06-01-at-2.58.02-PM.png "A graph in Flotr2")](./img/blog-wp-content-uploads-2012-06-Screen-Shot-2012-06-01-at-2.58.02-PM.png)\[/caption]
+
+
+
+Love it.
+
+
+
+Looks good. Serves its purpose. Simple to make.
+
+###### Related articles
+
+- [![](http://i.zemanta.com/noimg_05_80_80.jpg)](http://ask.metafilter.com/215379/Have-my-graph-and-graph-it-too)[Have my graph and graph it too?](http://ask.metafilter.com/215379/Have-my-graph-and-graph-it-too)
+
+
+
+  * * *
+
+
+
+- [![](http://i.zemanta.com/89526314_80_80.jpg)](http://www.r-bloggers.com/github-follower-graph-with-r/)[Github Follower Graph with R](http://www.r-bloggers.com/github-follower-graph-with-r/)
+
+
+
+  * * *
+
+
+
+- [![](http://i.zemanta.com/noimg_02_80_80.jpg)](http://the.taoofmac.com/space/infoviz)[Visualization](http://the.taoofmac.com/space/infoviz)
+
+
+
+  * * *
+
+
+
+- [![](http://i.zemanta.com/noimg_09_80_80.jpg)](http://www.webgl.com/2012/05/webgl-demo-graph-viewer-test-vivagraph-js/)[WebGL Demo - Graph Viewer Test (vivagraph.js)](http://www.webgl.com/2012/05/webgl-demo-graph-viewer-test-vivagraph-js/)
+
+
+
+  * * *
+
+
+
+- [![](http://i.zemanta.com/91372938_80_80.jpg)](http://arstechnica.com/business/2012/05/making-idiot-proof-infographics-with-infogr-am/)[Making idiot-proof infographics with Infogr.am](http://arstechnica.com/business/2012/05/making-idiot-proof-infographics-with-infogr-am/)
+
+
+
+  * * *
+
+
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=5580d959-40bd-49d9-87ad-b9e911728ddb)](http://www.zemanta.com/?px "Enhanced by Zemanta")

@@ -1,0 +1,279 @@
+---
+layout: post
+title: 'The birth of LISP - a summary of John McCarthy''s original paper'
+date: 2012-08-22
+redirect_from: 
+            - /blog/the-birth-of-lisp-a-summary-of-john-mccarthys-original-paper/swizec/5075
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ./img/blog-wp-content-uploads-2012-08-list-structure.png
+---
+> A programming system called [LISP](http://en.wikipedia.org/wiki/Lisp_%28programming_language%29 "Lisp (programming language)") (for LISt Processor) has been developed for the IBM 704 computer by the [Artificial Intelligence](http://en.wikipedia.org/wiki/Artificial_intelligence "Artificial intelligence") group at M.I.T. The system was designed to facilitate experiments with a proposed system called the Advice Taker, whereby a machine /../ could exhibit “common sense” in carrying out its instructions.
+>
+>
+>
+> /../
+>
+>
+>
+> LISP eventually came to be based on a scheme for representing the [partial recursive functions](http://en.wikipedia.org/wiki/Computable_function "Computable function") of a certain class of symbolic expressions. It now seems expedient to expound the system by starting with the class of expressions called S-expressions and the functions called S-functions.
+
+With that, [John McCarthy](http://en.wikipedia.org/wiki/John_McCarthy_%28computer_scientist%29 "John McCarthy (computer scientist)") starts off his [Recursive Functions of Symbolic Expressions and Their Computation by Machine](https://docs.google.com/viewer?url=http%3A%2F%2Fwww.cs.berkeley.edu%2F~christos%2Fclassics%2Flisp.ps) paper. Two years after LISP was originally developed, long before many of the concepts presented in the paper become the norm.
+
+
+
+Garbage collection, for instance, was first proposed/described in this paper (invented in 1959, paper published in 1960).
+
+
+
+While LISP never really delivered on its promise of artificial intelligence and the whole field has started turning in a [probabilistic rather than descriptive approach](http://www.tor.com/blogs/2011/06/norvig-vs-chomsky-and-the-fight-for-the-future-of-ai), this paper is a good read for anyone whose interests in computer science and engineering go beyond comparing Ruby to PHP on a syntactical basis.
+
+
+
+The Paper is 34 pages long and took me roughly 6 hours to grok, here's the gist in ~1300 words. For details, read the original :)
+
+## Functions and function definitions
+
+For starters we need some core mathematical constructs. These are well known, but the conditional expression was believed to be new at the time.
+
+- _[Partial Functions](http://en.wikipedia.org/wiki/Partial_function "Partial function")_ - functions only defined on parts of their domain, they arise because the computation is intractable for some values (turing completeness)
+
+- _Propositional Expressions and Predicates_ - functions/operators returning a _true_ or a _false_ (and, or, not, etc.)
+
+- _Conditional Expressions_ - a notation for expressing values depending on predicates, which was traditionally done using human words. For instance, definining the function _abs(x)_ benefits from this concept. Best explained with an example:
+
+  ```
+  (1 < 2→4, 1 > 2→3) = 4
+  (2 < 1→4, 2 > 1→3, 2 > 1→2) = 3
+  (2 < 1→4,T →3) = 3
+  (2 < 1→ 0 0,T →3) = 3
+  (2 < 1→3,T → 0 0) is undefined
+  (2 < 1→3, 4 < 1→4) is undefined
+  ```
+
+- _Recursive Function Definitions_ - because of the way _conditional expression_s are defined, we can use them recursively without falling into infinite loops:
+
+  ```
+  n! = (n = 0→1,T →n · (n−1)!)
+
+  2! = (2 = 0→1,T →2 · (2−1)!)
+     = 2 · 1! = 2 · (1 = 0→1T →·(1−1)!)
+     = 2 · 1 · 0!
+     = 2 · 1 · (0 = 0→1,T →0 · (0−1)!)
+     = 2 · 1 · 1
+     = 2
+  ```
+
+  The paper also defines propositional operators as recursive functions, because this helps us handle intractability without messing everything up.
+
+  ```
+  p ∧ q = (p→q,T →F)
+  p ∨ q = (p→T,T →q)
+  ¬p = (p→F,T →T)
+  p ⊃ q = (p→q,T →T)
+  ```
+
+- _Functions and Forms_ - the paper makes a distinction between forms - _y^2+x -_ and functions - _f(x) = ..._ - because we need a clean notation for applying functions to parameters. Thus the notion of a _lambda_ is introduced that takes arguments, binds them to an expression and returns the result:
+
+  ```
+  λ((x, y), y^2 + x),
+  λ((u, v), v^2 + u)
+  and λ((y, x), x^2 +y)
+  are the same function
+  ```
+
+- _Expressions and Recursive Functions_ - lambdas aren't good enough for defining things recursively because you can't have an operator as _"the whole expression"_. To fix this a _label_ is introduced that binds the lambda expression to a name, so it can be reused:
+
+  ```
+  label(sqrt, λ((a, x, eps), (|x2 −a| < eps→x,T →sqrt(a, 1/2(x+ a/x), eps))))
+  ```
+
+## Recursive functions of Symbolic expressions
+
+Now that we have a solid basis, it's time to define symbolic expressions (S-expressions for short), show how they can be used to define functions, how those functions can in turn be represented as S-expressions and finally we will define the all \\important _apply_ function, which lets the computer calculate anything.
+
+
+
+**S-expressions** are formed by using the special characters _dot, left-, right- parentheses_ \[_·_()] and distinguishable atomic symbols (defined in this paper as capital Latin letters, digits and a single space).
+
+1. Atomic symbols are S-expressions
+2. If _e1_ and _e2_ are S-expressions, so is _(e1 · e2)_
+
+So an S-expression is any ordered pair of S-expressions. Strictly speaking we are supposed to terminate any nesting of S-expressions with a _[NIL](http://en.wikipedia.org/wiki/NIL_%28programming_language%29 "NIL (programming language)")_, but we agree that _(m)_ stands for _(m_· NIL)__and that instead of a dot operator we can write expressions as lists, which makes our lives a lot easier
+
+```
+((AB,C),D) for ((AB · (C ·NIL)) · (D ·NIL))
+((A,B),C,D·E) for ((A· (B ·NIL)) · (C · (D · E)))
+```
+
+**Functions of S-expressions** use conventional notation, except they're limited to lower case letters, brackets and semicolons to distinguish them from S-expressions. These are called M-expressions (meta-expressions)
+
+```
+car[x]
+car[cons[(A· B); x]]
+```
+
+McCarthy then defines five**Elementary S-functions and Predicates**. _atom_ tells us whether something is atomic, _eq_ compares two atomic things and tells us if they're equal, _car_ returns the left part of an S-expression, _cdr_ returns the right and _cons_ constructs an S-expression from two atoms.\\
+
+
+
+By introducing **Recursive S-functions** we finally get a strong enough class of functions that we can construct all computable functions. McCarthy now defines a bunch of useful functions_-_let's look at the example of _ff_, which returns the first element of an S-expression.
+
+```
+ff[x] = [atom[x]→x;T →ff[car[x]]]
+
+ff [((A · B) · C)] = A
+calculation:
+= [atom[((A · B) · C)]→((A· B) · C);T →ff[car[((A· B)C·)]]]
+= [F →((A· B) · C);T →ff[car[((A· B) · C)]]]
+= [T →ff[car[((A· B) · C)]]]
+= ff[car[((A· B) · C)]]
+= ff[(A· B)] = [atom[(A · B)]→(A· B);T →ff[car[(A ·B)]]]
+= [F →(A· B);T →ff[car[(A· B)]]]
+= [T →ff[car[(A· B)]]]
+= ff[car[(A· B)]]
+= ff[A]
+= [atom[A]→A;T →ff[car[A]]]
+= [T →A;T →ff[car[A]]]
+= A
+```
+
+The next thing we need is **Representing S-functions as S-expressions.**We do this simply by changing lowercase into uppercase and properly handling some cases around labels and quotes. The M-expression for subst
+
+```
+label [subst; λ [[x; y; z]; [atom [z] → [eq [y; z] → x; T → z]; T → cons [subst [x; y; car [z]]; subst [x; y; cdr [z]]]]]]
+```
+
+becomes the S-expression
+
+```
+(LABEL, SUBST, (LAMBDA, (X, Y, Z), (COND ((ATOM, Z), (COND, (EQ, Y, Z), X), ((QUOTE, T), Z))), ((QUOTE, T), (CONS, (SUBST, X, Y, (CAR Z)), (SUBST, X, Y, (CDR, Z)))))))
+```
+
+Soup. It looks like a soup of weird.
+
+
+
+But it's very simple in principle. Add some tactical line breaks and code alignment and you get readable code!
+
+```
+(LABEL, SUBST,
+        (LAMBDA, (X, Y, Z),
+                 (COND ((ATOM, Z),
+                        (COND, (EQ, Y, Z), X),
+                        ((QUOTE, T), Z))),
+                 ((QUOTE, T),
+                  (CONS, (SUBST, X, Y, (CAR Z)),
+                         (SUBST, X, Y, (CDR, Z)))))))
+```
+
+**The Universal S-Function _apply_** is the all \\important function that gives us a way of applying a function to a list of arguments. It's a bit tricky to define and reason about - all you have to keep in mind is that it behaves exactly the same as the function it is applying. The main consequence of this is that we can now implement a machine (an interpreter) that only needs to implement the _apply_ function and it can run any program we write.
+
+```
+λ[[x; y]; cons[car[x]; y]][(A,B); (C,D)]
+= apply[(LAMBDA, (X,Y ), (CONS, (CAR,X),Y )); ((A,B), (C,D))] = (A,C,D)
+```
+
+In the background, _apply_ is an expression that represents the value of the function applied to arguments, while _eval_ does the heavy lifting of calculation, which takes an expression and its "name" as arguments, so it can attach the value to something useful in the next step of calculation.
+
+
+
+And we've come at the juicy goodness of functional programming - **Functions with Functions as Arguments.**The idea is that we can use an S-expression as an argument for another S-expression similar to what we did with _apply_, except in a more generally useful way.
+
+
+
+The paramount example is _maplist_(called "map" these days), which applies a function to every member of a list to construct a different list - for instance increasing all values by +1.
+
+## The LISP programming system
+
+LISP's core is a system of translating S-expressions into list structures that can be evaluated by a computer. This system was intended for various uses, the ultimate of which was the Advice Taker system.
+
+
+
+**Representing S-Expressions by a List Structure** can be visualised with a set of connected boxes. Each box is divided into two parts - the right being the _address field_ and the left being the _decrement field_. They contain the locations for subexpressions returned by _car_ and _cdr_ respectively.
+
+
+
+\[caption id="attachment_5133" align="alignnone" width="465" caption="List structure"][![List structure](http://swizec.com/blog/wp-content/uploads/2012/08/list-structure.png "List structure")](./img/blog-wp-content-uploads-2012-08-list-structure.png)\[/caption]
+
+
+
+Substructures can be repeated, but cycles aren't allowed - the bottom-right example wouldn't fly. When subexpressions are repeated their in-memory representation depends mostly on the program's history, but luckily this doesn't affect the final result.
+
+
+
+The reason McCarthy prohibits circular structures is interesting - they might help with representing, say, recursive functions, but there are too many difficulties with printing them in a world with our topology.
+
+
+
+\[caption id="attachment_5134" align="alignnone" width="165" caption="((A · B) · (C · (E · F)))"][![((A · B) · (C · (E · F)))](http://swizec.com/blog/wp-content/uploads/2012/08/example-list-structure.png "((A · B) · (C · (E · F)))")](./img/blog-wp-content-uploads-2012-08-example-list-structure.png)\[/caption]
+
+
+
+When storing atomic symbols an **association list** is used. These are used for anything from print names, to memory locations of values - the machine uses them for whatever low-level concept it needs to make the mathematical principles of LISP work.
+
+
+
+For example, to store the word _DIFFERENTIATE_ in an association list on a computer with 6-bit words a structure such as this is used:
+
+
+
+\[caption id="attachment_5136" align="alignnone" width="370" caption="Association list for "DIFFERENTIATE""][![Association list for "DIFFERENTIATE"](http://swizec.com/blog/wp-content/uploads/2012/08/association-list.png 'Association list for "DIFFERENTIATE"')](./img/blog-wp-content-uploads-2012-08-association-list.png)\[/caption]
+
+
+
+Even back then computers had more memory than a typical program would be using at all times, so a concept of a **free storage list** was introduced. At its core, the free storage list is simply a list structure that catalogs all the available free memory and starts with a pointer called _FREE_.
+
+
+
+A straightforward concept no doubt, but it introduces the invention of **garbage collection**. Whenever a subexpression is no longer needed it can be added to the free storage list. And because we're using lists, every single redeemed element is useful!
+
+
+
+Sweet!
+
+
+
+When our program runs out of free memory the garbage collector (called _"a reclamation cycle"_back then) goes through all accessible registers and marks them. Then it simply goes through the whole memory and anything that wasn't marked as accessible gets added to the free storage list.
+
+
+
+It's easy to imagine how the **elementary S-functions work in the Computer**_._They amount to nothing more than returning the correct part of the word. So _car_ returns the address value, _cdr_ the decrement value, _cons_ takes from free storage and fills the values ... and so on.
+
+
+
+Everything else is merely constructed from elementary functions.
+
+
+
+Another interesting observation is that talking about **representation of S-functions by Programs** McCarthy ever so casually introduces lazy evaluation by saying that compilation is simple and _"conditional expressions must be so compiled that only the_p's_and_e's_that are required are computed"_
+
+
+
+There are some problems with compiling recursive functions because of a possibility of register collisions - needing a part of memory that is also used by the previous level of recursion - which is solved by employing a mechanism we now know as _The Stack_.
+
+## Fin
+
+Further on McCarthy details the current state of the LISP system - everything basically works, a manual is being prepared, the compiler is 60-times faster than the interpreter and floating point operations are slow.
+
+
+
+There is also a short chapter on an alternative presentation of functions of symbolic expressions called _L-expressions_. They are the basis of linear LISP and use the more familiar elementary functions _first, rest_ and _combine_.
+
+
+
+Mathematically speaking linear LISP includes LISP, but for computers regular LISP is said to be faster.
+
+
+
+Now if only there weren't so many damn parentheses ... [I tried to learn LISP (clojure really)](http://swizec.com/blog/tag/clojure), I really did. But the syntax was just too jarring.
+
+###### Related articles
+
+- [![](http://i.zemanta.com/102977749_80_80.jpg)](http://passionsjustlikemine.wordpress.com/2012/07/27/john-mccarthy-in-the-literary-arena/)[John McCarthy in the Literary Arena](http://passionsjustlikemine.wordpress.com/2012/07/27/john-mccarthy-in-the-literary-arena/)
+- [![](http://i.zemanta.com/noimg_97_80_80.jpg)](http://blog.fogus.me/2012/07/25/some-lisp-books-and-then-some/)[Some Lisp books (and then some)](http://blog.fogus.me/2012/07/25/some-lisp-books-and-then-some/)
+- [![](http://i.zemanta.com/noimg_3_80_80.jpg)](http://nic.ferrier.me.uk/blog/2012_07/tips-and-tricks-for-emacslisp)[Tips and tricks with emacslisp for fun and profit](http://nic.ferrier.me.uk/blog/2012_07/tips-and-tricks-for-emacslisp)
+- [![](http://i.zemanta.com/101202848_80_80.jpg)](http://www.drdobbs.com/tools/developers-reading-list/240003875)[Developer's Reading List](http://www.drdobbs.com/tools/developers-reading-list/240003875)
+- [![](http://i.zemanta.com/noimg_46_80_80.jpg)](http://kresimirbojcic.com/2012/08/14/why-lisp-did-not-and-never-will-gain-enough-traction.html)[Why Lisp Did Not and Never Will Gain Enough Traction](http://kresimirbojcic.com/2012/08/14/why-lisp-did-not-and-never-will-gain-enough-traction.html)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=27a245ba-8da2-4b42-a319-61686149e5a2)](http://www.zemanta.com/?px "Enhanced by Zemanta")

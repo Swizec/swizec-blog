@@ -1,0 +1,141 @@
+---
+layout: post
+title: 'An elegant way to randomly change every list member in Haskell'
+date: 2012-08-13
+redirect_from: 
+            - /blog/an-elegant-way-to-randomly-change-every-list-member-in-haskell/swizec/5060
+categories: 'Uncategorized'
+author: Swizec Teller
+hero: ../../../defaultHero.jpg
+---
+Randomness is a bit of a strange concept in [Haskell](http://haskell.org "Haskell (programming language)").
+
+
+
+As I discovered writing about [Haskell and Randomness](http://swizec.com/blog/haskell-and-randomness/swizec/4763) a few weeks ago, the best way to avoid doing everything inside the IO monad is to write functions that always return the random generator.
+
+
+
+The crux of the matter is that random generators are long mathematical sequences. If you keep using the same index, you'll keep getting the same "random" value. You _have_ to make sure the random generator progresses.
+
+
+
+Increasing a number by a random value would look something like this:
+
+```
+\import System.Random
+
+addRand::(RandomGen g) => g -> Int -> (g, Int)
+addRand gen x = let (a, gen') = randomR (0, 20) gen
+                in (gen', x+a)
+main = do
+  generator <- newStdGen
+
+  print $ snd $ addRand generator 5
+  -- prints 15
+```
+
+
+
+While this approach is great for changing a single value, it breaks down when you try to randomly change a whole list:
+
+
+
+```
+  
+  print $ map (snd . (addRand generator)) [1,1,1,1]
+  -- prints [11,11,11,11]
+```
+
+
+
+Bummer! We applied a random function to every list member. And got a list of identical values!
+
+
+
+The problem is that every time _addRand_ gets called, it uses the same random generator. This means we're always using the same number in the random generator series.
+
+
+
+We need a way to perform a fold and a map at the same time. A map, so the function is applied to every list item and we get a new list, and a fold where the generator is used as the accumulator.
+
+
+
+We might be tempted to write something like this monstrosity:
+
+
+
+```
+addRand'::(RandomGen g) => g -> [Int] -> [(g, Int)]
+addRand' gen [x] = [addRand gen x]
+addRand' gen (x:xs) = let (gen', x') = addRand gen x
+                     in (gen', x'):(addRand' gen' xs)
+
+-- and then in main
+  print $ map (snd) $ addRand' generator [1,1,1,1]
+  -- prints [11,3,13,14]
+```
+
+This works. Every number in the list is different!
+
+
+
+But the code is somewhat terrible and difficult to reason about.
+
+
+
+Luckily, Haskell has got us covered and comes with a standard function called _mapAccumL_, which is a combination of a fold and a map:
+
+```
+  
+  print $ snd $ mapAccumL addRand generator [1,1,1,1]
+  -- prints [11,3,13,14]
+```
+
+
+
+Cleaner, less work, more obvious what's going on. And it just happens to be perfect for writing [evolutionary algorithms](http://en.wikipedia.org/wiki/Evolutionary_algorithm "Evolutionary algorithm") in Haskell. But more on that later, hopefully as early as Friday.
+
+
+
+Here's the whole code:
+
+```
+\import System.Random
+\import Data.List
+
+addRand::(RandomGen g) => g -> Int -> (g, Int)
+addRand gen x = let (a, gen') = randomR (0, 20) gen
+                in (gen', x+a)
+
+addRand'::(RandomGen g) => g -> [Int] -> [(g, Int)]
+addRand' gen [x] = [addRand gen x]
+addRand' gen (x:xs) = let (gen', x') = addRand gen x
+                     in (gen', x'):(addRand' gen' xs)
+
+main = do
+  generator <- newStdGen
+
+  print $ snd $ addRand generator 5
+  -- prints 15
+
+  print $ map (snd . (addRand generator)) [1,1,1,1]
+  -- prints [11,11,11,11]
+
+  print $ map (snd) $ addRand' generator [1,1,1,1]
+  -- prints [11,3,13,14]
+
+  print $ snd $ mapAccumL addRand generator [1,1,1,1]
+  -- prints [11,3,13,14]
+```
+
+
+
+###### Related articles
+
+- [![](http://i.zemanta.com/97837627_80_80.jpg)](http://swizec.com/blog/haskell-and-randomness/swizec/4763)[Haskell and randomness](http://swizec.com/blog/haskell-and-randomness/swizec/4763)
+- [![](http://i.zemanta.com/noimg_116_80_80.jpg)](http://www.reddit.com/comments/vi425)[What was your "ah ha" moment with Haskell?](http://www.reddit.com/comments/vi425)
+- [![](http://i.zemanta.com/noimg_76_80_80.jpg)](http://www.pokerlistings.com/strategy/psychology/on-randomness)[On Randomness](http://www.pokerlistings.com/strategy/psychology/on-randomness)
+- [![](http://i.zemanta.com/noimg_15_80_80.jpg)](http://www.pokerlistings.com/blog/random-number-generators-for-dummies)[Random Number Generators for Dummies - Poker Blog](http://www.pokerlistings.com/blog/random-number-generators-for-dummies)
+
+[![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=5433b6d5-80a7-4bfb-90d3-81ae0cd76716)](http://www.zemanta.com/?px "Enhanced by Zemanta")
