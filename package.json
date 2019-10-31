@@ -30,6 +30,7 @@
         "gatsby-remark-numbered-footnotes": "^1.0.1",
         "gatsby-remark-slug": "^0.1.0",
         "gatsby-remark-smartypants": "^2.1.14",
+        "prismjs": "^1.17.1",
         "react": "^16.9.0",
         "react-dom": "^16.9.0",
         "styled-components": "^4.4.0"
