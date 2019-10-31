@@ -2,20 +2,6 @@
     "version": 2,
     "scope": "swizec",
     "name": "swizec-blog",
-    "routes": [{
-        "src": "^/(.*).html",
-        "headers": {
-            "cache-control": "public,max-age=0,must-revalidate"
-        },
-        "dest": "$1.html"
-    }],
-    "builds": [{
-        "src": "package.json",
-        "use": "@now/static-build",
-        "config": {
-            "distDir": "public"
-        }
-    }],
     "env": {
         "GIPHY_API_KEY": "@giphy-api-key-swizeccom"
     }
