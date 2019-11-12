@@ -12,7 +12,7 @@
     },
     "dependencies": {
         "@agentofuser/remark-giphy": "^1.0.1",
-        "@narative/gatsby-theme-novela": "^0.9.5",
+        "@narative/gatsby-theme-novela": "^0.10.1",
         "@raae/gatsby-remark-oembed": "Swizec/gatsby-remark-oembed#fix-mdx-support",
         "babel-plugin-styled-components": "^1.10.6",
         "chalk": "^2.4.2",
