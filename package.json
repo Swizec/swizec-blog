@@ -6,7 +6,7 @@
     "scripts": {
         "build": "export NODE_OPTIONS=--max_old_space_size=4096 && gatsby build && cp -R _redirects public/",
         "develop": "gatsby develop",
-        "start": "gatsby develop",
+        "start": "export NODE_OPTIONS=--max_old_space_size=4096 && gatsby develop",
         "clean": "gatsby clean",
         "copyPosts": "rm -rf content/posts/* && cp -rf ../wordpress-to-markdown/out/* ./content/posts"
     },
