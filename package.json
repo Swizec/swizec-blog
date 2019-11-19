@@ -4,7 +4,7 @@
     "version": "1.0.0",
     "license": "MIT",
     "scripts": {
-        "build": " export NODE_OPTIONS=--max_old_space_size=4096 && gatsby build && cp -R _redirects public/",
+        "build": "export NODE_OPTIONS=--max_old_space_size=4096 && gatsby build && cp -R _redirects public/",
         "develop": "gatsby develop",
         "start": "export NODE_OPTIONS=--max_old_space_size=4096 && gatsby develop",
         "clean": "gatsby clean",
