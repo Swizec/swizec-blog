@@ -8,15 +8,7 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ../../../defaultHero.jpg
 ---
-Yesterday I was playing around with javascript trtying to find the cleanest way to implement [callbacks](http://en.wikipedia.org/wiki/Callback_%28computer_programming%29 "Callback (computer programming)") in [functions](http://en.wikipedia.org/wiki/Function_%28mathematics%29 "Function (mathematics)"). Primarily I wanted a readable way to make certain the last argument passed is a callback, withut having to rely on knowing how many [arguments](http://en.wikipedia.org/wiki/Argument "Argument") there are and so on.
-
-
-
-Instead I stumbled upon a pretty cool feature of how javascript handles function arguments. But let's look at some code.
-
-
-
-This is the usual way people use functions, it's nicely standard and works pretty much the same way in most languages
+Yesterday I was playing around with javascript trtying to find the cleanest way to implement [callbacks](http://en.wikipedia.org/wiki/Callback_%28computer_programming%29 "Callback (computer programming)") in [functions](http://en.wikipedia.org/wiki/Function_%28mathematics%29 "Function (mathematics)"). Primarily I wanted a readable way to make certain the last argument passed is a callback, withut having to rely on knowing how many [arguments](http://en.wikipedia.org/wiki/Argument "Argument") there are and so on. Instead I stumbled upon a pretty cool feature of how javascript handles function arguments. But let's look at some code. This is the usual way people use functions, it's nicely standard and works pretty much the same way in most languages
 
 ```
 function example(arg1, arg2, arg3) {
@@ -37,11 +29,7 @@ function example() {
 example(1, 2, 3);
 ```
 
-Ok, nothing too major, perhaps the biggest surprise is that arguments is an object, not a list or an array and strangely enough that the keys are strings despite being just numbers. Also pretty cool is that you don't have to specify any arguments at all, it just magically works. In python for example you at least have to say \*args or something like that.
-
-
-
-But things really start to heat up when we mix both ways of using function arguments in javascript:
+Ok, nothing too major, perhaps the biggest surprise is that arguments is an object, not a list or an array and strangely enough that the keys are strings despite being just numbers. Also pretty cool is that you don't have to specify any arguments at all, it just magically works. In python for example you at least have to say \*args or something like that. But things really start to heat up when we mix both ways of using function arguments in javascript:
 
 ```
 function example(arg) {
@@ -73,15 +61,7 @@ function example(arg) {
 example(1, 2, 3);
 ```
 
-The slightly strange thing here is that arguments the function takes explicitly are only references to the positions in the arguments object rather than variables of their own. Trying to make them a new variable doesn't work unless you give them a different name.
-
-
-
-However despite these being just pointers, you can't make them cross-reference each other because when you assign them to the arguments object a copy is performed and further changes are not reflected in both arguments properties.
-
-
-
-But is it a deep or a [shallow copy](http://en.wikipedia.org/wiki/Object_copy "Object copy")? Let's try:
+The slightly strange thing here is that arguments the function takes explicitly are only references to the positions in the arguments object rather than variables of their own. Trying to make them a new variable doesn't work unless you give them a different name. However despite these being just pointers, you can't make them cross-reference each other because when you assign them to the arguments object a copy is performed and further changes are not reflected in both arguments properties. But is it a deep or a [shallow copy](http://en.wikipedia.org/wiki/Object_copy "Object copy")? Let's try:
 
 ```
 function isitdeep(arg1, arg2) {
@@ -114,11 +94,7 @@ isitdeep({a: {b: 'c'}, d: {e: 'f'}},
 	 {g: 'h'});
 ```
 
-Interesting, turns out it's a shallow copy and you can still poke arguments in strange ways ... but maybe/probably that's just how javascript performs in general, the = operator being a shallow copy mechanism.
-
-
-
-Anyhow, I'm sure this knowledge will come in handy some day, I'm just nicely tickled by having found it. Actually ... it's kind of horrible, this sort of obscure language features should never be used in [production code](http://en.wikipedia.org/wiki/Motion_Picture_Production_Code "Motion Picture Production Code") :)
+Interesting, turns out it's a shallow copy and you can still poke arguments in strange ways ... but maybe/probably that's just how javascript performs in general, the = operator being a shallow copy mechanism. Anyhow, I'm sure this knowledge will come in handy some day, I'm just nicely tickled by having found it. Actually ... it's kind of horrible, this sort of obscure language features should never be used in [production code](http://en.wikipedia.org/wiki/Motion_Picture_Production_Code "Motion Picture Production Code") :)
 
 ###### Related articles
 

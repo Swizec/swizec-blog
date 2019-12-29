@@ -8,50 +8,22 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/blog-wp-content-uploads-2012-11-default-bootstrap-example.png
 ---
-I don't always get to work on mobile projects, but when I do they're websites pretending to be apps.
-
-
-
-\[caption id="attachment_5506" align="alignright" width="184"][![Default bootstrap example - zoomable etc.](http://swizec.com/blog/wp-content/uploads/2012/11/default-bootstrap-example.png "Default bootstrap example - zoomable etc.")](./img/blog-wp-content-uploads-2012-11-default-bootstrap-example.png) Default bootstrap example - zoomable etc.\[/caption]
-
-
-
-So the question is: If your schedule is too tight to get a simple phonegap application through the approval process, how do you deliver a great mobile experience to users on launch day?
-
-
-
-Responsive design will only get you so far. Which is to say not very far at all.
-
-
-
-Take Bootstrap, use all the responsive features and you are left with a website that looks a bit different on a phone than it does on a computer or a tablet. But it's no app.
+I don't always get to work on mobile projects, but when I do they're websites pretending to be apps. \[caption id="attachment_5506" align="alignright" width="184"][![Default bootstrap example - zoomable etc.](http://swizec.com/blog/wp-content/uploads/2012/11/default-bootstrap-example.png "Default bootstrap example - zoomable etc.")](./img/blog-wp-content-uploads-2012-11-default-bootstrap-example.png) Default bootstrap example - zoomable etc.\[/caption] So the question is: If your schedule is too tight to get a simple phonegap application through the approval process, how do you deliver a great mobile experience to users on launch day? Responsive design will only get you so far. Which is to say not very far at all. Take Bootstrap, use all the responsive features and you are left with a website that looks a bit different on a phone than it does on a computer or a tablet. But it's no app.
 
 - renders super small despite the _initial-scale=1.0_ [meta tag](http://en.wikipedia.org/wiki/Meta_element "Meta element")
 - scrolls all over the place
 
 First step to fixing things is disabling user scalability:
 
-
-
 ```
 
 ```
 
-
-
-Default zooming is okay now and users can't [pinch-to-zoom](http://en.wikipedia.org/wiki/Multi-touch_gestures "Multi-touch gestures") anymore. But they can still do plenty of strange side-scrolling and bouncing around. Something apps don't usually do.
-
-
-
-Adding another meta tag fixes that problem.
-
-
+Default zooming is okay now and users can't [pinch-to-zoom](http://en.wikipedia.org/wiki/Multi-touch_gestures "Multi-touch gestures") anymore. But they can still do plenty of strange side-scrolling and bouncing around. Something apps don't usually do. Adding another meta tag fixes that problem.
 
 ```
 
 ```
-
-
 
 Our only problem now is that pesky [address bar](http://en.wikipedia.org/wiki/Address_bar "Address bar") on the top. Apps don't have that! This can be solved with a bit of simple javascript:
 
@@ -66,15 +38,7 @@ window.addEventListener("load",function() {
 });
 ```
 
-Marvelous! You even get an extra 60 pixels of room to play with.
-
-
-
-Just keep in mind that you _must_ use those 60 pixels, otherwise the address bar won't hide because there's nothing to scroll up.
-
-
-
-\[caption id="attachment_5509" align="alignnone" width="269"][![Final result - an app-like website](http://swizec.com/blog/wp-content/uploads/2012/11/app-like-bootstrap-example.png "Final result - an app-like website")](./img/blog-wp-content-uploads-2012-11-app-like-bootstrap-example.png) Final result - an app-like website\[/caption]
+Marvelous! You even get an extra 60 pixels of room to play with. Just keep in mind that you _must_ use those 60 pixels, otherwise the address bar won't hide because there's nothing to scroll up. \[caption id="attachment_5509" align="alignnone" width="269"][![Final result - an app-like website](http://swizec.com/blog/wp-content/uploads/2012/11/app-like-bootstrap-example.png "Final result - an app-like website")](./img/blog-wp-content-uploads-2012-11-app-like-bootstrap-example.png) Final result - an app-like website\[/caption]
 
 ###### Related articles
 

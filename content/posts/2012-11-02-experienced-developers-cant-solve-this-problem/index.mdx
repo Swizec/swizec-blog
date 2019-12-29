@@ -10,52 +10,20 @@ hero: ../../../defaultHero.jpg
 ---
 > In 8 or less characters of [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") write an expression that evaluates to **-265**. You are not allowed to use "-265" as the solution or use the \* character.
 
-The other day someone asked this on [IRC](http://en.wikipedia.org/wiki/Internet_Relay_Chat "Internet Relay Chat").
-
-
-
-Everyone pounced on the problem and after a lot of discussion about how strange the 265 number is and whether he didn't mean 256 we decided it was impossible to solve in just eight characters.
-
-
-
-The shortest solution I could come up with was this:
+The other day someone asked this on [IRC](http://en.wikipedia.org/wiki/Internet_Relay_Chat "Internet Relay Chat"). Everyone pounced on the problem and after a lot of discussion about how strange the 265 number is and whether he didn't mean 256 we decided it was impossible to solve in just eight characters. The shortest solution I could come up with was this:
 
 ```
 ~(1<<8)-8
 ```
 
-Shifting left for eight places gives you 257, negating gives -257, then you just subtract 8 and voila, you have -265.
-
-
-
-Except it's **9 characters** long ... not a solution.
-
-
-
-But I did learn about [javascript bitwise operations](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/Bitwise_Operators), so this exercise in futility was not a total waste. Not sure what I'm going to use them for, but it can't hurt :)
-
-
-
-So, come up with the answer yet?
-
-
-
-![Trollface](http://cache.ohinternet.com/images/thumb/2/2d/Trollface_HD.png/618px-Trollface_HD.png "Trollface")
-
-
-
-Here's some solutions:
+Shifting left for eight places gives you 257, negating gives -257, then you just subtract 8 and voila, you have -265. Except it's **9 characters** long ... not a solution. But I did learn about [javascript bitwise operations](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/Bitwise_Operators), so this exercise in futility was not a total waste. Not sure what I'm going to use them for, but it can't hurt :) So, come up with the answer yet? ![Trollface](http://cache.ohinternet.com/images/thumb/2/2d/Trollface_HD.png/618px-Trollface_HD.png "Trollface") Here's some solutions:
 
 - _-1060/4_ is just 7 characters
 - _-256-9_ is just 6 characters
 - _-530/2_is only 6 characters as well
 - _~264_ is just 4 characters (by [@zidarsk8](http://twitter.com/zidarsk8))
 
-And so on, you get the picture. Shameful as it is, I couldn't come up with an answer _at all_. Never even occurred to me. I think this happens to a lot of developers who have been in the game for too long, we immediately try creating elegant solutions where simple ones will do.
-
-
-
-If you solved this on your own, congratulations. You are better than me.
+And so on, you get the picture. Shameful as it is, I couldn't come up with an answer _at all_. Never even occurred to me. I think this happens to a lot of developers who have been in the game for too long, we immediately try creating elegant solutions where simple ones will do. If you solved this on your own, congratulations. You are better than me.
 
 ###### Related articles
 

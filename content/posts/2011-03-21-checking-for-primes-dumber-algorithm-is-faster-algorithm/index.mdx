@@ -7,15 +7,7 @@ redirect_from:
 author: Swizec Teller
 hero: ../../../defaultHero.jpg
 ---
-It's been a busy few weeks since I last posted about my toying around with [project euler](http://projecteuler.net/ "Project Euler"), but never you mind. I did do some progress nontheless! HA!
-
-
-
-Just so I won't bore you with the details, the most interesting thing I discovered is that the way I was calculating prime numbers was totally wrong. Not in the sense that it didn't work, but in the sense that it was only fast in theory. In practice it turns out that either my implementation was completely and utterly horrible or that I simply don't know enough about performance bottlenecks of clojure and made a boo boo somewhere.
-
-
-
-Here's my original way of creating prime numbers and checking if a number is prime:
+It's been a busy few weeks since I last posted about my toying around with [project euler](http://projecteuler.net/ "Project Euler"), but never you mind. I did do some progress nontheless! HA! Just so I won't bore you with the details, the most interesting thing I discovered is that the way I was calculating prime numbers was totally wrong. Not in the sense that it didn't work, but in the sense that it was only fast in theory. In practice it turns out that either my implementation was completely and utterly horrible or that I simply don't know enough about performance bottlenecks of clojure and made a boo boo somewhere. Here's my original way of creating prime numbers and checking if a number is prime:
 
 ```
 (defn any? [l]
@@ -39,11 +31,7 @@ Here's my original way of creating prime numbers and checking if a number is pri
 	(recur (inc cnt) (concat p [(next-prime p)])))))
 ```
 
-Not exactly certain what sieve I was using here, but the idea is that a number is prime if it isn't divisible by any primes smaller than the number you're checking. This works great in theory because you're always dividing with very few numbers.
-
-
-
-But turns out, there's a much _much_ faster way of doing it:
+Not exactly certain what sieve I was using here, but the idea is that a number is prime if it isn't divisible by any primes smaller than the number you're checking. This works great in theory because you're always dividing with very few numbers. But turns out, there's a much _much_ faster way of doing it:
 
 ```
 (defn any? [l]
@@ -63,19 +51,7 @@ But turns out, there's a much _much_ faster way of doing it:
 	(recur (inc num) (if (prime? num) (concat p [num]) p)))))
 ```
 
-This way of checking for primes just loops through all numbers smaller than the square root of the one we're checking by starting off with 3 and jumping by two places.
-
-
-
-Obviously a very big improvement here is using the square root as the looping boundary, but turns out even adding this trick to the previous method only goes so far. The dumber version is still at least a 100 times faster. In fact the dumb version produced all primes under 2,000,000 in about a minute whereas the first version wasn't even finished after ten minutes.
-
-
-
-So what's happening here? Considering the sparseness of prime number distribution I'm thinking that the dumber method performed at least ten times more divisions.
-
-
-
-My theory is that maybe, just maybe, the problem was in copying that huge arse list of known primes around when performing function calls. Or maybe it was the appending of primes to the big list that was the problem ... whatever it was, I learned a valuable lesson: Keep it Stupid Simple For Realz.
+This way of checking for primes just loops through all numbers smaller than the square root of the one we're checking by starting off with 3 and jumping by two places. Obviously a very big improvement here is using the square root as the looping boundary, but turns out even adding this trick to the previous method only goes so far. The dumber version is still at least a 100 times faster. In fact the dumb version produced all primes under 2,000,000 in about a minute whereas the first version wasn't even finished after ten minutes. So what's happening here? Considering the sparseness of prime number distribution I'm thinking that the dumber method performed at least ten times more divisions. My theory is that maybe, just maybe, the problem was in copying that huge arse list of known primes around when performing function calls. Or maybe it was the appending of primes to the big list that was the problem ... whatever it was, I learned a valuable lesson: Keep it Stupid Simple For Realz.
 
 ###### Related articles
 

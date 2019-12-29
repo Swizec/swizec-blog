@@ -8,23 +8,7 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/blog-wp-content-uploads-2012-11-nyan-cat-testing2.png
 ---
-[![Nyan cat testing](http://swizec.com/blog/wp-content/uploads/2012/11/nyan-cat-testing2.png "Nyan cat testing")](./img/blog-wp-content-uploads-2012-11-nyan-cat-testing2.png)
-
-
-
-Socket.io is probably one of the coolest things to come out of the [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") world in recent years. Finally! Something that lets [web developers](http://en.wikipedia.org/wiki/Web_developer "Web developer") create real-time apps without the fuss of thinking about websockets and [long polling](http://en.wikipedia.org/wiki/Push_technology "Push technology") and all the other hacks that need to be used.
-
-
-
-The idea is pretty simple, the server can emit an event and the [client](http://en.wikipedia.org/wiki/Client_%28computing%29 "Client (computing)") will pick it up. The converse also happens. [Callbacks](http://en.wikipedia.org/wiki/Callback_%28computer_programming%29 "Callback (computer programming)") through the server-client barrier works as well. Socket.io takes care of deciding which of the real-time hacks should be used to make the magic happen.
-
-
-
-Thing is, the interplay of client and server makes socket.io apps a bit difficult to test.
-
-
-
-A good way I've found is the combination of [Mocha](http://visionmedia.github.com/mocha/), [Chai](http://chaijs.com/) and [socket.io-client](https://github.com/LearnBoost/socket.io-client).
+[![Nyan cat testing](http://swizec.com/blog/wp-content/uploads/2012/11/nyan-cat-testing2.png "Nyan cat testing")](./img/blog-wp-content-uploads-2012-11-nyan-cat-testing2.png) Socket.io is probably one of the coolest things to come out of the [JavaScript](http://en.wikipedia.org/wiki/JavaScript "JavaScript") world in recent years. Finally! Something that lets [web developers](http://en.wikipedia.org/wiki/Web_developer "Web developer") create real-time apps without the fuss of thinking about websockets and [long polling](http://en.wikipedia.org/wiki/Push_technology "Push technology") and all the other hacks that need to be used. The idea is pretty simple, the server can emit an event and the [client](http://en.wikipedia.org/wiki/Client_%28computing%29 "Client (computing)") will pick it up. The converse also happens. [Callbacks](http://en.wikipedia.org/wiki/Callback_%28computer_programming%29 "Callback (computer programming)") through the server-client barrier works as well. Socket.io takes care of deciding which of the real-time hacks should be used to make the magic happen. Thing is, the interplay of client and server makes socket.io apps a bit difficult to test. A good way I've found is the combination of [Mocha](http://visionmedia.github.com/mocha/), [Chai](http://chaijs.com/) and [socket.io-client](https://github.com/LearnBoost/socket.io-client).
 
 ## First, something to test
 
@@ -66,11 +50,7 @@ Hello World
 
 ## Automating the test
 
-Typing commands into a console, even clicking around a webpage is a rather arduous and boring process. The easiest way I've found to automate this is using Mocha and socket.io-client.
-
-
-
-First thing we're going to need is requiring everything and making sure the socket.io server is running.
+Typing commands into a console, even clicking around a webpage is a rather arduous and boring process. The easiest way I've found to automate this is using Mocha and socket.io-client. First thing we're going to need is requiring everything and making sure the socket.io server is running.
 
 ```
 var chai = require('chai'),
@@ -95,11 +75,7 @@ describe("echo", function () {
     });
 ```
 
-See, simple :)
-
-
-
-Now comes the interesting part, the actual test making sure our server does in fact echo what we ask it to.
+See, simple :) Now comes the interesting part, the actual test making sure our server does in fact echo what we ask it to.
 
 ```
     it("echos message", function (done) {
@@ -127,25 +103,7 @@ The idea behind this test is simple:
 5. Listener checks correctness of response
 6. Disconnects client
 
-Disconnecting clients after tests is **_very \\important_**. As I've discovered, not disconnecting can lead to the socket accumulating [event listeners](http://en.wikipedia.org/wiki/Observer_pattern "Observer pattern"), which in turn can fire completely different tests than what you expect. It also leads to tests that pass 70% of the time, but fail in random ways.
-
-
-
-In the end, our efforts are rewarded by a happy nyan cat.
-
-
-
-[![Nyan cat testing](http://swizec.com/blog/wp-content/uploads/2012/11/nyan-cat-testing.png "Nyan cat testing")](./img/blog-wp-content-uploads-2012-11-nyan-cat-testing.png)
-
-
-
-PS: you can see all the code [on github](https://github.com/Swizec/random-coding/tree/master/socket.io-testing).
-
-
-
-Maria Ramos from [Webhostinghub.com/support/edu](http://www.webhostinghub.com/support/edu) has translated this post into [Spanish](http://www.webhostinghub.com/support/es/misc/probando-aplicaciones-de-socketio).
-
-
+Disconnecting clients after tests is **_very \\important_**. As I've discovered, not disconnecting can lead to the socket accumulating [event listeners](http://en.wikipedia.org/wiki/Observer_pattern "Observer pattern"), which in turn can fire completely different tests than what you expect. It also leads to tests that pass 70% of the time, but fail in random ways. In the end, our efforts are rewarded by a happy nyan cat. [![Nyan cat testing](http://swizec.com/blog/wp-content/uploads/2012/11/nyan-cat-testing.png "Nyan cat testing")](./img/blog-wp-content-uploads-2012-11-nyan-cat-testing.png) PS: you can see all the code [on github](https://github.com/Swizec/random-coding/tree/master/socket.io-testing). Maria Ramos from [Webhostinghub.com/support/edu](http://www.webhostinghub.com/support/edu) has translated this post into [Spanish](http://www.webhostinghub.com/support/es/misc/probando-aplicaciones-de-socketio).
 
 ###### Related articles
 

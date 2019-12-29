@@ -12,31 +12,7 @@ hero: ../../../defaultHero.jpg
 
   Image via [Wikipedia](http://en.wikipedia.org/wiki/Image:Adobe_AIR_icon.png)
 
-Some days ago when I was developing a plugin interface for [Twitulater](http://twitulater.com) I came upon an interesting and seemingly unsolvable problem in the way [Adobe AIR](http://www.adobe.com/products/air/ "Adobe Integrated Runtime") brainlessly tries to make everything more secure - eval function simply doesn't work. Even if you use it, nothing happens.
-
-
-
-Alright so there is no eval for evaluating dynamically created javascript. No problem, I'll just use some sort of include function Adobe has surely implemented since AIR is supposed to be this awesome development platform and we all know the ability to include files is somewhat paramount to serious development.
-
-
-
-But what's this? Even in AIR 1.5 there STILL isn't an include? What the fuck! Ok, sure, I do realise that they provide an include with Flex, but to be honest Flex isn't exactly something I want to use because the way variable types are postfixed to the variable name fucks with my brain and makes me feel dyslexic. Seriously Adobe, what WERE you thinking there?
-
-
-
-Anyhow, back to lack of eval. Adobe claims that eval is an evil funciton people use to evaluate unverified code from third party API's and thus make their applications superbly vulnerable to an injection attack. Naturally this is a very valid reservation, but I think the solution is severely flawed since it introduces more problems than it's worth.
-
-
-
-Basically everything they've done is force bad developers to use a [JSON](http://en.wikipedia.org/wiki/JSON "JSON") interpreter of some sort for their third-party stuff. Which makes sense, it's a little bit slower than eval, but at least no code gets executed since functions and objects produce errors. Great, no executable third-party code. But did this really solve anything? Oh no wait, bad developers will still open their application up to many security flaws and everyone else is more than slightly inconvenienced.
-
-
-
-I could understand if Adobe at least put a JSON compiler or some sort of dumbed down eval into their javascript API, but no, they just leave us out to dry. And, surprisingly, none of the [jQuery](http://jquery.com/ "JQuery") include plugins out there actually work, neither does javascript MVC's include function. At least I haven't been able to make them work.
-
-
-
-But there is in fact a way to include all files from a certain dir, it's a very fucking ugly hack and using it made my programming heart convulse in pain. See for yourself:
+Some days ago when I was developing a plugin interface for [Twitulater](http://twitulater.com) I came upon an interesting and seemingly unsolvable problem in the way [Adobe AIR](http://www.adobe.com/products/air/ "Adobe Integrated Runtime") brainlessly tries to make everything more secure - eval function simply doesn't work. Even if you use it, nothing happens. Alright so there is no eval for evaluating dynamically created javascript. No problem, I'll just use some sort of include function Adobe has surely implemented since AIR is supposed to be this awesome development platform and we all know the ability to include files is somewhat paramount to serious development. But what's this? Even in AIR 1.5 there STILL isn't an include? What the fuck! Ok, sure, I do realise that they provide an include with Flex, but to be honest Flex isn't exactly something I want to use because the way variable types are postfixed to the variable name fucks with my brain and makes me feel dyslexic. Seriously Adobe, what WERE you thinking there? Anyhow, back to lack of eval. Adobe claims that eval is an evil funciton people use to evaluate unverified code from third party API's and thus make their applications superbly vulnerable to an injection attack. Naturally this is a very valid reservation, but I think the solution is severely flawed since it introduces more problems than it's worth. Basically everything they've done is force bad developers to use a [JSON](http://en.wikipedia.org/wiki/JSON "JSON") interpreter of some sort for their third-party stuff. Which makes sense, it's a little bit slower than eval, but at least no code gets executed since functions and objects produce errors. Great, no executable third-party code. But did this really solve anything? Oh no wait, bad developers will still open their application up to many security flaws and everyone else is more than slightly inconvenienced. I could understand if Adobe at least put a JSON compiler or some sort of dumbed down eval into their javascript API, but no, they just leave us out to dry. And, surprisingly, none of the [jQuery](http://jquery.com/ "JQuery") include plugins out there actually work, neither does javascript MVC's include function. At least I haven't been able to make them work. But there is in fact a way to include all files from a certain dir, it's a very fucking ugly hack and using it made my programming heart convulse in pain. See for yourself:
 
 ```
 	PluginLoader.prototype.loadPlugin = function ( pluginDir )

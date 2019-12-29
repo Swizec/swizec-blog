@@ -8,43 +8,11 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/wikipedia-commons-thumb-6-6b-AmdahlsLaw.png-300px-AmdahlsLaw.png
 ---
-Perhaps the most \\important lesson I've learned while studying computer science is that of [Amdahl's law](http://en.wikipedia.org/wiki/Amdahl%27s_law "Amdahl's law").
-
-
-
-\[caption id="" align="alignright" width="300" caption="Graph Illustrating Amdahl's Law (Photo credit: Wikipedia)"][![Graph Illustrating Amdahl's Law](./img/wikipedia-commons-thumb-6-6b-AmdahlsLaw.png-300px-AmdahlsLaw.png "Graph Illustrating Amdahl's Law")](http://commons.wikipedia.org/wiki/File:AmdahlsLaw.png)\[/caption]
-
-
-
-![Amdahl's law](./img/wikipedia-en-math-8-9-6-89638a25639297d701f9298b68ee9cec.png "Amdahl's law")
-
-
-
-Amdahl's law is generally used to predict the maximum speedup by improving a single component of a system (say, a function or a database). But the implications are simple: _Improve the thing that will **actually** help._
-
-
-
-As programmers, however, we would rather contemplate just what is [the fastest way to concatenate a string](http://www.codinghorror.com/blog/2009/01/the-sad-tragedy-of-micro-optimization-theater.html). Or whether [PHP](http://www.php.net "PHP") is much faster than Ruby. And just how much more traffic you can handle with 5 or 10 fcgi workers. And so on. The internet is riddled with these questions. And let's not forget the age old debate of speed improvements by using raw [SQL](http://www.iso.org/iso/catalogue_detail.htm?csnumber=45498 "SQL") instead of an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational mapping").
-
-
-
-Once upon a time I even wrote a web framework where I made sure to _always use the fastest pattern of doing X in PHP_. I knew databases were slow, so I did a lot of the work regarding JOINs and such in PHP.
-
-
-
-Yeah.
+Perhaps the most \\important lesson I've learned while studying computer science is that of [Amdahl's law](http://en.wikipedia.org/wiki/Amdahl%27s_law "Amdahl's law"). \[caption id="" align="alignright" width="300" caption="Graph Illustrating Amdahl's Law (Photo credit: Wikipedia)"][![Graph Illustrating Amdahl's Law](./img/wikipedia-commons-thumb-6-6b-AmdahlsLaw.png-300px-AmdahlsLaw.png "Graph Illustrating Amdahl's Law")](http://commons.wikipedia.org/wiki/File:AmdahlsLaw.png)\[/caption] ![Amdahl's law](./img/wikipedia-en-math-8-9-6-89638a25639297d701f9298b68ee9cec.png "Amdahl's law") Amdahl's law is generally used to predict the maximum speedup by improving a single component of a system (say, a function or a database). But the implications are simple: _Improve the thing that will **actually** help._ As programmers, however, we would rather contemplate just what is [the fastest way to concatenate a string](http://www.codinghorror.com/blog/2009/01/the-sad-tragedy-of-micro-optimization-theater.html). Or whether [PHP](http://www.php.net "PHP") is much faster than Ruby. And just how much more traffic you can handle with 5 or 10 fcgi workers. And so on. The internet is riddled with these questions. And let's not forget the age old debate of speed improvements by using raw [SQL](http://www.iso.org/iso/catalogue_detail.htm?csnumber=45498 "SQL") instead of an [ORM](http://en.wikipedia.org/wiki/Object-relational_mapping "Object-relational mapping"). Once upon a time I even wrote a web framework where I made sure to _always use the fastest pattern of doing X in PHP_. I knew databases were slow, so I did a lot of the work regarding JOINs and such in PHP. Yeah.
 
 ## Optimizing where it matters
 
-The other day I finally assembled all the bits and pieces for an [evolutionary algorithm](http://en.wikipedia.org/wiki/Evolutionary_algorithm "Evolutionary algorithm") in [Haskell](http://haskell.org "Haskell (programming language)").
-
-
-
-I'm trying to print _[Hello World](http://en.wikipedia.org/wiki/Hello_world_program "Hello world program")_ by performing random changes on a population of strings - eventually I want to create an extensible framework for evolutionary algorithms that will let me [write poetry programmatically](http://swizec.github.com/Le-Thesis/).
-
-
-
-It took **27 seconds** to go 5 epochs. Just five generations.
+The other day I finally assembled all the bits and pieces for an [evolutionary algorithm](http://en.wikipedia.org/wiki/Evolutionary_algorithm "Evolutionary algorithm") in [Haskell](http://haskell.org "Haskell (programming language)"). I'm trying to print _[Hello World](http://en.wikipedia.org/wiki/Hello_world_program "Hello world program")_ by performing random changes on a population of strings - eventually I want to create an extensible framework for evolutionary algorithms that will let me [write poetry programmatically](http://swizec.github.com/Le-Thesis/). It took **27 seconds** to go 5 epochs. Just five generations.
 
 ```
   INIT    time    0.00s  (  0.00s elapsed)
@@ -67,27 +35,7 @@ levenshtein   Evaluators.Basic  91.5  100.0
 levenshtein.d Evaluators.Basic   8.5    0.0
 ```
 
-The [levenshtein distance function I implemented](http://swizec.com/blog/levenshtein-distance-in-haskell/swizec/4801 "Levenshtein distance in Haskell") costs 100% of [computation time](http://en.wikipedia.org/wiki/Time_complexity "Time complexity")!
-
-
-
-After replacing my function with [the implementation suggested by Reddit](http://www.reddit.com/r/programming/comments/w4gs6/levenshtein_distance_in_haskell/c5a6jjz) life instantly became much easier. It now takes just 0.03 seconds to compute 5 epochs of the algorithm.
-
-
-
-**27 seconds -> 0.03 seconds by changing a single function.**
-
-
-
-The problem I have now is anything larger than ~25 epochs makes my computer decide something funny is going and kill the program, which says I'm doing something terrible with memory.
-
-
-
-Then again, there _are_ 480195 population members at the 25th epoch ... I probably don't need that many.
-
-
-
-By the way, it's still not a memory problem per se (for 20 epochs):
+The [levenshtein distance function I implemented](http://swizec.com/blog/levenshtein-distance-in-haskell/swizec/4801 "Levenshtein distance in Haskell") costs 100% of [computation time](http://en.wikipedia.org/wiki/Time_complexity "Time complexity")! After replacing my function with [the implementation suggested by Reddit](http://www.reddit.com/r/programming/comments/w4gs6/levenshtein_distance_in_haskell/c5a6jjz) life instantly became much easier. It now takes just 0.03 seconds to compute 5 epochs of the algorithm. **27 seconds -> 0.03 seconds by changing a single function.** The problem I have now is anything larger than ~25 epochs makes my computer decide something funny is going and kill the program, which says I'm doing something terrible with memory. Then again, there _are_ 480195 population members at the 25th epoch ... I probably don't need that many. By the way, it's still not a memory problem per se (for 20 epochs):
 
 ```
   Total   time   10.72s  ( 10.80s elapsed)

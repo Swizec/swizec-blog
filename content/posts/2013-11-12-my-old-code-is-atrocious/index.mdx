@@ -8,97 +8,15 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/images-3841.png
 ---
-\[caption id="" align="alignnone" width="478"]![Fixing others' code](./img/images-3841.png "Fixing others' code") Fixing others' code\[/caption]
-
-
-
-
-
-Fixing old code is always a humbling experience. Especially your own.
-
-
-
-That's a lie. Fixing other people's old code is a maddening experience that puts you in a stabby mood. At the very least you'd like to punch the programmer in the face repeatedly while screaming _"WHY DID YOU DO THAT LIKE THAT WHAT WERE YOU THINKING ARE YOU A COMPLETE IDIOT OR JUST A TOTAL IDIOT?"_ and showering them with spit. Veins popping out of your neck and forehead. Face going red. The whole spiel.
-
-
-
-Your own code though ... that's humbling.
+\[caption id="" align="alignnone" width="478"]![Fixing others' code](./img/images-3841.png "Fixing others' code") Fixing others' code\[/caption] Fixing old code is always a humbling experience. Especially your own. That's a lie. Fixing other people's old code is a maddening experience that puts you in a stabby mood. At the very least you'd like to punch the programmer in the face repeatedly while screaming _"WHY DID YOU DO THAT LIKE THAT WHAT WERE YOU THINKING ARE YOU A COMPLETE IDIOT OR JUST A TOTAL IDIOT?"_ and showering them with spit. Veins popping out of your neck and forehead. Face going red. The whole spiel. Your own code though ... that's humbling.
 
 ## Fixing an old project
 
-A few weeks ago, closer to a month or two than a fortnight, a project of mine suddenly went offline. I usually don't notice, which is a terrible habit, but I tend to build cool things, being excited for a week or two, then letting them rot and fall offline.
-
-
-
-But not [this project](https://github.com/Swizec/Personal-Runway). This is my crowning glory, the coolest thing I've ever built. That strange cacophony of technologies that sends me an email every few days saying _"Hey you, you're doing fine. Keep spending."_ or _"What the fuck are you doing idiot? Your money is vanishing! STAHP!"_
-
-
-
-It's really neat.
-
-
-
-But man is it built out of some truly atrocious code. It started as a [Haskell](http://haskell.org "Haskell (programming language)") learning experiment over new year's break two years ago and, you know, back then I really thought I was a great engineer.
-
-
-
-Last night I almost cried.
+A few weeks ago, closer to a month or two than a fortnight, a project of mine suddenly went offline. I usually don't notice, which is a terrible habit, but I tend to build cool things, being excited for a week or two, then letting them rot and fall offline. But not [this project](https://github.com/Swizec/Personal-Runway). This is my crowning glory, the coolest thing I've ever built. That strange cacophony of technologies that sends me an email every few days saying _"Hey you, you're doing fine. Keep spending."_ or _"What the fuck are you doing idiot? Your money is vanishing! STAHP!"_ It's really neat. But man is it built out of some truly atrocious code. It started as a [Haskell](http://haskell.org "Haskell (programming language)") learning experiment over new year's break two years ago and, you know, back then I really thought I was a great engineer. Last night I almost cried.
 
 ## Atrocities
 
-The first atrocity committed in the name of hacking was writing the program in two distinct languages for reasons that were weak at best.
-
-
-
-I used node.js to drive the main process and talk to API's. `runner.js` calls other parts of the code, talks to mongodb, and runs the algorithmic Haskell part as a subprocess.
-
-
-
-The Haskell and node.js part communicate via mongodb.
-
-
-
-I didn't even use a mongodb library. Hacked something together because mongoose - ORM-like mongodb library for node - was too slow for some reason. And I have no idea how Haskell does it. Monads continue to confuse me.
-
-
-
-To make matters even more worse, I didn't use any libraries to talk to either [Toggl](http://www.toggl.com "Toggl.com") or [Toshl](http://toshl.com/). Partly because Toshl only released an official API this summer and other than [my half baked attempt from two weeks ago](http://swizec.com/blog/about-achieving-polymorphism-in-javascript/swizec/6370) there are no libraries, partly because I don't know why.
-
-
-
-The Toshl part is the worst. I fake user interactions to log into their service and export a [CSV file](http://en.wikipedia.org/wiki/Comma-separated_values "Comma-separated values") with data, then parse it locally.
-
-
-
-Yes that includes sending plaintext passwords over https. Yes it also includes saving said password in a file on the server.
-
-
-
-Why yes, yes I do use that email/password combination elsewhere.
-
-
-
-Wonderful innit?
-
-
-
-And don't even get me started on the Toggl implementation. That's what broke by the way. Version 6 of their API was deprecated on September 1st and I just didn't notice.
-
-
-
-I _know_ there was a library for Toggl. I even remember using it. But the code I was fixing last night used [superagent](https://github.com/visionmedia/superagent) to make JSON requests manually.
-
-
-
-Yes that includes setting `Accept: application/json` headers and utf8 encoding.
-
-
-
-Yup, there also wasn't any abstraction at all. The three API calls were meticulously spelled out. Everything from bits of the URL (https, toggl.com, ...), to specifying the headers every time.
-
-
-
-All of that became this function:
+The first atrocity committed in the name of hacking was writing the program in two distinct languages for reasons that were weak at best. I used node.js to drive the main process and talk to API's. `runner.js` calls other parts of the code, talks to mongodb, and runs the algorithmic Haskell part as a subprocess. The Haskell and node.js part communicate via mongodb. I didn't even use a mongodb library. Hacked something together because mongoose - ORM-like mongodb library for node - was too slow for some reason. And I have no idea how Haskell does it. Monads continue to confuse me. To make matters even more worse, I didn't use any libraries to talk to either [Toggl](http://www.toggl.com "Toggl.com") or [Toshl](http://toshl.com/). Partly because Toshl only released an official API this summer and other than [my half baked attempt from two weeks ago](http://swizec.com/blog/about-achieving-polymorphism-in-javascript/swizec/6370) there are no libraries, partly because I don't know why. The Toshl part is the worst. I fake user interactions to log into their service and export a [CSV file](http://en.wikipedia.org/wiki/Comma-separated_values "Comma-separated values") with data, then parse it locally. Yes that includes sending plaintext passwords over https. Yes it also includes saving said password in a file on the server. Why yes, yes I do use that email/password combination elsewhere. Wonderful innit? And don't even get me started on the Toggl implementation. That's what broke by the way. Version 6 of their API was deprecated on September 1st and I just didn't notice. I _know_ there was a library for Toggl. I even remember using it. But the code I was fixing last night used [superagent](https://github.com/visionmedia/superagent) to make JSON requests manually. Yes that includes setting `Accept: application/json` headers and utf8 encoding. Yup, there also wasn't any abstraction at all. The three API calls were meticulously spelled out. Everything from bits of the URL (https, toggl.com, ...), to specifying the headers every time. All of that became this function:
 
 ```
 var __request = function (url, query, callback) {
@@ -124,30 +42,6 @@ var workspaces = function (callback) {
 };
 ```
 
-Much better than essentially having `__request` function repeated every time.
-
-
-
-Had I been using an actively developed library maybe my project wouldn't break. Somebody else would make sure my code still knew how to talk with Toggl by virtue of updating their library.
-
-
-
-Alas, I was being an idiot. Alas alas I didn't _really_ fix the situation last night either.
-
-
-
-To top it off, the CSV parsing library changed in the newer version so I had to fix that part of my code as well.
-
-
-
-And I will never understand why looping through aaaaaall the data for both Toshl and Toggl was a good idea when all I care about are the last three days. Everything else is in mongodb anyway.
-
-
-
-Another time maybe. When I once more muster the courage to go fixing my old code.
-
-
-
-I just hope I still know enough Haskell to fix the algorithmic part if it ever breaks. No comments. No explanation of the algorithm. D'oh.
+Much better than essentially having `__request` function repeated every time. Had I been using an actively developed library maybe my project wouldn't break. Somebody else would make sure my code still knew how to talk with Toggl by virtue of updating their library. Alas, I was being an idiot. Alas alas I didn't _really_ fix the situation last night either. To top it off, the CSV parsing library changed in the newer version so I had to fix that part of my code as well. And I will never understand why looping through aaaaaall the data for both Toshl and Toggl was a good idea when all I care about are the last three days. Everything else is in mongodb anyway. Another time maybe. When I once more muster the courage to go fixing my old code. I just hope I still know enough Haskell to fix the algorithmic part if it ever breaks. No comments. No explanation of the algorithm. D'oh.
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=36ac71d4-54e8-45d0-a899-64e537bd545a)](http://www.zemanta.com/?px "Enhanced by Zemanta")

@@ -8,53 +8,13 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ../../../defaultHero.jpg
 ---
-You've set up rails with [devise](https://github.com/plataformatec/devise) and [omniauth](http://www.omniauth.org/). Users are signing up with facebook or twitter or email&password or something completely different. Everything is going great.
+You've set up rails with [devise](https://github.com/plataformatec/devise) and [omniauth](http://www.omniauth.org/). Users are signing up with facebook or twitter or email&password or something completely different. Everything is going great. Now you want to force some users to add a facebook login to their account. Maybe you just want to see if their name and avatar match what they've set up in your service to make sure they really are who they say they are. Whatever. It seems like you might need to add a custom Devise strategy. You start googling. Doesn't seem like a lot of work, you just extend `Authorizable` and override the `authorize!` function and then ... do _something_. Seems you'll have to mostly override how authorization works. Will that play well with `omniauthable`? But that only solves the problem of forcing [Facebook](http://en.wikipedia.org/wiki/Facebook "Facebook") on authorization. Who's going to check the conditions on every page load and sign the user out? You set up a filter. Put it in `application_controller` and it's just a big mess. You're still not sure how to tie everything together and the clusterfuck of code is growing and growing.
 
-
-
-Now you want to force some users to add a facebook login to their account. Maybe you just want to see if their name and avatar match what they've set up in your service to make sure they really are who they say they are. Whatever.
-
-
-
-It seems like you might need to add a custom Devise strategy. You start googling. Doesn't seem like a lot of work, you just extend `Authorizable` and override the `authorize!` function and then ... do _something_. Seems you'll have to mostly override how authorization works. Will that play well with `omniauthable`?
-
-
-
-But that only solves the problem of forcing [Facebook](http://en.wikipedia.org/wiki/Facebook "Facebook") on authorization. Who's going to check the conditions on every page load and sign the user out?
-
-
-
-You set up a filter. Put it in `application_controller` and it's just a big mess. You're still not sure how to tie everything together and the clusterfuck of code is growing and growing.
-
-> If it’s complicated and confusing, you probably haven’t found the right approach yet. [#programming](https://twitter.com/search?q=%23programming&src=hash)
->
->
->
-> — Swizec (@Swizec) [June 18, 2013](https://twitter.com/Swizec/statuses/347024137086173185)
+> If it’s complicated and confusing, you probably haven’t found the right approach yet. [#programming](https://twitter.com/search?q=%23programming&src=hash) — Swizec (@Swizec) [June 18, 2013](https://twitter.com/Swizec/statuses/347024137086173185)
 
 ## Force FB with just 19 sloc
 
-There's a better way!
-
-
-
-I stumbled on this solution almost by accident after ending up on an obscure API doc page on my gazillionth google search. Turns out you can force a user to sign up with facebook in just under 19 [lines of code](http://en.wikipedia.org/wiki/Source_lines_of_code "Source lines of code").
-
-
-
-We have to extend how _models_ behave, not create a new Devise strategy. The function we're looking to override is `active_for_authentication?`.
-
-
-
-This function is called on every page load when a user is signed in and checks that they're still active. If it returns `false` the user will be signed out and asked to login before continuing. They won't be let through until the function returns `true`.
-
-
-
-Elegant!
-
-
-
-All you have to do is put something like this in your `app/classes` directory.
+There's a better way! I stumbled on this solution almost by accident after ending up on an obscure API doc page on my gazillionth google search. Turns out you can force a user to sign up with facebook in just under 19 [lines of code](http://en.wikipedia.org/wiki/Source_lines_of_code "Source lines of code"). We have to extend how _models_ behave, not create a new Devise strategy. The function we're looking to override is `active_for_authentication?`. This function is called on every page load when a user is signed in and checks that they're still active. If it returns `false` the user will be signed out and asked to login before continuing. They won't be let through until the function returns `true`. Elegant! All you have to do is put something like this in your `app/classes` directory.
 
 ```
 module Facebookable
@@ -83,18 +43,6 @@ module Facebookable
 end
 ```
 
-And that's essentially it. Add a boolean `needs_facebook` field to your user model and add `:facebookable` to the strategies list and you're done. Everything works.
-
-
-
-Facebookable will automatically take care of checking whether a user has facebook connected and kick them out if they don't but should. On every page load it will also check whatever condition you've set and flag the user.
-
-
-
-It took me four days to come up with those 19 lines of code because nobody's written a blogpost about how to do this properly. Now someone has.
-
-
-
-PS: testing this works the same as testing any other model methods.
+And that's essentially it. Add a boolean `needs_facebook` field to your user model and add `:facebookable` to the strategies list and you're done. Everything works. Facebookable will automatically take care of checking whether a user has facebook connected and kick them out if they don't but should. On every page load it will also check whatever condition you've set and flag the user. It took me four days to come up with those 19 lines of code because nobody's written a blogpost about how to do this properly. Now someone has. PS: testing this works the same as testing any other model methods.
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=98e2b5a1-87ba-4afc-b043-b54b490c314d)](http://www.zemanta.com/?px "Enhanced by Zemanta")

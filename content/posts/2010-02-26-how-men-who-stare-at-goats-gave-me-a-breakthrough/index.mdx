@@ -8,56 +8,6 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ../../../defaultHero.jpg
 ---
-Last night I was faced with a daunting task of making a [meta-heuristic](http://en.wikipedia.org/wiki/Metaheuristic "Metaheuristic") process a non-trivial amount of data in no more than a tenth of the time it was taking now.
-
-
-
-Just to help you embrace the herculean task this was: My goal was to make the algorithm's runtime lower than 1.5 seconds for any realistic data sample. It was taking anywhere from 5 to 20 and even 30 seconds at the time.
-
-
-
-So I set off. First some profiling and some tidbits here and there, then tweaking and poking and yanking and scraping code for _hours upon hours upon hours._
-
-
-
-Nothing, no increase in performance. Nothing even remote to sane behaviour at all. Even though the algorithm was working, my debugging/profiling data wasn't making any sense.
-
-
-
-And I said fuck this shit and went to chillax and rest my mind over [Men Who Stare at Goats](http://www.amazon.com/Men-Who-Stare-at-Goats/dp/0330375482%3FSubscriptionId%3D0G81C5DAZ03ZR9WH9X82%26tag%3Dzemanta-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D0330375482 "Men Who Stare at Goats") for two hours.
-
-
-
-
-
-There were some good laughs and some pretty good chillaxing being done. My I-don't-know-which-exactly-or-what's-it-called part of the brain was probably busy processing the afore mentioned problem in the background. Or maybe it wasn't, who knows.
-
-
-
-All I know is that when I came back to the problem I noticed something funky.
-
-
-
-HEY THAT FUNCTION ARGUMENT SHOULDN'T BE A FUCKING CONSTANT WHAT THE FUCK IS GOING ON!
-
-
-
-Characters 1 and t look a lot alike ...
-
-
-
-So anyway, long story short. The meta-heuristic that used to take 1500 epochs to do something now takes only _**ten**_ to do the same thing, but slightly better.
-
-
-
-That's a pretty fucking good improovement right there!
-
-
-
-Now the algorithm is constantly taking about a second to do its thing and I'm happy. Pushed it into production where profiling data will be collected of a more varied sample of data to see if all is well.
-
-
-
-Chillaxing! It really does work.
+Last night I was faced with a daunting task of making a [meta-heuristic](http://en.wikipedia.org/wiki/Metaheuristic "Metaheuristic") process a non-trivial amount of data in no more than a tenth of the time it was taking now. Just to help you embrace the herculean task this was: My goal was to make the algorithm's runtime lower than 1.5 seconds for any realistic data sample. It was taking anywhere from 5 to 20 and even 30 seconds at the time. So I set off. First some profiling and some tidbits here and there, then tweaking and poking and yanking and scraping code for _hours upon hours upon hours._ Nothing, no increase in performance. Nothing even remote to sane behaviour at all. Even though the algorithm was working, my debugging/profiling data wasn't making any sense. And I said fuck this shit and went to chillax and rest my mind over [Men Who Stare at Goats](http://www.amazon.com/Men-Who-Stare-at-Goats/dp/0330375482%3FSubscriptionId%3D0G81C5DAZ03ZR9WH9X82%26tag%3Dzemanta-20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D0330375482 "Men Who Stare at Goats") for two hours.  There were some good laughs and some pretty good chillaxing being done. My I-don't-know-which-exactly-or-what's-it-called part of the brain was probably busy processing the afore mentioned problem in the background. Or maybe it wasn't, who knows. All I know is that when I came back to the problem I noticed something funky. HEY THAT FUNCTION ARGUMENT SHOULDN'T BE A FUCKING CONSTANT WHAT THE FUCK IS GOING ON! Characters 1 and t look a lot alike ... So anyway, long story short. The meta-heuristic that used to take 1500 epochs to do something now takes only _**ten**_ to do the same thing, but slightly better. That's a pretty fucking good improovement right there! Now the algorithm is constantly taking about a second to do its thing and I'm happy. Pushed it into production where profiling data will be collected of a more varied sample of data to see if all is well. Chillaxing! It really does work.
 
 [![Reblog this post \[with Zemanta\]](http://img.zemanta.com/reblog_e.png?x-id=9b21d896-9c08-4f43-8180-2ccdffa12a70)](http://reblog.zemanta.com/zemified/9b21d896-9c08-4f43-8180-2ccdffa12a70/ "Reblog this post \[with Zemanta]")

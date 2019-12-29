@@ -9,33 +9,17 @@ hero: ./img/blog-wp-content-uploads-2016-08-Screen-Shot-2016-08-14-at-23.13.04.p
 ---
 _This is a Livecoding Recap – an almost-weekly post about interesting things discovered while livecoding ?. Always under 500 words and with pictures. You can follow my channel, [here](https://livecoding.tv/swizec). New content almost **every Sunday at 2pm PDT**. There’s live chat, come say hai ?_
 
-
-
-
-
 This week, we wanted to build an example for the [TransitionableComponent from last week](https://swizec.com/blog/livecoding-18-an-abstract-react-transition-component/swizec/6906) — an animated piechart. Not because piecharts are exciting, but because someone asked me by email.
-
-
 
 It did not go so well. After 1 hour and 45 minutes of fighting everything from Webpack to npm, we built this:
 
-
-
 ![A not animated piechart](./img/blog-wp-content-uploads-2016-08-Screen-Shot-2016-08-14-at-23.13.04.png)
-
-
 
 A _not_ animated piechart that shows the ratio of British \\imports vs. exports in the year 1820. Exports are blue. The tiny dataset is from [A Handbook of Small Data Sets](http://www.stat.ncsu.edu/research/sas/sicl/data/).
 
-
-
 We were going to build an animation that walks through the years in our dataset – 1820 through 1850 – and draws a 2-arc piechart for each year. If there was time, we’d add the ability for users to scroll through.
 
-
-
 Building the piechart itself was quick: Fetch and parse data with `d3.tsv('data.dat')`, call `setState` and build a 2-entry array as data for the piechart. Our tiny dataset gives only one number, so we have to infer the other.
-
-
 
 ```
 // src/App.js
@@ -66,11 +50,7 @@ componentDidMount() {
 }
 ```
 
-
-
 That’s how you’d use the `AnimatedPiechart` component once it works. The component itself wasn’t quick to build, too. It looks like this:
-
-
 
 ```
 // src/AnimatedPiechart.js
@@ -103,54 +83,28 @@ const AnimatedPiechart = ({ x, y, r, data }) => {
 };
 ```
 
-
-
 A piechart is a collection of arcs. As such it doesn’t need to do much: use `d3.pie()` to turn a dataset into a piechart, then walk through it and render arcs.
-
-
 
 The arcs were supposed to use `TransitionableComponent` to become animated, but … heh … it didn’t actually work as a library. Published to npm and everything. 29 people even tried to use it! Couldn’t even \\import ?
 
-
-
 Calling `\import TransitionableComponent from 'react-transitionable-component'` produced a syntax error. Something like _“Unexpected token: export in index.js”_.
-
-
 
 When you publish a library, it has to be compiled. Nobody wants to build their whole node_modules directory every time they run Webpack, so configs always exclude it.
 
-
-
 I wonder how long build all your dependencies would take … I should try that one day ?
-
-
 
 So, to make a library work as a library, you have to compile it. To compile it, you have to first know how to run Webpack. It took me an embarrassing amount of time to realize that `webpack webpack.config.prod.js` does _not_ run Webpack. `webpack ––config=webpack.config.prod.js` does.
 
-
-
 To save some time, we modeled our webpack config after what we found in [react-scripts](https://github.com/facebookincubator/create-react-app). Also known as `create-react-app`. When I say “model”, I mean “copy file then delete cruft”.
-
-
 
 You can delete everything to do with HTML and CSS. Unless your packaged component comes with its own styling, which I’m still on the fence about. Should open source components include stylings like jQuery plugins once did?
 
-
-
 Our final webpack config that got the AnimatedPiechart project running comes out to 74 lines and is too long to paste here. You can [see it on Github](https://github.com/Swizec/react-transitionable-component/blob/master/webpack.config.prod.js).
-
-
 
 We also had to install 16 dependencies, which is insane. And we’re no closer to knowing how to correctly use d3 v4 modularity and avoid depending on the whole library. ?
 
-
-
 But, you can use react-transition-group as a library now \\o/
 
-
-
 Join me next time, when we use `TransitionableComponent` to build an animated piechart for real. Maybe even figure out how to do `\import Thing from 'd3-transform'` properly.
-
-
 
 PS: the edited and improved versions of these videos are becoming a video course. Readers of the engineer package of [React+d3js ES6](http://swizec.com/reactd3js/) get the video course for free when it’s ready.

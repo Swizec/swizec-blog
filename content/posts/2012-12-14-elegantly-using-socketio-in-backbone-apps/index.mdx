@@ -8,15 +8,7 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ../../../defaultHero.jpg
 ---
-[Backbone.js](http://backbonejs.org/) is my favourite modern MVC framework for client-side javascript. Not that I've seriously tried any others ... simply didn't feel the need to.
-
-
-
-The way apps are usually organised is Backbone is that data is king. A view reacts to some user action and changes some data in a model. Everybody who's listening for that change then reacts and does something either to their view (adding something new on the screen, say) or data gets changed. Sometimes a change in data will cause the browser [URL](http://en.wikipedia.org/wiki/Uniform_Resource_Locator "Uniform Resource Locator") to change.
-
-
-
-Whatever, the \\important part is events are usually communicated through state changes.
+[Backbone.js](http://backbonejs.org/) is my favourite modern MVC framework for client-side javascript. Not that I've seriously tried any others ... simply didn't feel the need to. The way apps are usually organised is Backbone is that data is king. A view reacts to some user action and changes some data in a model. Everybody who's listening for that change then reacts and does something either to their view (adding something new on the screen, say) or data gets changed. Sometimes a change in data will cause the browser [URL](http://en.wikipedia.org/wiki/Uniform_Resource_Locator "Uniform Resource Locator") to change. Whatever, the \\important part is events are usually communicated through state changes.
 
 ## Events
 
@@ -50,27 +42,11 @@ That can get unwieldy real quick ... Backbone has us covered with the events has
     },
 ```
 
-Both of these approaches result in _this.button_clicked_being called when a user clicks the button. Except the second approach is much easier on the eye and significantly less convoluted when you have ten different events doing things.
-
-
-
-But what happens when you add socket.io to the mix?
-
-
+Both of these approaches result in _this.button_clicked_being called when a user clicks the button. Except the second approach is much easier on the eye and significantly less convoluted when you have ten different events doing things. But what happens when you add socket.io to the mix?
 
 ## Adding socket.io
 
-
-
-Backbone doesn't have any built-in support for a third source of events so you end up doing things the old way again. Adding listeners to a global socket in your _initialize_ function. Global sockets might sound like a bad idea, but I find having a single socket communicating with the server to make things easier.
-
-
-
-I usually keep the socket in the global _App_object.
-
-
-
-But this feels dirty:
+Backbone doesn't have any built-in support for a third source of events so you end up doing things the old way again. Adding listeners to a global socket in your _initialize_ function. Global sockets might sound like a bad idea, but I find having a single socket communicating with the server to make things easier. I usually keep the socket in the global _App_object. But this feels dirty:
 
 ```
         window.app.socket.on("message", function(message) {
@@ -78,11 +54,7 @@ But this feels dirty:
         });
 ```
 
-Or worse, handling everything about the message in the callback!
-
-
-
-Instead, I started making all my views extend a common _MainView_ that enables me to listen for socket events just like I would for user actions:
+Or worse, handling everything about the message in the callback! Instead, I started making all my views extend a common _MainView_ that enables me to listen for socket events just like I would for user actions:
 
 ```
 var MyView = MainView.extend({
@@ -91,8 +63,6 @@ var MyView = MainView.extend({
         "message": "got_message"
     }
 ```
-
-
 
 MainView then takes care of binding socket events to their callbacks much in the same way as Backbone's native View does.
 
@@ -127,15 +97,7 @@ var MainView = Backbone.View.extend({
 });
 ```
 
-The reason there's two initialize functions is that we can't properly hook into the default View object and add some functionality. So we use initialize to do event delegation when the object is created - backbone calls initialize from the constructor - but if a child view needs their own initialize function, they should still be able to delegate socket events.
-
-
-
-Such a child view would simply call _this.\_\_initialize()_to execute MainView's initialize function and get things working.
-
-
-
-This is far from perfect and to get all of this really working the way I'd like - as seamlessly as user actions - I would have to make a pull request to Backbone ... but it's a good start to elegantly using socket.io in backbone apps.
+The reason there's two initialize functions is that we can't properly hook into the default View object and add some functionality. So we use initialize to do event delegation when the object is created - backbone calls initialize from the constructor - but if a child view needs their own initialize function, they should still be able to delegate socket events. Such a child view would simply call _this.\_\_initialize()_to execute MainView's initialize function and get things working. This is far from perfect and to get all of this really working the way I'd like - as seamlessly as user actions - I would have to make a pull request to Backbone ... but it's a good start to elegantly using socket.io in backbone apps.
 
 ###### Related articles
 

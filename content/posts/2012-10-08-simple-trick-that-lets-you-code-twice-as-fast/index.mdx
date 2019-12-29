@@ -8,59 +8,11 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/blog-wp-content-uploads-2012-10-mocha-testing.png
 ---
-\[caption id="" align="alignnone" width="438" caption="Basic idea from THE Bret Victor talk"]![Basic idea from THE Bret Victor talk](http://icant.co.uk/talks/h5/pictures/smashingconf/shorterjourney.jpg "Basic idea from THE Bret Victor talk")\[/caption]
-
-
-
-Immediate feedback.
-
-
-
-No really, it's that simple.
-
-
-
-Most of our a developer's revolves around verifying code. After [hitting the limit of how fast you can type](http://swizec.com/blog/ive-hit-a-glass-ceiling-of-coding-productivity-now-what/swizec/5191 "I’ve hit a glass ceiling of coding productivity. Now what?"), the only way to think faster is getting feedback instantly.
-
-
-
-There's actually two parts to this trick.
+\[caption id="" align="alignnone" width="438" caption="Basic idea from THE Bret Victor talk"]![Basic idea from THE Bret Victor talk](http://icant.co.uk/talks/h5/pictures/smashingconf/shorterjourney.jpg "Basic idea from THE Bret Victor talk")\[/caption] Immediate feedback. No really, it's that simple. Most of our a developer's revolves around verifying code. After [hitting the limit of how fast you can type](http://swizec.com/blog/ive-hit-a-glass-ceiling-of-coding-productivity-now-what/swizec/5191 "I’ve hit a glass ceiling of coding productivity. Now what?"), the only way to think faster is getting feedback instantly. There's actually two parts to this trick.
 
 ## 1. Automated testing
 
-First of all, you should write tests. No need for full on TDD writing tests before writing code, just have tests, _any_ tests. Because eventually you will want to know if this thing you've just coded works.
-
-
-
-Your first test is: does it run?
-
-
-
-\[caption id="attachment_5386" align="alignright" width="307" caption="Mocha automated automated testing"][![Mocha automated automated testing](http://swizec.com/blog/wp-content/uploads/2012/10/mocha-testing.png "Mocha automated automated testing")](./img/blog-wp-content-uploads-2012-10-mocha-testing.png)\[/caption]
-
-
-
-The next test is: does it do what it's supposed to?
-
-
-
-Without an automated [test suite](http://en.wikipedia.org/wiki/Test_suite "Test suite") this one is tricky. It takes _ages_. _Decades_compared to how easy it was to write. At worst, you have to check your whole program after every change. Good design alleviates a lot of this burden due to isolation, but still ... effort.
-
-
-
-I still remember when every change meant some 20 minutes of clicking around to check if things worked. And I only remembered to click around the thing I just changed, never you mind any ripple effects in the codebase.
-
-
-
-Horror.
-
-
-
-Automated testing reduces those 20 minutes to, say, 30 seconds.
-
-
-
-Your life becomes:
+First of all, you should write tests. No need for full on TDD writing tests before writing code, just have tests, _any_ tests. Because eventually you will want to know if this thing you've just coded works. Your first test is: does it run? \[caption id="attachment_5386" align="alignright" width="307" caption="Mocha automated automated testing"][![Mocha automated automated testing](http://swizec.com/blog/wp-content/uploads/2012/10/mocha-testing.png "Mocha automated automated testing")](./img/blog-wp-content-uploads-2012-10-mocha-testing.png)\[/caption] The next test is: does it do what it's supposed to? Without an automated [test suite](http://en.wikipedia.org/wiki/Test_suite "Test suite") this one is tricky. It takes _ages_. _Decades_compared to how easy it was to write. At worst, you have to check your whole program after every change. Good design alleviates a lot of this burden due to isolation, but still ... effort. I still remember when every change meant some 20 minutes of clicking around to check if things worked. And I only remembered to click around the thing I just changed, never you mind any ripple effects in the codebase. Horror. Automated testing reduces those 20 minutes to, say, 30 seconds. Your life becomes:
 
 1. Write some code
 2. Hop into a console of some sort
@@ -74,43 +26,7 @@ Great, it's just taken a minute (not counting twitterredditfacebooksomething tim
 
 ## 2. Automated automated testing
 
-One hour and twenty minutes every full workday.
-
-
-
-Man, that's some non-negligible time right there!
-
-
-
-Then again, I've got an automated test suite, why am I running it manually? Wouldn't it be better if something ran the test suite every time I hit _Ctrl+S_?
-
-
-
-And that's exactly how it's supposed to be!
-
-
-
-Let [automated testing](http://en.wikipedia.org/wiki/Test_automation "Test automation") run automatically and just glance at the results every so often. You won't break concentration, you won't be tempted to check twitter while the tests run, you won't have to get out of your [text editor](http://en.wikipedia.org/wiki/Text_editor "Text editor").
-
-
-
-Win-win-win.
-
-
-
-Right now I use two tools to do this (and am looking for more)
-
-
-
-[Mocha](http://visionmedia.github.com/mocha/)'s got a wonderful _-w_ option for running node.js tests - it watches files for changes and reruns the suite every time you save. And Mocha is just generally wonderful, but that's a different post.
-
-
-
-For frontend development, I'm using _[Live CSS Mod](https://chrome.google.com/webstore/detail/live-css-mod/pcfngkdgaccedbamgamojgomaibafdcg) -_a Chrome extension, which refreshes a page every couple of seconds. But it's smart enough to do this in the background and only show the changes if there's anything different. This means you don't lose state all the time because that would be annoying.
-
-
-
-Now all I need are these sorts of tools for the other stacks I'm using. (Django/python and Haskell).
+One hour and twenty minutes every full workday. Man, that's some non-negligible time right there! Then again, I've got an automated test suite, why am I running it manually? Wouldn't it be better if something ran the test suite every time I hit _Ctrl+S_? And that's exactly how it's supposed to be! Let [automated testing](http://en.wikipedia.org/wiki/Test_automation "Test automation") run automatically and just glance at the results every so often. You won't break concentration, you won't be tempted to check twitter while the tests run, you won't have to get out of your [text editor](http://en.wikipedia.org/wiki/Text_editor "Text editor"). Win-win-win. Right now I use two tools to do this (and am looking for more) [Mocha](http://visionmedia.github.com/mocha/)'s got a wonderful _-w_ option for running node.js tests - it watches files for changes and reruns the suite every time you save. And Mocha is just generally wonderful, but that's a different post. For frontend development, I'm using _[Live CSS Mod](https://chrome.google.com/webstore/detail/live-css-mod/pcfngkdgaccedbamgamojgomaibafdcg) -_a Chrome extension, which refreshes a page every couple of seconds. But it's smart enough to do this in the background and only show the changes if there's anything different. This means you don't lose state all the time because that would be annoying. Now all I need are these sorts of tools for the other stacks I'm using. (Django/python and Haskell).
 
 ###### Related articles
 

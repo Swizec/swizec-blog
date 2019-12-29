@@ -30,6 +30,7 @@ The computer I was testing on is my trusty MBP with 4gigs of RAM and a 2.4gig co
 This is the basic implementation in node.js, the more cutesy algorithm just uses a global array of known primes and iterates over those, but otherwise the code is the same so it'd be silly to post it twice.
 
 ```
+
 var async = require('async');
 
 var isPrime = function (n, callback) {
@@ -51,19 +52,13 @@ var isPrime = function (n, callback) {
 var primes = function (n, callback) {
     var acc = new Array();
 
-    for (var i=2; i    async.filter(acc, isPrime, function(results){
-	results.unshift(2);
-	callback(results);
-    });
-}
+    for (var i=2; i
 
-primes(process.argv[2], function (result) {
-});
-```
 
 This is practically the same code in clojure:
 
-```
+
+
 (defn prime? [n]
   (if (even? n) false
       (let [root (num (int (Math/sqrt n)))]
@@ -79,13 +74,20 @@ This is practically the same code in clojure:
     (concat (filter prime? nums) [2])))
 
 (primes (Integer/parseInt (first *command-line-args*)))
-```
+
+
+
 
 Immediately we can see that the clojure code is much more concise; which code is more readable is a bit harder to say. Personally I'd lean towards javascript for readability, but there is a certain level of elegance in lisp.
 
+
+
+
 This is the code I used to run the tests. You can see for each run a process is spawned and the cleanest possible time is measured. This helps us avoid any memory leaking issues that could slow down the code, but introduces a small penalty for spawning processes. I'm assuming this penalty is constant.
 
-```
+
+
+
 var spawn = require('child_process').spawn;
 
 var N = 100000000;
@@ -111,28 +113,56 @@ var runs = function (n, i, avg) {
 }
 
 runs(5)
-```
 
-## The results
 
-\[caption id="" align="alignnone" width="595" caption="Raw data shows that runtimes for anything under 1M are pretty reasonable."]![](./img/BkTG0.png "The raw data")\[/caption]
 
-\[caption id="" align="alignnone" width="431" caption="In the first graph we can see how horribly exponential my solution is."]![](./img/22s7m.png "First graph")\[/caption]
+The results
 
-\[caption id="" align="alignnone" width="389" caption="Here we can notice the initial penalty of compiling clojure"]![](./img/qXPSS.png "Second graph")\[/caption]
+
+
+[caption id="" align="alignnone" width="595" caption="Raw data shows that runtimes for anything under 1M are pretty reasonable."][/caption]
+
+
+
+
+[caption id="" align="alignnone" width="431" caption="In the first graph we can see how horribly exponential my solution is."][/caption]
+
+
+
+
+[caption id="" align="alignnone" width="389" caption="Here we can notice the initial penalty of compiling clojure"][/caption]
+
+
+
 
 As you can see, looking for primes is a bit of an exponential problem. However, if you have a linear solution I would absolutely love to see it.
 
+
+
+
 The more interesting part is how differently exponential it is with the same algorithm in different runtime environments. I have no idea what's going on with node.js on those large datasets. Both algorithms seem to be running on a nice exponential curve and then BAM, shoots through the roof and even dies completely. Whereas Clojure's biggest problem with the small datasets is apparently the run-up time itself and then it continues growing on a predictable exponential curve.
 
-## Conclusion
+
+
+Conclusion
+
+
 
 My conclusion from all this is that despite everything, despite all the awesome optimiziations the V8 engine does, clojure is simply more appropriate when you're doing serious calculation on serious datasets. Go ahead and use node.js for everything nice and small, it's absolutely magnificent there.
 
+
+
+
 The next relevant test would probably input/output since that is supposedly node's strongpoint, but something tells me the story will be similar. Node better for small bursts of activity and clojure better for more sustained hardcore work.
+
+
+
 
 Let me know what you think, where did I fuck up this test?
 
 
 
+
+
 PS: I know clojure has type hinting, they proved to slow down the code.
+```

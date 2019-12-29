@@ -8,27 +8,7 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/blog-wp-content-uploads-2011-11-Screen-Shot-2011-11-23-at-10.10.32-PM.png
 ---
-\[caption id="attachment_3052" align="alignright" width="399" caption="The machine I used for testing"][![The machine I used for testing](http://swizec.com/blog/wp-content/uploads/2011/11/Screen-Shot-2011-11-23-at-10.10.32-PM.png "The machine I used for testing")](./img/blog-wp-content-uploads-2011-11-Screen-Shot-2011-11-23-at-10.10.32-PM.png)\[/caption]
-
-
-
-Felt like doing some coding last night and since my friends were just trolling me about codegolfing a [turing machine simulator](http://en.wikipedia.org/wiki/Turing_machine "Turing machine")(they need it for a term paper), I decided to do just that.
-
-
-
-At first I wanted to make it super simple, 10 [lines of code](http://en.wikipedia.org/wiki/Source_lines_of_code "Source lines of code") max ... and I failed.
-
-
-
-What better way to embrace failure than to implement a simulator of [nondeterministic turing machines](http://en.wikipedia.org/wiki/Non-deterministic_Turing_machine "Non-deterministic Turing machine") in as little lines of code as possible?
-
-
-
-Adding "eps" to the alphabet of course - basically a means for the machine to know when it's gone off either end of the tape and that it can also write nothing to the tape. Both very useful features!
-
-
-
-And here's the code in all its glory. You can also view it on [github](https://github.com/Swizec/random-coding/blob/master/turing.js) if that's your thing.
+\[caption id="attachment_3052" align="alignright" width="399" caption="The machine I used for testing"][![The machine I used for testing](http://swizec.com/blog/wp-content/uploads/2011/11/Screen-Shot-2011-11-23-at-10.10.32-PM.png "The machine I used for testing")](./img/blog-wp-content-uploads-2011-11-Screen-Shot-2011-11-23-at-10.10.32-PM.png)\[/caption] Felt like doing some coding last night and since my friends were just trolling me about codegolfing a [turing machine simulator](http://en.wikipedia.org/wiki/Turing_machine "Turing machine")(they need it for a term paper), I decided to do just that. At first I wanted to make it super simple, 10 [lines of code](http://en.wikipedia.org/wiki/Source_lines_of_code "Source lines of code") max ... and I failed. What better way to embrace failure than to implement a simulator of [nondeterministic turing machines](http://en.wikipedia.org/wiki/Non-deterministic_Turing_machine "Non-deterministic Turing machine") in as little lines of code as possible? Adding "eps" to the alphabet of course - basically a means for the machine to know when it's gone off either end of the tape and that it can also write nothing to the tape. Both very useful features! And here's the code in all its glory. You can also view it on [github](https://github.com/Swizec/random-coding/blob/master/turing.js) if that's your thing.
 
 ```
 // transition format: {from: 'q1', to: 'q2', via: 'A', put: 'B', move: 1/-1}
@@ -60,19 +40,7 @@ JSON.parse(require('fs').readFileSync(process.argv[2], 'utf-8')).map(function (i
 console.log(delta(states, {"q0": [0, process.argv[3].split("")]}, process.argv[4]));
 ```
 
-Basically what you're doing is performing a [breadth-first-search](http://en.wikipedia.org/wiki/Breadth-first_search "Breadth-first search") on a graph, looking for the end state and a pinch of complications with observing contents the tape as well. You should make sure not to accidentally implement a [depth-first search](http://en.wikipedia.org/wiki/Depth-first_search "Depth-first search") since some branches might never terminate.
-
-
-
-The above implementation could probably be codegolfed some more, but I don't like codegolfing by just compating lines beyond what is reasonable. I much prefer doing it with languages features and perhaps algorithmic improvements.
-
-
-
-One of the biggest hindrances to making this much shorter is that a lot of operations on javascript arrays affect state, but don't return the new object as well. Lost at least three lines because of this!
-
-
-
-An approach worth trying would be to perform a reduce on the tree of states and if the start and end state ever overlap, you know to return a truthy value, otherwise you go with something falsy. But I wasn't sure how to go about that.
+Basically what you're doing is performing a [breadth-first-search](http://en.wikipedia.org/wiki/Breadth-first_search "Breadth-first search") on a graph, looking for the end state and a pinch of complications with observing contents the tape as well. You should make sure not to accidentally implement a [depth-first search](http://en.wikipedia.org/wiki/Depth-first_search "Depth-first search") since some branches might never terminate. The above implementation could probably be codegolfed some more, but I don't like codegolfing by just compating lines beyond what is reasonable. I much prefer doing it with languages features and perhaps algorithmic improvements. One of the biggest hindrances to making this much shorter is that a lot of operations on javascript arrays affect state, but don't return the new object as well. Lost at least three lines because of this! An approach worth trying would be to perform a reduce on the tree of states and if the start and end state ever overlap, you know to return a truthy value, otherwise you go with something falsy. But I wasn't sure how to go about that.
 
 ###### Related articles
 

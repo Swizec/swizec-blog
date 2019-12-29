@@ -8,91 +8,27 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/wikipedia-commons-thumb-9-9a-AN-MSQ-18_Coder_Decoder_Group.png-300px-AN-MSQ-18_Coder_Decoder_Group.png
 ---
-Let's say you want to launch a service. For coders, by coders.
-
-
-
-\[caption id="" align="alignright" width="300" caption="Coder decoder group AN/MSQ-18 (Photo credit: Wikipedia)"][![English: Coder decoder group AN/MSQ-18 (ao in ...](./img/wikipedia-commons-thumb-9-9a-AN-MSQ-18_Coder_Decoder_Group.png-300px-AN-MSQ-18_Coder_Decoder_Group.png "English: Coder decoder group AN/MSQ-18 (ao in ...")](http://commons.wikipedia.org/wiki/File:AN-MSQ-18_Coder_Decoder_Group.png)\[/caption]
-
-
-
-Let's also say you want _only_ coders. Nobody else should be able to get in.
-
-
-
-Leaving aside any "_Haha, launching is \_hard\_! Allow everyone and tweak incentives so only coders want to join."_ While essentially true, coders act differently around coders than they do around people, and an exclusive environment could be awesome.
+Let's say you want to launch a service. For coders, by coders. \[caption id="" align="alignright" width="300" caption="Coder decoder group AN/MSQ-18 (Photo credit: Wikipedia)"][![English: Coder decoder group AN/MSQ-18 (ao in ...](./img/wikipedia-commons-thumb-9-9a-AN-MSQ-18_Coder_Decoder_Group.png-300px-AN-MSQ-18_Coder_Decoder_Group.png "English: Coder decoder group AN/MSQ-18 (ao in ...")](http://commons.wikipedia.org/wiki/File:AN-MSQ-18_Coder_Decoder_Group.png)\[/caption] Let's also say you want _only_ coders. Nobody else should be able to get in. Leaving aside any "_Haha, launching is \_hard\_! Allow everyone and tweak incentives so only coders want to join."_ While essentially true, coders act differently around coders than they do around people, and an exclusive environment could be awesome.
 
 ## How do you make a lock only coders can get through?
 
-The low-tech solution is a manual approval process. When a person signs up, you look at their profile and google around a little bit. Try to find them on Github, see if they have any technical blogs, have ever released a piece of software etc.
-
-
-
-Congratulations! You've just made yourself a bunch of work and excluded the 80% of the coders who don't have a strong web presence or aren't even interested in that sort of thing.
-
-
-
-No, we need an automated test ... something only coders can solve, but trumps everyone else.
-
-
-
-Something that:
+The low-tech solution is a manual approval process. When a person signs up, you look at their profile and google around a little bit. Try to find them on Github, see if they have any technical blogs, have ever released a piece of software etc. Congratulations! You've just made yourself a bunch of work and excluded the 80% of the coders who don't have a strong web presence or aren't even interested in that sort of thing. No, we need an automated test ... something only coders can solve, but trumps everyone else. Something that:
 
 - **Every** [coder](http://en.wikipedia.org/wiki/Programmer "Programmer") can solve.
 - Nobody who _isn't_ a coder can solve.
 - Is simple to test.
 - Takes less than 15 seconds to solve.
 
-But what's the common knowledge all coders share?
-
-
-
-**The [for-loop](http://en.wikipedia.org/wiki/For_loop "For loop")!**
-
-
-
-Everyone can write a for loop right!? How do you test a for loop? [Wikia:code lists _18_ different for loops](http://code.wikia.com/wiki/For_loop). Which means there are more ... plus there's languages like Haskell which prefer recursio. I hear there's also a lot of coders out there using [CSS](http://en.wikipedia.org/wiki/Cascading_Style_Sheets "Cascading Style Sheets") and HTML that don't even have a concept for looping.
-
-
-
-Yes, those people are coders too. They write thousands of lines of code. Maybe not programmers - definitely coders.
-
-
-
-Okay that was a stupid idea ... but every coder has got a favourite text editor don't they? If you like a text editor you are definitely a coder. Then again, there are thousands of [text editors](http://en.wikipedia.org/wiki/Text_editor "Text editor") out there, we can't test this one either.
-
-
-
-Oh hey! Everyone can write a [regular expression](http://en.wikipedia.org/wiki/Regular_expression "Regular expression") can't they? At least a very basic one!
-
-
-
-Regular expressions are great, they aren't language specific since they _are_ a language and pretty much everyone has written a basic regular expression once or twice in some of their projects.
-
-
-
-Well, except for the guys writing hardcore C all their lives who are coding rocket launch procedures for [SpaceX](http://www.spacex.com/ "SpaceX"). Doubt they ever needed a regex. Maybe for _grep_ or _sed_?
+But what's the common knowledge all coders share? **The [for-loop](http://en.wikipedia.org/wiki/For_loop "For loop")!** Everyone can write a for loop right!? How do you test a for loop? [Wikia:code lists _18_ different for loops](http://code.wikia.com/wiki/For_loop). Which means there are more ... plus there's languages like Haskell which prefer recursio. I hear there's also a lot of coders out there using [CSS](http://en.wikipedia.org/wiki/Cascading_Style_Sheets "Cascading Style Sheets") and HTML that don't even have a concept for looping. Yes, those people are coders too. They write thousands of lines of code. Maybe not programmers - definitely coders. Okay that was a stupid idea ... but every coder has got a favourite text editor don't they? If you like a text editor you are definitely a coder. Then again, there are thousands of [text editors](http://en.wikipedia.org/wiki/Text_editor "Text editor") out there, we can't test this one either. Oh hey! Everyone can write a [regular expression](http://en.wikipedia.org/wiki/Regular_expression "Regular expression") can't they? At least a very basic one! Regular expressions are great, they aren't language specific since they _are_ a language and pretty much everyone has written a basic regular expression once or twice in some of their projects. Well, except for the guys writing hardcore C all their lives who are coding rocket launch procedures for [SpaceX](http://www.spacex.com/ "SpaceX"). Doubt they ever needed a regex. Maybe for _grep_ or _sed_?
 
 ## A plausible solution
 
-A friend of mine recently (yesterday) had this problem and it seems the final solution is good enough for now.
-
-
-
-To sign up you need to answer one of two questions:
+A friend of mine recently (yesterday) had this problem and it seems the final solution is good enough for now. To sign up you need to answer one of two questions:
 
 1. Write a _very_ simple regex. (match _New York_ and _New Jersey,_ but not _Newark_)
 2. Or find a hidden element on the webpage and click it.
 
-I was too lazy to do either, so I went into the page source and used node.js to run the snippet of javascript that constructs the redirect url. _Also_ proving that I am a coder. I think ...
-
-
-
-But what about all those coders who are just starting out? Who haven't encountered any of this stuff before? It took me _years_ to first get into regexes ... And what of those who've _never_ come into contact with either regexes _or_front-end web development ... someone coding up controllers for your car's engine, say?
-
-
-
-Question is, how would _you_ make a [CAPTCHA](http://en.wikipedia.org/wiki/CAPTCHA "CAPTCHA") to distinguish coders from non-coders?
+I was too lazy to do either, so I went into the page source and used node.js to run the snippet of javascript that constructs the redirect url. _Also_ proving that I am a coder. I think ... But what about all those coders who are just starting out? Who haven't encountered any of this stuff before? It took me _years_ to first get into regexes ... And what of those who've _never_ come into contact with either regexes _or_front-end web development ... someone coding up controllers for your car's engine, say? Question is, how would _you_ make a [CAPTCHA](http://en.wikipedia.org/wiki/CAPTCHA "CAPTCHA") to distinguish coders from non-coders?
 
 ###### Related articles
 
@@ -100,34 +36,18 @@ Question is, how would _you_ make a [CAPTCHA](http://en.wikipedia.org/wiki/CAPTC
 
 - [![](http://i.zemanta.com/noimg_20_80_80.jpg)](http://www.theglobeandmail.com/report-on-business/small-business/digital/biz-categories-technology/how-to-find-the-software-coder-of-your-dreams/article2446549/)[How to find the software coder of your dreams](http://www.theglobeandmail.com/report-on-business/small-business/digital/biz-categories-technology/how-to-find-the-software-coder-of-your-dreams/article2446549/)
 
-
-
   * * *
-
-
 
 - [![](http://i.zemanta.com/noimg_19_80_80.jpg)](http://nikic.github.com/2012/06/15/The-true-power-of-regular-expressions.html)[The true power of regular expressions](http://nikic.github.com/2012/06/15/The-true-power-of-regular-expressions.html)
 
-
-
   * * *
-
-
 
 - [![](http://i.zemanta.com/91970114_80_80.jpg)](http://othmanelmoulatblog.wordpress.com/2012/06/01/coders-block/)[Coder's Block!](http://othmanelmoulatblog.wordpress.com/2012/06/01/coders-block/)
 
-
-
   * * *
-
-
 
 - [![](http://i.zemanta.com/86096088_80_80.jpg)](https://www.eff.org/deeplinks/2012/04/introducing-coders-rights-list)[Introducing the Coders' Rights List](https://www.eff.org/deeplinks/2012/04/introducing-coders-rights-list)
 
-
-
   * * *
-
-
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=eca9c70b-c39a-4a68-8b25-494b1569bc97)](http://www.zemanta.com/?px "Enhanced by Zemanta")

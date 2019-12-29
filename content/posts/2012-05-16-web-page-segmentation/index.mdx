@@ -8,90 +8,24 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/KwdOq.png
 ---
-The Internet talks a lot about article extraction - taking a page and deciding what the real content is. Hell, I've written about the [Uncanny valley of web scraping](http://www.zemanta.com/fruitblog/the-uncanny-valley-of-web-scraping/) myself.
-
-
-
-Article extraction is such a wide spread problem that a bunch of API's exist to help you solve it. Everything from a fringe feature in five or ten semantic API's, to startups devoted wholly to extracting articles - like Diffbot.
-
-
-
-But what if you don't want to extract an article? What if all you want is: _this is the header, here is a sidebar, these are ads, here is content, oh and this is a footer, btw those are comments._
-
-
-
-![Visual vs. Densitometric segmentation (expected)](./img/KwdOq.png "Visual vs. Densitometric segmentation (expected)")
-
-
-
-Suddenly you are shit out of luck.
-
-
-
-Sure, it makes sense the API's wouldn't let you do this - it's supposedly their secret magic sauce. Right?
-
-
-
-Except it isn't.
-
-
-
-Analyzing the different implementations of article extractors reveals that far from using a methodical approach of marking up different bits of a page, they mostly work as tree [pruning algorithms](http://en.wikipedia.org/wiki/Pruning_%28decision_trees%29 "Pruning (decision trees)") - go through [DOM](http://en.wikipedia.org/wiki/Document_Object_Model "Document Object Model"), remove anything that's not promising, end up with the juicy article.
-
-
-
-Nothing you could use to create a web page segmentor ...
-
-
-
-Turns out, there is but a single very useful paper devoted to web page segmentation - Christian Kohlschütter's _[A Densitometric Approach to Web Page Segmentation](https://docs.google.com/viewer?url=http%3A%2F%2Fcoitweb.uncc.edu%2F~jfan%2Fwebimage2.pdf)._
-
-
-
-Yep, the same guy who later wrote _Boilerplate Detection using Shallow Text Features,_which later turned into [Boilerpipe](https://code.google.com/p/boilerpipe/), one of the best (most certainly the quickest) libraries web content extraction.
-
-
-
-In the paper Kohlschütter explains that only three approaches exist:
+The Internet talks a lot about article extraction - taking a page and deciding what the real content is. Hell, I've written about the [Uncanny valley of web scraping](http://www.zemanta.com/fruitblog/the-uncanny-valley-of-web-scraping/) myself. Article extraction is such a wide spread problem that a bunch of API's exist to help you solve it. Everything from a fringe feature in five or ten semantic API's, to startups devoted wholly to extracting articles - like Diffbot. But what if you don't want to extract an article? What if all you want is: _this is the header, here is a sidebar, these are ads, here is content, oh and this is a footer, btw those are comments._ ![Visual vs. Densitometric segmentation (expected)](./img/KwdOq.png "Visual vs. Densitometric segmentation (expected)") Suddenly you are shit out of luck. Sure, it makes sense the API's wouldn't let you do this - it's supposedly their secret magic sauce. Right? Except it isn't. Analyzing the different implementations of article extractors reveals that far from using a methodical approach of marking up different bits of a page, they mostly work as tree [pruning algorithms](http://en.wikipedia.org/wiki/Pruning_%28decision_trees%29 "Pruning (decision trees)") - go through [DOM](http://en.wikipedia.org/wiki/Document_Object_Model "Document Object Model"), remove anything that's not promising, end up with the juicy article. Nothing you could use to create a web page segmentor ... Turns out, there is but a single very useful paper devoted to web page segmentation - Christian Kohlschütter's _[A Densitometric Approach to Web Page Segmentation](https://docs.google.com/viewer?url=http%3A%2F%2Fcoitweb.uncc.edu%2F~jfan%2Fwebimage2.pdf)._ Yep, the same guy who later wrote _Boilerplate Detection using Shallow Text Features,_which later turned into [Boilerpipe](https://code.google.com/p/boilerpipe/), one of the best (most certainly the quickest) libraries web content extraction. In the paper Kohlschütter explains that only three approaches exist:
 
 - segmenting visually
 - linguistic approach
 - densitometric approach
 
-Visual segmentation is perhaps the easiest to understand - you _look_ at a website and as a person you instantly know where different sections are. A computer vision algorithm could do something similar. With the caveat you now have to render every page, then run a [visual learning](http://en.wikipedia.org/wiki/Visual_learning "Visual learning") algorithm and do a bunch of things that are computationally very expensive.
-
-
-
-The linguistic approach is somewhat more reasonable - take a page, look at distributions of words and syllables and what have you ([quanititive linguistics](http://en.wikipedia.org/wiki/Quantitative_linguistics) this is called) and decide based on that. Problem here is, this only works well for large blocks of text ... the linguistic content in, say, a header might be somewhat lacking.
+Visual segmentation is perhaps the easiest to understand - you _look_ at a website and as a person you instantly know where different sections are. A computer vision algorithm could do something similar. With the caveat you now have to render every page, then run a [visual learning](http://en.wikipedia.org/wiki/Visual_learning "Visual learning") algorithm and do a bunch of things that are computationally very expensive. The linguistic approach is somewhat more reasonable - take a page, look at distributions of words and syllables and what have you ([quanititive linguistics](http://en.wikipedia.org/wiki/Quantitative_linguistics) this is called) and decide based on that. Problem here is, this only works well for large blocks of text ... the linguistic content in, say, a header might be somewhat lacking.
 
 ## Block fusion algorithm
 
-![Visual vs. Densitometric (actual)](./img/LCupU.png "Visual vs. Densitometric (actual)")
-
-
-
-Kohlschütter's densitometric approach has a tendency to work as well as a visual algorithm, while being as fast as a lingustic approach ... bloody marvelous!
-
-
-
-The idea is basically this:
+![Visual vs. Densitometric (actual)](./img/LCupU.png "Visual vs. Densitometric (actual)") Kohlschütter's densitometric approach has a tendency to work as well as a visual algorithm, while being as fast as a lingustic approach ... bloody marvelous! The idea is basically this:
 
 - walk through nodes
 - assign a text density to each node -> number-of-tokens / number-of-'lines'
 - merge neighbor nodes with the same densities
 - repeat until desired granularity is reached
 
-The simplicity of this algorithm is just brilliant. Even better is the fact they managed to get it down to _15ms_ per page on average. For comparison's sake - the time it takes Readability to clean up a page is counted in seconds, an average response time from Diffbot (visual approach) is about _10 seconds per page._
-
-
-
-Yep, that fast.
-
-
-
-And for the icing on the cake - most main bits of the Block Fusion Algorithm are already implemented deep inside the bowels of Boilerpipe. You just have to look hard enough.
-
-
+The simplicity of this algorithm is just brilliant. Even better is the fact they managed to get it down to _15ms_ per page on average. For comparison's sake - the time it takes Readability to clean up a page is counted in seconds, an average response time from Diffbot (visual approach) is about _10 seconds per page._ Yep, that fast. And for the icing on the cake - most main bits of the Block Fusion Algorithm are already implemented deep inside the bowels of Boilerpipe. You just have to look hard enough.
 
 ###### Related articles
 

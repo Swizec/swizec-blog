@@ -1,0 +1,316 @@
+---
+layout: post
+title: 'Towards a Gatsby+Suspense proof-of-concept'
+date: 2019-11-11
+redirect_from: 
+            - /blog/towards-a-gatsbysuspense-proof-of-concept/swizec/9238
+author: Swizec Teller
+hero: ./img/K6USjWa.jpg
+---
+Messing around with React Suspense gave me a great idea: What if you could fallback to preloaded data instead of a loading spinner? 💡
+
+
+
+
+
+![](./img/K6USjWa.jpg)
+
+
+
+You could leverage Gatsby's approach with React Suspense for a smooth user experience. Load partial data at build time, bake it into the static HTML, then load the rest when a user renders your page.
+
+
+
+Initial experiments look great, where I'm stuck is loading data for subsequent pages. Let me explain
+
+
+
+You can see it in action here 👉 <https://gatsby-suspense-poc.now.sh/>
+
+
+
+Code on GitHub 👉 <https://github.com/Swizec/gatsby-suspense-poc>
+
+
+
+## Gatsby with dynamic data, some background
+
+
+
+Let's start with background on using Gatsby for dynamic pages.
+
+
+
+Gatsby is a static site builder. You build a website in React, use GraphQL to connect to data sources, and compile a static HTML page.
+
+
+
+Your GraphQL queries run at compile time and bake data into your static HTML via hardcoded props. Not quite hardcoded props but close enough.
+
+
+
+The result is a page that can work offline and loads without API requests. This makes it fast.
+
+
+
+When your site loads in a browser, however, it becomes a React single page app. [React hydration](https://reactjs.org/docs/react-dom.html#hydrate) means there's no flash of blank content and no need to re-render the HTML.
+
+
+
+You can add Apollo Client for GraphQL support or use `fetch()`. It's just a JavaScript app at this point.
+
+
+
+I like to wrap the root node in ApolloProvider and use [react-apollo-hooks](https://github.com/trojanowski/react-apollo-hooks) for the rest.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1573495144942.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=javascript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20gatsby-browser.js%0A%2F%2F%20gatsby-ssr.js%0A%0A\import%20%7B%20client%20%7D%20from%20%22.%2Fsrc%2Fapollo%22%0A%0Aexport%20const%20wrapRootElement%20%3D%20(%7B%20element%20%7D)%20%3D%3E%20(%0A%20%20%3CApolloProvider%20client%3D%7Bclient%7D%3E%7Belement%7D%3C%2FApolloProvider%3E%0A))
+
+
+
+That gives my entire app access to GraphQL for a specific server. Using [Star Wars API](https://swapi.co/) for this example.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1573495144760.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=javascript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20src%2Fapollo.js%0A%0A\import%20ApolloClient%20from%20%22apollo-boost%22%0A\import%20fetch%20from%20%22isomorphic-fetch%22%0A%0Aconst%20SERVER_URI%20%3D%0A%20%20%20%20%22https%3A%2F%2Fapi.graphcms.com%2Fsimple%2Fv1%2Fswapi%22%0A%0Aexport%20const%20client%20%3D%20new%20ApolloClient(%7B%0A%20%20%20%20uri%3A%20SERVER_URI%2C%0A%20%20%20%20fetch%2C%0A%7D))
+
+
+
+## Loading additional data on render
+
+
+
+Once you have "cached" data baked into your HTML and the ability to load fresh data on render, you're presented with a dilemma.
+
+
+
+> How do I show static data, communicate that more data is loading, and show fresh data when I've got it? If the user is offline, what then?
+
+
+
+Those are tough problems. Traditionally, you'd render a component, show a spinner, fetch more data after render, then re-render once done.
+
+
+
+Something like this (this is pseudocode):
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1573495144730.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=javascript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=const%20STARSHIP_QUERY%20%3D%20gql%60%0A%20%20query%20starships(%24count%3A%20Int)%20%7B%0A%20%20%20%20allStarships(last%3A%20%24count)%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%7D%0A%20%20%7D%0A%60%0A%0Afunction%20StarshipList(%7B%20data%20%7D)%20%7B%0A%09const%20%7B%20loading%2C%20data%20%7D%20%3D%20useQuery(STARSHIP_QUERY%2C%20%7B%0A%09%09variables%3A%20%7B%0A%09%09%09count%3A%2015%0A%09%09%7D%0A%09%7D)%0A%09%0A%09return%20%3Cdiv%3E%0A%09%09%7Bloading%20%3F%20%22Loading%20more%22%20%3A%20null%7D%0A%09%09%3Cul%3E%0A%09%09%09%7Bdata.list.map(ship%20%3D%3E%20%3Cli%3E%7Bship.name%7D%3C%2Fli%3E)%7D%0A%09%09%3C%2Ful%3E%0A%09%3C%2Fdiv%3E%0A%7D)
+
+
+
+`STARSHIP_QUERY` is a GraphQL query that returns a list of `$count` starships from StarWarsApi, `swapi` for short.
+
+
+
+`useQuery` runs the query and returns a loading state and data.
+
+
+
+Component renders the loading notification and a list of starships from props. Those were baked in at build time. When fresh data arrives from our API call, the component re-renders.
+
+
+
+You can tell this is pseudocode because I'm re-defining the `data` constant and that won't work :)
+
+
+
+## Using React Suspense instead
+
+
+
+With React Suspense, you can make that API call preemptively. While the page is loading.
+
+
+
+Some background on how that works in last week's [Experimenting with the new React Concurrent mode](https://swizec.com/blog/experimenting-with-the-new-react-concurrent-mode/swizec/9231) article ✌️
+
+
+
+Here's how you might set it up for Gatsby. Or at least how I did.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1573495144991.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=javascript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20pages%2Findex.js%0A%0A\import%20%7B%20starshipQuery%2C%20ErrorBoundary%20%7D%20from%20%22..%2Futil%22%0A%0A%2F%2F%20Export%20static%20query%20for%20Gatsby%0Aexport%20const%20query%20%3D%20graphql%60%0A%20%20query%20%7B%0A%20%20%20%20swapi%20%7B%0A%20%20%20%20%20%20allStarships(last%3A%205)%20%7B%0A%20%20%20%20%20%20%20%20name%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%60%0A%0A%2F%2F%20Run%20query%20on%20browser%20hydration%0Aconst%20starshipQuerySuspender%20%3D%20starshipQuery(10)%0A%0A%2F%2F%20The%20component%20that%20suspends%20with%20a%20data%20load%0Aconst%20Starships%20%3D%20()%20%3D%3E%20%7B%0A%20%20const%20starships%20%3D%20starshipQuerySuspender.read()%0A%0A%20%20return%20%3CStarshipsList%20list%3D%7Bstarships%7D%20title%3D%2210%20Dynamically%20loaded%20ships%22%20%2F%3E%0A%7D%0A%0A%2F%2F%20Wrapper%20component%20with%20a%20title%20and%20a%20list%0Aconst%20StarshipsList%20%3D%20(%7B%20list%2C%20title%20%7D)%20%3D%3E%20(%0A%20%20%3C%3E%0A%20%20%20%20%3Ch2%3E%7Btitle%7D%3C%2Fh2%3E%0A%20%20%20%20%3Cul%3E%0A%20%20%20%20%20%20%7Blist.allStarships.map((ship%2C%20i)%20%3D%3E%20(%0A%20%20%20%20%20%20%20%20%3Cli%20key%3D%7Bi%7D%3E%7Bship.name%7D%3C%2Fli%3E%0A%20%20%20%20%20%20))%7D%0A%20%20%20%20%3C%2Ful%3E%0A%20%20%3C%2F%3E%0A))
+
+
+
+All this goes in the `index.js` page. The first page you see in a Gatsby app.
+
+
+
+We start with a static page query for Gatsby. This one runs at build-time and bakes data into our HTML. I tried having a shared query between Gatsby and Apollo, but the `graphql` (gatsby) and `gql` (apollo) tags are not compatible.
+
+
+
+Then we've got the `starshipQuerySuspender`, which runs in the browser when Gatsby turns this page into a JavaScript app.
+
+
+
+The `<Starships>` component suspends with a data load and renders `<StarshipsList>` when data shows up. The static page is going to render this same component with its data.
+
+
+
+### Page render with suspendering
+
+
+
+In the `IndexPage` component we can then use `<Suspense>` to coordinate loading and error states.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1573495144911.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=javascript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20pages%2Findex.js%0A%0Aconst%20IndexPage%20%3D%20(%7B%20data%20%7D)%20%3D%3E%20(%0A%09%2F%2F%20...%0A%09%3CSuspense%0A%20%20%20%20%20%20fallback%3D%7B%0A%20%20%20%20%20%20%20%20%3CStarshipsList%0A%20%20%20%20%20%20%20%20%20%20list%3D%7Bdata.swapi%7D%0A%20%20%20%20%20%20%20%20%20%20title%3D%22Statically%20compiled%20starships%22%0A%20%20%20%20%20%20%20%20%2F%3E%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%3E%0A%20%20%20%20%20%20%3CErrorBoundary%0A%20%20%20%20%20%20%20%20fallback%3D%7B%0A%20%20%20%20%20%20%20%20%20%20%3CStarshipsList%0A%20%20%20%20%20%20%20%20%20%20%20%20list%3D%7Bdata.swapi%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20title%3D%22Failed%20to%20fetch%2C%20these%20are%20static%22%0A%20%20%20%20%20%20%20%20%20%20%2F%3E%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%3E%0A%20%20%20%20%20%20%20%20%3CStarships%20%2F%3E%0A%20%20%20%20%20%20%3C%2FErrorBoundary%3E%0A%20%20%20%20%3C%2FSuspense%3E%0A))
+
+
+
+Our Gatsby page gets static data via the `data` prop. This works offline too, [you can try, here](https://gatsby-suspense-poc.now.sh/) 👌
+
+
+
+Here's where the fun starts:
+
+
+
+`Suspense` sees that we're running a GraphQL query (the suspender.read()) so it renders the `fallback` render prop. But that prop uses our static data to render a list of 5 starships. It's not all of them, but it's better than nothing.
+
+
+
+![](./img/1tK5XvC.png)
+
+
+
+Even if it all goes to shit, our user gets the most \\important data they're looking for.
+
+
+
+Once our query finishes, Suspense renders the main list. Now with fresh data from the API.
+
+
+
+![](./img/29zAunt.png)
+
+
+
+That `<ErrorBoundary>` gives us an extra feature: We can show something useful even if the user is offline and our query fails.
+
+
+
+![](./img/vKX8As1.png)
+
+
+
+Same fallback to static data, now with a warning that you're offline ✌️
+
+
+
+## Where I'm stuck: subsequent pages
+
+
+
+Now that approach works great, if your site has a single page. Where it breaks down are multi-page sites. Which is most of them.
+
+
+
+I tried replicating the same code on `page-2.js` and this happens:
+
+
+
+![](./img/JUHvLjC.png)
+
+
+
+Two `swapi` requests on initial page load. Makes subsequent pages crazy fast with no hint of data loading, but means that you're _loading data for your whole website on initial load_.
+
+
+
+That just won't do. We need to hook into the router's lifecycle. Gatsby uses [@reach/router](https://github.com/reach/router) by the way.
+
+
+
+And that's where I'm stuck. Tried a few things, none worked.
+
+
+
+### Suspend on render, nope
+
+
+
+Loading on render was slow as heck:
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1573495144848.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=javascript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=dataSuspender%20%3D%20()%20%3D%3E%20starshipQuerySuspender(15)%0A%3CStarships%20data%3D%7BdataSuspender()%7D%20%2F%3E)
+
+
+
+Worked but just as slow as running a query without Suspense.
+
+
+
+### Pass suspender as link state, nah
+
+
+
+Reach Router lets you pass state to pages with a `state` prop in your `<Link>` component. Whatever you pass shows up in the `location` prop on the target component.
+
+
+
+Works great for static values, but did not work with this approach:
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1573495144824.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=javascript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%3CLink%0A%20%20to%3D%22%2Fpage-2%22%0A%20%20state%3D%7B%7B%0A%20%20%20%20starshipQuerySuspender%3A%20()%20%3D%3E%20starshipQuery(15)%2C%20%2F%2F%20didnt%20work%0A%20%20%7D%7D%0A%3E)
+
+
+
+Not sure why, but trying to pass a function made the whole state value `null`.
+
+
+
+### Hook into onPreRouteUpdate, nyet
+
+
+
+Another approach I tried was using Gatsby's browser APIs. You can hook into various parts of the page lifecycle with special methods in `gatsby-browser.js`.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1573495144669.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=javascript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=export%20const%20onRouteUpdate%20%3D%20(%7B%20location%20%7D)%20%3D%3E%20%7B%0A%20%20%2F%2F%20this%20feels%20brittle%0A%20%20if%20(location.pathname%20%3D%3D%3D%20%22%2Fpage-2%22)%20%7B%0A%20%20%20%20%2F%2F%20this%20works%20but%20data%20shows%20up%20in%20location%20prop%20_after_%20the%20page%20is%20rendered%0A%20%20%20%20location.dataSuspender%20%3D%20starshipQuery(15)%0A%20%20%7D%0A%7D)
+
+
+
+Thought I could manipulate the `location` prop passed into a page and I can, sort of.
+
+
+
+When you console.log that value, it shows that you successfully passed the `dataSuspender`. This was great news until I realized that data shows up _after_ the page renders.
+
+
+
+How do I know?
+
+
+
+Because `console.log(location)` shows the value, but `console.log(location.dataSuspender)` prints undefined. Means the value isn't there when you're printing, but does show up later. Hooray for console.log being dynamic and always showing current object state.
+
+
+
+## I tried
+
+
+
+![I_tried giphy](./img/media-bqXMrwkWhAbrV0Z0dG-giphy.gif)
+
+
+
+I tried everything I could think of. Some of this stuff is either a bug in Gatsby, a bug in [@reach](https://twitter.com/reach)/router, or just not meant to work this way by design.
+
+
+
+Next step: bug people online to find out 😛
+
+
+
+Happy Monday, ~Swizec

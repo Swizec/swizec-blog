@@ -22,31 +22,11 @@ When you look at code a lot of web developers produce (and yes, even I did it pl
 $page = (isset($_GET['page'])) ? intval($_GET['page']) : 0;
 ```
 
-Anyone notice a security flaw? Then think of this, what happens if the page is set to -1? Sure, if errors aren't being displayed right to the user nothing too \\important. But if they get shown an [SQL](http://en.wikipedia.org/wiki/SQL "SQL") error ... or worse ...
-
-
-
-However people are usually at least a little bit more careful about POST data because they realise that hey, this is something a person filled in a [web form](http://en.wikipedia.org/wiki/Form_%28web%29 "Form (web)") and perhaps the data should go through a series of a little bit more stringent tests before it gets chucked into the [database](http://en.wikipedia.org/wiki/Database "Database"). Hell, maybe we could even tell the user where they screwed up and if the planets are in constelation, why not also make sure those required fields are actually filled out ... you know, so we don't get any weird inconsistencies in our database.
-
-
-
-But still, it's a lot of work to do all of that by hand every god damn time. If only there were something easier, more transparent and plain old automagical ...
+Anyone notice a security flaw? Then think of this, what happens if the page is set to -1? Sure, if errors aren't being displayed right to the user nothing too \\important. But if they get shown an [SQL](http://en.wikipedia.org/wiki/SQL "SQL") error ... or worse ... However people are usually at least a little bit more careful about POST data because they realise that hey, this is something a person filled in a [web form](http://en.wikipedia.org/wiki/Form_%28web%29 "Form (web)") and perhaps the data should go through a series of a little bit more stringent tests before it gets chucked into the [database](http://en.wikipedia.org/wiki/Database "Database"). Hell, maybe we could even tell the user where they screwed up and if the planets are in constelation, why not also make sure those required fields are actually filled out ... you know, so we don't get any weird inconsistencies in our database. But still, it's a lot of work to do all of that by hand every god damn time. If only there were something easier, more transparent and plain old automagical ...
 
 ### Cue Django Forms
 
-In django, all of this comes automagically. There is this thing called a "form", which basically lets you define what parameters a request needs, be it GET or POST based, what they should validate against and most \\importantly, what's required and what is not.
-
-
-
-If you're into that sort of stuff you even get building the form in a html, so the users can use it, completely for free and magically with all the required "Hey bozo, you filled so and so field wrong. Fix it!". For every field! Magic.
-
-
-
-But since most of my time is spent on developing [API](http://en.wikipedia.org/wiki/Application_programming_interface "Application programming interface")'s rather than user-facing [websites](http://en.wikipedia.org/wiki/Website "Website") let me show you how to use forms effectively in that sort of environment. For the html stuff just go check out the [django form docs](http://docs.djangoproject.com/en/dev/topics/forms/).
-
-
-
-The basic use of forms goes a little bit like this (hopefully your forms are in a separate file from your views, this is just an example :P)
+In django, all of this comes automagically. There is this thing called a "form", which basically lets you define what parameters a request needs, be it GET or POST based, what they should validate against and most \\importantly, what's required and what is not. If you're into that sort of stuff you even get building the form in a html, so the users can use it, completely for free and magically with all the required "Hey bozo, you filled so and so field wrong. Fix it!". For every field! Magic. But since most of my time is spent on developing [API](http://en.wikipedia.org/wiki/Application_programming_interface "Application programming interface")'s rather than user-facing [websites](http://en.wikipedia.org/wiki/Website "Website") let me show you how to use forms effectively in that sort of environment. For the html stuff just go check out the [django form docs](http://docs.djangoproject.com/en/dev/topics/forms/). The basic use of forms goes a little bit like this (hopefully your forms are in a separate file from your views, this is just an example :P)
 
 ```
 from django \import forms
@@ -76,15 +56,7 @@ Well something along those lines anyhow. What you can see is that I basically de
 
 ### Some tips&tricks
 
-And now let's get onto some tips&tricks :)
-
-
-
-First thing you'll notice once you start using forms like you properly should is that all of your views follow this pattern: get form; validate form; do something; or do something else;
-
-
-
-So I wrote up a descriptor for that, now I can be certain that when I'm in my view the form is valid and I can use the data.
+And now let's get onto some tips&tricks :) First thing you'll notice once you start using forms like you properly should is that all of your views follow this pattern: get form; validate form; do something; or do something else; So I wrote up a descriptor for that, now I can be certain that when I'm in my view the form is valid and I can use the data.
 
 ```
 def form_valid(form_type, data_type):
@@ -109,11 +81,7 @@ def image(request):
                         content_type=blob.content_type)
 ```
 
-Using the decorator thus makes for much much cleaner code.
-
-
-
-Now let's look at some magic done with custom clean functions inside forms :P
+Using the decorator thus makes for much much cleaner code. Now let's look at some magic done with custom clean functions inside forms :P
 
 ```
 ## this enables us to handle comma separated values seamlessly

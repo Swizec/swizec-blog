@@ -1,0 +1,294 @@
+---
+layout: post
+title: 'How I answer the door with AWS Lambda and Twilio'
+date: 2019-12-08
+redirect_from: 
+            - /blog/how-i-answer-the-door-with-aws-lambda-and-twilio/swizec/9255
+author: Swizec Teller
+hero: ./img/ST8uZfB.jpg
+---
+Remember [the doorbell slack bot I built in 2016](https://swizec.com/blog/make-slack-twilio-talk/swizec/7128)? Probably not, but the girl whose sanity it saved became one of my best friends. For 2 years she could focus on work instead of answering the phone every time [Yup Inc](https://yup.com) got a visitor.
+
+
+
+Then we moved and the bot died.
+
+
+
+2 weeks ago _I_ moved and the new apartment has a front gate buzzer, but no package concierge. For the first time in 5 years we're gonna have to answer the door! 😱
+
+
+
+Millennials are killing the doorbell industry by texting "here" but that don't work for deliveries. Especially if you're not home.
+
+
+
+The buzzer looks like this:
+
+
+
+![](./img/ST8uZfB.jpg)
+
+
+
+Delivery person finds your name, taps `call` and the box calls a pre-programmed phone number. You pick up the phone, talk to the person, and press `9` to let them in. They drop off the package behind a locked gate and people don't steal it. 👌
+
+
+
+Now here's the thing: My phone is where phone calls go to die. And I don't want my girlfriend to be on the hook every time I order something from Giant Dildos Dot Com.
+
+
+
+The box accepts 1 phone number.
+
+
+
+So I sat down for 3 hours and banged out a serverless app that answers the door, transcribes the audio, sends us a text, waits for reply, and opens the door if you say YES. 🤙
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1575873627646.png)](https://www.youtube.com/watch?v=eZm7WZizgVw)
+
+
+
+Final integration test around the [3:00:35 mark](https://youtu.be/eZm7WZizgVw?t=10838)
+
+
+
+You can read [the code on GitHub](https://github.com/Swizec/doorbell-app)
+
+
+
+Code contains my old Twilio Auth Token because lazy. Someone racked up $300 in fraudulent calls within minutes. That was dumb.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1575873910342.png)](https://twitter.com/Swizec/status/1201374225224757248)
+
+
+
+## How you can answer the door with AWS Lambda and Twilio
+
+
+
+![](./img/9SOoNwI.png)
+
+
+
+👆 sketch of how it works. It's harder to draw than I thought. Here's a description of the process:
+
+
+
+1. Delivery person makes call
+2. Twilio picks up the phone
+3. Twilio sends request to AWS Lambda `"What should I say?"`
+4. Lamda responds with instructions 4.1. Say _"Welcome, what do you want? State your business after the beep and press any key"_ 4.2. Record response 4.3. Wait for 60 seconds
+5. Twilio talks to callbox
+6. Person says what they want and presses a key
+7. Twilio sends recording to AWS Lambda `"now what?"`
+8. Lambda responds with further instructions 8.1. Say _"Thanks, someone will let you in_ 8.2. Pause for 60 seconds 8.3. If still in call, say _"Sorry, nobody responded"_ 8.4. Hang up
+9. Twilio sends all that to callbox and pauses the call
+10. In parallel, twilio transcribes the recording
+11. Twilio sends transcript to AWS Lambda `"here transcript, now what?"`
+12. Lambda saves Call ID and callbox number in DB for later
+13. Lambda tells Twilio to text Swiz
+14. Twilio sends text
+15. Swiz sees text and replies with `YES`
+16. Twilio gets text response and sends to AWS Lambda `"here, response. Now what?"`
+17. Lambda looks up original Call ID 17.1. If no ongoing call, bail 17.2. If more than 60 seconds since call, bail (it hung up)
+18. Lambda checks if my text matches `yes`
+19. Send voice call response to Twilio 19.1. Say _"Letting you in"_ or _"Sorry, you can't come in"_ 19.2. Dial 9
+20. Twilio sends all that to callbox
+21. Door unlocks, delivery gets delivered
+22. Lambda sends text to Swizec saying _"All good, person was let in"_
+
+
+
+Sounds complicated, right? Thanks to AWS Lambda and Serverless it's pretty easy 👉 Each step becomes a standalone JavaScript function. The sophistication comes from how they work together.
+
+
+
+Like I mention in the [Serverless Pros & Cons chapter](https://serverlesshandbook.dev/serverless-pros-cons/) of [Serverless Handbook](https://serverlesshandbook.dev):
+
+
+
+> Serverless lets you trade function complexity for systems complexity. Individual pieces are easier to build & test, but _the system_ becomes hairier.
+
+
+
+You can see this in action [during the livestream](https://www.youtube.com/watch?v=eZm7WZizgVw). Every few minutes we integration test the next piece of the puzzle. 🤘
+
+
+
+![whoa giphy](./img/media-3o6gDPXMNxFhvHdcf6-giphy.gif)
+
+
+
+### Step 1: Picking up the phone
+
+
+
+This is the first Lambda in our system. It answers the phone when Twilio converts it to an API POST request.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1575873614420.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=typescript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20src%2Fanswercall.ts%0A%0Aexport%20const%20handler%20%3D%20async%20(event%3A%20APIGatewayEvent)%20%3D%3E%20%7B%0A%20%20%20%20if%20(event.httpMethod.toLowerCase()%20%3D%3D%3D%20%22post%22)%20%7B%0A%20%20%20%20%20%20%20%20%2F%2F%20Twilio%20sent%20us%20a%20phone%20call%2C%20assumed%20to%20be%20gate%20buzzer%20box%0A%20%20%20%20%20%20%20%20return%20handleBuzzerCall()%3B%0A%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20%20%20%2F%2F%20Someone%20got%20here%20with%20a%20browser%0A%20%20%20%20%20%20%20%20return%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20statusCode%3A%20200%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20body%3A%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Hello%20%F0%9F%91%8B%2C%20this%20URL%20is%20meant%20to%20be%20used%20via%20a%20buzzer%20box%20phone%20call.%20You%20probably%20don't%20want%20to%20be%20here%22%0A%20%20%20%20%20%20%20%20%7D%3B%0A%20%20%20%20%7D%0A%7D%3B%0A%0Aasync%20function%20handleBuzzerCall()%20%7B%0A%20%20%20%20const%20response%20%3D%20new%20twiml.VoiceResponse()%3B%0A%20%20%20%20response.say(%0A%20%20%20%20%20%20%20%20%22Welcome!%20What%20do%20you%20want%3F%20Answer%20after%20the%20beep%2C%20then%20press%20any%20key%22%0A%20%20%20%20)%3B%0A%20%20%20%20response.record(%7B%0A%20%20%20%20%20%20%20%20action%3A%20%22acceptRecording%22%2C%0A%20%20%20%20%20%20%20%20timeout%3A%2060%2C%0A%20%20%20%20%20%20%20%20transcribe%3A%20true%2C%0A%20%20%20%20%20%20%20%20transcribeCallback%3A%20%22acceptTranscript%22%0A%20%20%20%20%7D)%3B%0A%0A%20%20%20%20return%20sendTwiml(response)%3B%0A%7D)
+
+
+
+Twilio sends a POST request with various params, which we ignore since our response is always the same: A TwiML message constructed via [Twilio's node library](https://www.twilio.com/docs/libraries/node).
+
+
+
+TwiML is Twilio's markup language based on XML used to respond to voice calls and handle text messages.
+
+
+
+`response.say()` turns into a `<Say>Hello</Say>` line and becomes a spoken computer voice. `response.record()` allows us to record the person's reply.
+
+
+
+In this case we're giving a 60 second `timeout`, asking Twilio to `transcribe`, and telling it to send the recording to an `acceptRecording` endpoint. Twilio is smart enough to handle relative URLs so we don't have to worry about that.
+
+
+
+We use Twilio's dashboard to map a phone number to an API endpoint.
+
+
+
+![](./img/9ERHfRR.png)
+
+
+
+### Step 2: Accept voice recording, ask to wait
+
+
+
+After the person says what they want, they press a button. This tells Twilio to stop recording and talk to our next lambda: `acceptRecording`.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1575873614255.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=typescript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20src%2FacceptRecording.ts%0A%0Aexport%20const%20handler%20%3D%20async%20(event%3A%20APIGatewayEvent)%20%3D%3E%20%7B%0A%20%20%20%20const%20response%20%3D%20new%20twiml.VoiceResponse()%3B%0A%0A%20%20%20%20response.say(%22Thank%20you.%20Someone%20will%20let%20you%20in%20right%20away.%22)%3B%0A%20%20%20%20response.pause(%7B%0A%20%20%20%20%20%20%20%20length%3A%2060%0A%20%20%20%20%7D)%3B%0A%20%20%20%20response.say(%22Looks%20like%20nobody%20answered%2C%20try%20calling%20a%20real%20human.%22)%3B%0A%0A%20%20%20%20return%20sendTwiml(response)%3B%0A%7D%3B)
+
+
+
+Same spiel as before 👉 we get a POST request and respond with some TwiML constructed with Twilio's node library. Let the person know someone's about to answer the door, wait 60 seconds, and if nothing happens deliver the bad news.
+
+
+
+Btw, the `sendTwiml` function is a helper to avoid code duplication:
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1575873614283.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=typescript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20src%2Futils.ts%0A%0Aexport%20const%20sendTwiml%20%3D%20(twiml%3A%20any)%20%3D%3E%20%7B%0A%20%20%20%20return%20%7B%0A%20%20%20%20%20%20%20%20statusCode%3A%20200%2C%0A%20%20%20%20%20%20%20%20headers%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%22Content-Type%22%3A%20%22application%2Fxml%22%0A%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20body%3A%20twiml.toString()%0A%20%20%20%20%7D%3B%0A%7D%3B)
+
+
+
+Status Code 200 means request succeeded, content type `application/xml` so Twilio API doesn't get confused, and `twiml` converted to a string as the body.
+
+
+
+### Step 3: Accept transcript, send text
+
+
+
+Twilio's transcript API doesn't let you send TwiML into a phone call. That's why this is separate from the recording lambda, which just replies.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1575873614247.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=typescript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20src%2FacceptTranscript.ts%0A%0Aexport%20const%20handler%20%3D%20async%20(event%3A%20APIGatewayEvent)%20%3D%3E%20%7B%0A%20%20%20%20const%20%7B%20RecordingUrl%2C%20TranscriptionText%2C%20CallSid%2C%20Called%20%7D%20%3D%20qs.parse(%0A%20%20%20%20%20%20%20%20event.body!%0A%20%20%20%20)%3B%0A%0A%20%20%20%20%2F%2F%20Save%20(CallSid%2C%20Called)%20pair%20for%20lookup%20in%20SMS%20handler%0A%20%20%20%20await%20updateItem(%7B%0A%20%20%20%20%20%20%20%20Key%3A%20%7B%20phone_number%3A%20Called%20as%20string%20%7D%2C%0A%20%20%20%20%20%20%20%20UpdateExpression%3A%0A%20%20%20%20%20%20%20%20%20%20%20%20%22SET%20callSid%20%3D%20%3AcallSid%2C%20createdAt%20%3D%20%3AcreatedAt%2C%20handledAt%20%3D%20%3AhandledAt%22%2C%0A%20%20%20%20%20%20%20%20ExpressionAttributeValues%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%22%3AcallSid%22%3A%20CallSid%20as%20string%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22%3AcreatedAt%22%3A%20new%20Date().toISOString()%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22%3AhandledAt%22%3A%20null%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D)%3B%0A%0A%20%20%20%20const%20client%20%3D%20twilio(accountSid%2C%20authToken)%3B%0A%20%20%20%20for%20(let%20recipient%20of%20recipients)%20%7B%0A%20%20%20%20%20%20%20%20await%20client.messages.create(%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20body%3A%20%60There's%20someone%20at%20the%20door!%5Cn%5Cn%0A%20%20%20%20%20%20%20%20transcript%3A%20%22%24%7BTranscriptionText%7D%22%5Cn%5Cn%0A%20%20%20%20%20%20%20%20recording%3A%20%24%7BRecordingUrl%7D%5Cn%0A%20%20%20%20%20%20%20%20Reply%20YES%20to%20let%20them%20in!%0A%20%20%20%20%20%20%20%20%60%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20to%3A%20recipient%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20from%3A%20Called%20as%20string%0A%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20return%20%7B%0A%20%20%20%20%20%20%20%20statusCode%3A%20200%2C%0A%20%20%20%20%20%20%20%20body%3A%20%22success%22%0A%20%20%20%20%7D%3B%0A%7D%3B)
+
+
+
+This time we do care about params Twilio sends with their request:
+
+
+
+- `RecordingUrl` is the audio file I can listen to
+- `TranscriptionText` is the machine transcription of the audio, usually good, sometimes hilariously wrong
+- `CallSid` is the original call ID, we'll need it to hook back into the call
+- `Called` is the phone number that was called, which helps us identify the callbox (future proofing, if I productize)
+
+
+
+We use `updateItem` to save the `(CallSid, Called)` pair in DynamoDB. Our next lambda will use this to hook into the original call and to keep track of whether the call was handled yet. Great when multiple people reply YES to the same call.
+
+
+
+![](./img/RZDckNq.png)
+
+
+
+### Step 4: Handle SMS reply
+
+
+
+Handling the `YES` reply to that SMS gets tricky. A bunch of situations to consider: What if there's no call? What if they're late? What if someone else said YES already?
+
+
+
+So we build the main `handler` method with a big conditional and call helper methods.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1575873614384.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=typescript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20src%2FhandleSMSReply.ts%0A%0Aexport%20const%20handler%20%3D%20async%20(event%3A%20APIGatewayEvent)%20%3D%3E%20%7B%0A%20%20%20%20const%20%7B%20Body%2C%20To%20%7D%20%3D%20qs.parse(event.body!)%3B%0A%20%20%20%20const%20%7B%20Item%20%7D%20%3D%20await%20getItem(%7B%20Key%3A%20%7B%20phone_number%3A%20To%20as%20string%20%7D%20%7D)%3B%0A%0A%20%20%20%20if%20(Item%20%26%26%20!Item.handledAt%20%26%26%20!outdated(Item))%20%7B%0A%20%20%20%20%20%20%20%20if%20((Body%20as%20string).toLowerCase().includes(%22yes%22))%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%2F%2F%20open%20the%20door%0A%20%20%20%20%20%20%20%20%20%20%20%20return%20openDoor(Item.callSid%2C%20To%20as%20string)%3B%0A%20%20%20%20%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%2F%2F%20don't%20open%20the%20door%0A%20%20%20%20%20%20%20%20%20%20%20%20return%20closeDoor(Item.callSid%2C%20To%20as%20string)%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20%20%20const%20response%20%3D%20new%20twiml.MessagingResponse()%3B%0A%20%20%20%20%20%20%20%20let%20text%20%3D%0A%20%20%20%20%20%20%20%20%20%20%20%20%22No%20ongoing%20call.%20Only%20text%20this%20number%20in%20response%20to%20a%20message%20%E2%9C%8C%EF%B8%8F%22%3B%0A%0A%20%20%20%20%20%20%20%20if%20(Item)%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%2F%2F%20call%20was%20found%0A%20%20%20%20%20%20%20%20%20%20%20%20if%20(Item.handledAt)%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%20%3D%20%22Someone%20else%20already%20answered%20the%20door%22%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%20else%20if%20(outdated(Item))%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%20%3D%20%22You%20missed%20the%2060second%20timeout%22%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%20%20return%20sendTwiml(response.message(text))%3B%0A%20%20%20%20%7D%0A%7D%3B)
+
+
+
+Takes the sms `Body` and `To` phone number from Twilio's POST request and checks the DynamoDB database.
+
+
+
+If there's a call and it hasn't been handled and it's not too late, we call `closeDoor` or `openDoor` based on the text `Body`. Otherwise we reply with a text saying there's no call, it's too late, or all is well.
+
+
+
+The `openDoor` and `closeDoor` functions are similar. They both call `continueCall` to talk to the callbox and send a text to let me know the deed is done.
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1575873614309.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=typescript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20src%2FhandleSMSReply.ts%0A%0A%2F%2F%20Texts%20user%20that%20door%20is%20openinng%0A%2F%2F%20Hooks%20into%20ongoing%20phone%20call%0A%2F%2F%20Sends%20dial%20tone%0Aasync%20function%20openDoor(callSid%3A%20string%2C%20phone_number%3A%20string)%20%7B%0A%20%20%20%20const%20success%20%3D%20await%20continueCall(callSid%2C%20true)%3B%0A%0A%20%20%20%20const%20response%20%3D%20new%20twiml.MessagingResponse()%3B%0A%20%20%20%20let%20message%3B%0A%0A%20%20%20%20if%20(success)%20%7B%0A%20%20%20%20%20%20%20%20message%20%3D%20response.message(%22Opened%20the%20door%22)%3B%0A%0A%20%20%20%20%20%20%20%20%2F%2F%20flag%20call%20as%20handled%0A%20%20%20%20%20%20%20%20await%20updateItem(%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20Key%3A%20%7B%20phone_number%20%7D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20UpdateExpression%3A%20%22SET%20handledAt%20%3D%20%3AhandledAt%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20ExpressionAttributeValues%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22%3AhandledAt%22%3A%20new%20Date().toISOString()%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%7D)%3B%0A%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20%20%20message%20%3D%20response.message(%22Something%20went%20wrong%22)%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20return%20sendTwiml(message)%3B%0A%7D)
+
+
+
+Oh and they update the database to say `call handled`. Same `updateItem` method as before :)
+
+
+
+Hooking into the waiting call to open the door looks like this:
+
+
+
+[![Click through for source](./img/techletter.app-screenshot-1575873614280.png)](https://carbon.now.sh/?bg=rgba(255,255,255,1)&t=seti&l=typescript&ds=true&wc=true&wa=true&pv=48px&ph=32px&ln=false&code=%2F%2F%20src%2FhandleSMSReply.ts%0A%0Aasync%20function%20continueCall(callSid%3A%20string%2C%20openDoor%3A%20boolean)%20%7B%0A%20%20%20%20const%20client%20%3D%20twilio(accountSid%2C%20authToken)%3B%0A%20%20%20%20try%20%7B%0A%20%20%20%20%20%20%20%20const%20response%20%3D%20new%20twiml.VoiceResponse()%3B%0A%20%20%20%20%20%20%20%20if%20(openDoor)%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20response.say(%22Buzzing%20you%20in%22)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20response.play(%7B%20digits%3A%20%22ww9wwww%22%20%7D)%3B%0A%20%20%20%20%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20response.say(%22Sorry%2C%20residents%20said%20you%20can't%20come%20in%22)%3B%0A%20%20%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%20%20await%20client.calls(callSid).update(%7B%20twiml%3A%20response.toString()%20%7D)%3B%0A%20%20%20%20%20%20%20%20return%20true%3B%0A%20%20%20%20%7D%20catch%20(e)%20%7B%0A%20%20%20%20%20%20%20%20console.log(%22Error%20continuing%20call%22)%3B%0A%20%20%20%20%20%20%20%20console.log(e)%3B%0A%20%20%20%20%20%20%20%20return%20false%3B%0A%20%20%20%20%7D%0A%7D)
+
+
+
+Here's where storing that `callSid` becomes useful. We can update an ongoing call without being part of the original API loop 💪
+
+
+
+We send Twilio some TwiML to let the person know they're being buzzed in and dial number `9` with some waits.
+
+
+
+## That is all ✌️
+
+
+
+And that completes the crazy flowchart from before. A sequence of small steps you can understand and test on their own. When combined they make magic.
+
+
+
+![](./img/RTPzkxz.png)
+
+
+
+Cheers,
+
+
+
+~Swizec
+
+
+
+PS: wanna learn more about using serverless? I'm making [Serverless Handbook](https://serverlesshandbook.dev/) the best way to get started

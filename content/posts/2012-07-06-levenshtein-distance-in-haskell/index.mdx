@@ -8,29 +8,13 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ../../../defaultHero.jpg
 ---
-When you have to figure out the difference between two strings your best bet is either H_amming distance_ or _[Levenshtein distance](http://en.wikipedia.org/wiki/Levenshtein_distance "Levenshtein distance")_.
-
-
-
-Because [hamming distance](http://en.wikipedia.org/wiki/Hamming_distance "Hamming distance") only works on strings of equal lengths, you're usually better off using levenshtein distance. Its name is also harder to spell so you know it's better!
-
-
-
-It is defined as _the minimum amount of edits needed to transform one string into another_. Like this:
+When you have to figure out the difference between two strings your best bet is either H_amming distance_ or _[Levenshtein distance](http://en.wikipedia.org/wiki/Levenshtein_distance "Levenshtein distance")_. Because [hamming distance](http://en.wikipedia.org/wiki/Hamming_distance "Hamming distance") only works on strings of equal lengths, you're usually better off using levenshtein distance. Its name is also harder to spell so you know it's better! It is defined as _the minimum amount of edits needed to transform one string into another_. Like this:
 
 > 1. **k**itten → **s**itten (substitution of 's' for 'k')
 > 2. sitt**e**n → sitt**i**n (substitution of 'i' for 'e')
 > 3. sittin → sittin**g** (insertion of 'g' at the end).
 
-Levenshtein distance also happens to be a great case for learning about dynamic programming, because one of the simplest implementations involves nothing more than keeping track of the already known distances and deciding whether you should increase that number for the next character.
-
-
-
-Doing this in a 2D array is trivially simple because it lest you travel through the distance space very efficiently without forgetting that _kitten_ and _kiten_ only have a levenshtein distance of 1.
-
-
-
-The meat of the algorithm goes like this:
+Levenshtein distance also happens to be a great case for learning about dynamic programming, because one of the simplest implementations involves nothing more than keeping track of the already known distances and deciding whether you should increase that number for the next character. Doing this in a 2D array is trivially simple because it lest you travel through the distance space very efficiently without forgetting that _kitten_ and _kiten_ only have a levenshtein distance of 1. The meat of the algorithm goes like this:
 
 ```
       if s[i] = t[j] then  
@@ -46,15 +30,7 @@ The meat of the algorithm goes like this:
 
 ## [Dynamic programming](http://en.wikipedia.org/wiki/Dynamic_programming "Dynamic programming") and Haskell
 
-Doing this in Haskell becomes tricky because we don't have state so we can't really keep track of what we already know. Translating this into a recursive problem is our only option.
-
-
-
-The key insight comes from looking at what those index manipulations are doing - traveling in the space of two strings.
-
-
-
-So, if we start from the other end of the "matrix" - bottom right instead of top left - we can express the levenshtein distance recursively:
+Doing this in Haskell becomes tricky because we don't have state so we can't really keep track of what we already know. Translating this into a recursive problem is our only option. The key insight comes from looking at what those index manipulations are doing - traveling in the space of two strings. So, if we start from the other end of the "matrix" - bottom right instead of top left - we can express the levenshtein distance recursively:
 
 - if last two characters are same, ignore them
 - otherwise take the minimum of ignoring either or both the last characters
@@ -75,19 +51,7 @@ levenshtein s1 s2
                           1 + levenshtein (init s1) (init s2)]
 ```
 
-Better Haskellers than me can probably write this a bit cleaner - for instance you don't need the _levenshtein "" "" = 0_ line, but I think it's more readable when all the border cases are spelled out explicitly.
-
-
-
-However, the problem is that this is incredibly slow when comparing a long string to a short one. So slow in fact, I never waited for the code to stop executing (takes 20s+).
-
-
-
-Luckily, speeding up the code is trivial - look at those border cases. We can just handle those first and _then_ go into the meaty algorithm!
-
-
-
-The code becomes somewhat uglier to look at, but is usefully quick for all cases:
+Better Haskellers than me can probably write this a bit cleaner - for instance you don't need the _levenshtein "" "" = 0_ line, but I think it's more readable when all the border cases are spelled out explicitly. However, the problem is that this is incredibly slow when comparing a long string to a short one. So slow in fact, I never waited for the code to stop executing (takes 20s+). Luckily, speeding up the code is trivial - look at those border cases. We can just handle those first and _then_ go into the meaty algorithm! The code becomes somewhat uglier to look at, but is usefully quick for all cases:
 
 ```
 -- calculate levenshtein distance between two strings
@@ -107,44 +71,24 @@ levenshtein s1 s2
                          1 + levenshtein (init s1) (init s2)]
 ```
 
-If anyone's got an even better idea for implementing Levenshtein distance in Haskell, I'd love to hear!
-
-
-
-edit: A Reddit commenter provides a far better [Levenshtein distance function](http://www.reddit.com/r/programming/comments/w4gs6/levenshtein_distance_in_haskell/c5a6jjz).
+If anyone's got an even better idea for implementing Levenshtein distance in Haskell, I'd love to hear! edit: A Reddit commenter provides a far better [Levenshtein distance function](http://www.reddit.com/r/programming/comments/w4gs6/levenshtein_distance_in_haskell/c5a6jjz).
 
 ###### Related articles
 
 - [![](http://i.zemanta.com/87510074_80_80.jpg)](http://www.jefclaes.be/2012/01/autocorrecting-unknown-actions-using.html)[Autocorrecting unknown actions using the Levenshtein distance](http://www.jefclaes.be/2012/01/autocorrecting-unknown-actions-using.html)
 
-
-
   * * *
-
-
 
 - [![](http://i.zemanta.com/87174255_80_80.jpg)](http://stackoverflow.com/questions/5859561/getting-the-closest-string-match)[Incredibly thorough response to a Fuzzy String Search question on SO](http://stackoverflow.com/questions/5859561/getting-the-closest-string-match)
 
-
-
   * * *
-
-
 
 - [![](http://i.zemanta.com/91010017_80_80.jpg)](http://cs.stackexchange.com/questions/2093/efficient-map-data-structure-supporting-approximate-lookup)[Efficient map data structure supporting approximate lookup](http://cs.stackexchange.com/questions/2093/efficient-map-data-structure-supporting-approximate-lookup)
 
-
-
   * * *
-
-
 
 - [![](http://i.zemanta.com/87179321_80_80.jpg)](http://stackoverflow.com/questions/5859561/getting-the-closest-string-match/5859691)[Answer by adorablepuppy for Getting the closest string match](http://stackoverflow.com/questions/5859561/getting-the-closest-string-match/5859691)
 
-
-
   * * *
-
-
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=350fa2c4-f571-457e-a891-22f73c43d8a7)](http://www.zemanta.com/?px "Enhanced by Zemanta")

@@ -10,33 +10,9 @@ hero: ../../../defaultHero.jpg
 ---
 Officially this is something that cannot be done. Or rather that shouldn't be done. When you look at the [google appengine](http://code.google.com/appengine/ "Google App Engine") docs on "[uploading](http://en.wikipedia.org/wiki/Uploading_and_downloading "Uploading and downloading") to blobstore" this is what they have to say:
 
-> Blobs are useful for serving large files, such as video or image files, and for allowing users to upload large data files.
->
->
->
-> To prompt a user to upload a Blobstore value, your app presents a [web form](http://en.wikipedia.org/wiki/Form_%28web%29 "Form (web)") with a file upload field.
+> Blobs are useful for serving large files, such as video or image files, and for allowing users to upload large data files. To prompt a user to upload a Blobstore value, your app presents a [web form](http://en.wikipedia.org/wiki/Form_%28web%29 "Form (web)") with a file upload field.
 
-So ok, obviously the official documentation isn't of much use here since it only talks about letting users upload files. But I needed something different. I needed to fetch an image from an url (gotten by intricate means, different story) and store it in the blobstore so it could later be served to many users. Obviously since [file access](http://en.wikipedia.org/wiki/File_system "File system") isn't permitted on appengine the only choice left was storing the file in the blobstore.
-
-
-
-Naturally someone else has had this problem before right?
-
-
-
-No. There are no solutions I could find online. None. Nada. Zilch. Niente.
-
-
-
-After a few hours of hacking a week or so ago, however, I got it working.
-
-
-
-Essentially the solution is to fake a form post to the blobstore url the [API](http://en.wikipedia.org/wiki/Application_programming_interface "Application programming interface") creates. An interesting gotcha is that a redirect happens. Initially I thought I was making the form post right back to my application, but apparently you're first posting to the blobstore, then the blobstore posts back to you. For some reason I couldn't keep the associated meta-data to go through with the request so there's an ugly-ish workaround that happens.
-
-
-
-Another thing that's \\important to note for this tutorial/howto is that I am using django-nonrel and that the initial event that starts the process is triggered by appengine's task queue.
+So ok, obviously the official documentation isn't of much use here since it only talks about letting users upload files. But I needed something different. I needed to fetch an image from an url (gotten by intricate means, different story) and store it in the blobstore so it could later be served to many users. Obviously since [file access](http://en.wikipedia.org/wiki/File_system "File system") isn't permitted on appengine the only choice left was storing the file in the blobstore. Naturally someone else has had this problem before right? No. There are no solutions I could find online. None. Nada. Zilch. Niente. After a few hours of hacking a week or so ago, however, I got it working. Essentially the solution is to fake a form post to the blobstore url the [API](http://en.wikipedia.org/wiki/Application_programming_interface "Application programming interface") creates. An interesting gotcha is that a redirect happens. Initially I thought I was making the form post right back to my application, but apparently you're first posting to the blobstore, then the blobstore posts back to you. For some reason I couldn't keep the associated meta-data to go through with the request so there's an ugly-ish workaround that happens. Another thing that's \\important to note for this tutorial/howto is that I am using django-nonrel and that the initial event that starts the process is triggered by appengine's task queue.
 
 #### The howto
 
@@ -125,11 +101,7 @@ def upload(request):
         return HttpResponse('meow')
 ```
 
-Basically it extracts the article's id from the filename (the only way I could make work to pass that information) and stores some changes into the datastore. You'll notice that I'm basically just storing the article's id again in another field, this is to preserve knowledge of the file extension. It's also \\important to note that the blobstore requires a redirect response upon success, otherwise it will throw an error.
-
-
-
-Here is the get_uploads function I found online somewhere.
+Basically it extracts the article's id from the filename (the only way I could make work to pass that information) and stores some changes into the datastore. You'll notice that I'm basically just storing the article's id again in another field, this is to preserve knowledge of the file extension. It's also \\important to note that the blobstore requires a redirect response upon success, otherwise it will throw an error. Here is the get_uploads function I found online somewhere.
 
 ```
 def get_uploads(request, field_name=None, populate_post=False):
@@ -185,15 +157,7 @@ def image(request):
 
 #### One final note
 
-And one VERY \\important final note. The vanilla urllib2 library can't handle file uploads, so I found one online that can. It's called [urllib2_file](http://fabien.seisen.org/python/urllib2_file/).
-
-
-
-However it doesn't quite work on google appengine. For example it can't handle being told what you want the filename to be and some other details because it relies on raw file access. So I changed it a little bit, unfortunately I don't quite know how to upstream my changes so I'm hosting it on github.
-
-
-
-You can get it [at github](http://github.com/Swizec/urllib2_file), feel free to contribute.
+And one VERY \\important final note. The vanilla urllib2 library can't handle file uploads, so I found one online that can. It's called [urllib2_file](http://fabien.seisen.org/python/urllib2_file/). However it doesn't quite work on google appengine. For example it can't handle being told what you want the filename to be and some other details because it relies on raw file access. So I changed it a little bit, unfortunately I don't quite know how to upstream my changes so I'm hosting it on github. You can get it [at github](http://github.com/Swizec/urllib2_file), feel free to contribute.
 
 ###### Related articles by Zemanta
 

@@ -8,26 +8,16 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/blog-wp-content-uploads-2012-01-4972036859_feeca3b936_m8.jpg
 ---
-\[caption id="" align="alignright" width="192" caption="Image by Morning Calm News via Flickr"][![DeCA partners with military to help promote su...](./img/blog-wp-content-uploads-2012-01-4972036859_feeca3b936_m8.jpg "DeCA partners with military to help promote su...")](http://www.flickr.com/photos/28486074@N08/4972036859)\[/caption]
-
-
-
-This post is a summary of Eli Gottlieb's thesis on the [Deca programming language](http://decac.googlecode.com/files/Deca%20Thesis.pdf) from May 2011. In short _Deca is a language designed to provide the advanced features of sophisticated, [high-level programming languages](http://en.wikipedia.org/wiki/High-level_programming_language "High-level programming language")while still programming as close as possible to the bare metal. It brings in the functional, object-oriented and generic programming paradigms without requiring a garbage collector or a threading system._
+\[caption id="" align="alignright" width="192" caption="Image by Morning Calm News via Flickr"][![DeCA partners with military to help promote su...](./img/blog-wp-content-uploads-2012-01-4972036859_feeca3b936_m8.jpg "DeCA partners with military to help promote su...")](http://www.flickr.com/photos/28486074@N08/4972036859)\[/caption] This post is a summary of Eli Gottlieb's thesis on the [Deca programming language](http://decac.googlecode.com/files/Deca%20Thesis.pdf) from May 2011. In short _Deca is a language designed to provide the advanced features of sophisticated, [high-level programming languages](http://en.wikipedia.org/wiki/High-level_programming_language "High-level programming language")while still programming as close as possible to the bare metal. It brings in the functional, object-oriented and generic programming paradigms without requiring a garbage collector or a threading system._
 
 > Since it is a programming-language thesis, it is also dedicated to every programmer who ever wanted a better language but could not use a virtual machine or a run-time library. To them I dedicate this thesis and say: _I am become type theory, destroyer of minds._
 
 ## Problems of systems programming
 
-
-
-I once contemplated doing some Linux kernel hacking, but decided to lie down until the feeling passes. That is my closest brush with systems programming and after reading this thesis - yikes.
-
-
-
-Essentially the problems are what you'd expect when dealing with hardware-imposed limitations, lacking useful abstractions and safety features - in fact, you're usually the one creating these.
+I once contemplated doing some Linux kernel hacking, but decided to lie down until the feeling passes. That is my closest brush with systems programming and after reading this thesis - yikes. Essentially the problems are what you'd expect when dealing with hardware-imposed limitations, lacking useful abstractions and safety features - in fact, you're usually the one creating these.
 
 1. **precise data representation** - working so close to bare metal means datatypes must correspond directly to their hardware representations. You can't just have a magical List datatype_,_ you _can_ have a block of memory though
-2. **safety properties and confined unsafety**- the most common form of safety is _\[caption id="" align="alignleft" width="300" caption="Panic"][![English: Kernel panic Magyar: "Kernel pan...](./img/blog-wp-content-uploads-2012-01-300px-Kernel-panic6.jpg 'English: Kernel panic Magyar: "Kernel pan...')](http://commons.wikipedia.org/wiki/File:Kernel-panic.jpg)\[/caption][type safety](http://en.wikipedia.org/wiki/Type_safety "Type safety"),_the idea being that the compiler makes sure you aren't trying to multiply a sack of potates with a banana. But other safety features a good language should provide according to Gottlieb are _[escape analysis](http://en.wikipedia.org/wiki/Escape_analysis)_ for pointers, _[region-based memory management](http://en.wikipedia.org/wiki/Region-based_memory_management "Region-based memory management")_ and_[preservation and progress](http://en.wikipedia.org/wiki/Type_safety#Definitions)_ (well-typedness)
+2. **safety properties and confined unsafety**- the most common form of safety is _\[caption id="" align="alignleft" width="300" caption="Panic"][![English: Kernel panic Magyar: "Kernel pan...](./img/blog-wp-content-uploads-2012-01-300px-Kernel-panic6.jpg 'English: Kernel panic Magyar: "Kernel pan...')](http://commons.wikipedia.org/wiki/File:Kernel-panic.jpg)\[/caption] [type safety](http://en.wikipedia.org/wiki/Type_safety "Type safety"),_the idea being that the compiler makes sure you aren't trying to multiply a sack of potates with a banana. But other safety features a good language should provide according to Gottlieb are _[escape analysis](http://en.wikipedia.org/wiki/Escape_analysis)_ for pointers, _[region-based memory management](http://en.wikipedia.org/wiki/Region-based_memory_management "Region-based memory management")_ and_[preservation and progress](http://en.wikipedia.org/wiki/Type_safety#Definitions)_ (well-typedness)
 3. **abstraction, encapsulation, modularity**- most modern languages provide ways of packaging code so it can be reused and encapsulated. For instance: when you are using a stack structure, you don't really care whether it's implemented as a list or a memory vector.
 4. **extensibility**- a way to extend the language itself with new features (for example, making the + operator work with new data types). So far possible solutions for this exist as [OOP](http://en.wikipedia.org/wiki/Object-oriented_programming "Object-oriented programming"), ad-hoc polymorphism, macros and so on, but it remains an open question and the perfect solution might not even exist
 5. **Stroustroup's rule**- the lead designer of C++ [Bjarne Stroustrup](http://www.research.att.com/~bs/homepage.html "Bjarne Stroustrup") once presented a rule that _What you don't use, you don't pay for._ But in many high-level languages automatic memory management runs whether you need it or not, or every function needs exception handling ... all big problems in the limited confines of bare metal programming.
@@ -49,6 +39,7 @@ Essentially the problems are what you'd expect when dealing with hardware-impose
 I would love to personally produce an example of what Deca looks like, but I'm already having enough [fun learning Haskell](http://swizec.com/blog/learning-me-a-haskell/swizec/3272 "Learning me a Haskell"), so here's an official example of a List implementation.
 
 ```
+
 module list
 
 \import malloc
@@ -81,15 +72,7 @@ end
 
 ## [Conclusion](<>)
 
-[The thesis itself also compares Deca to other modern high-level languages for systems programming like](<>)[Clay](http://lambda-the-ultimate.org/node/4023), [BitC](http://www.bitc-lang.org/ "BitC"), [Cyclone](http://en.wikipedia.org/wiki/Cyclone_programming_language) and Java "with magic". That section didn't feel too \\important, the resolution is simply that Deca is _better_.
-
-
-
-Unfortunately though, Deca itself doesn't look to be ready for real-world use just yet. Even though the language itself is pretty much defined and its grammar is known, no complete compiler yet exists. The [official compiler, decac,](http://code.google.com/p/decac/) developed by Gottlieb doesn't yet support all the features and I've heard rumors it has been scrapped and is being developed anew because some fundamental issues were discovered.
-
-
-
-All in all, this looks like an interesting language to keep an eye on if you're a systems programmer, but I feel C will be the king for a long while yet.
+[The thesis itself also compares Deca to other modern high-level languages for systems programming like](<>)[Clay](http://lambda-the-ultimate.org/node/4023), [BitC](http://www.bitc-lang.org/ "BitC"), [Cyclone](http://en.wikipedia.org/wiki/Cyclone_programming_language) and Java "with magic". That section didn't feel too \\important, the resolution is simply that Deca is _better_. Unfortunately though, Deca itself doesn't look to be ready for real-world use just yet. Even though the language itself is pretty much defined and its grammar is known, no complete compiler yet exists. The [official compiler, decac,](http://code.google.com/p/decac/) developed by Gottlieb doesn't yet support all the features and I've heard rumors it has been scrapped and is being developed anew because some fundamental issues were discovered. All in all, this looks like an interesting language to keep an eye on if you're a systems programmer, but I feel C will be the king for a long while yet.
 
 ###### Related articles
 

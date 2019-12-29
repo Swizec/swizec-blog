@@ -8,27 +8,7 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/blog-wp-content-uploads-2011-11-6334305146_57b7976719_m1.jpg
 ---
-Over the weekend I started working on [llamaduck](https://github.com/Swizec/llamaduck)- a simple tool that aims to figure out whether your code will run on the newly released node 0.6.0. Eventually it might be able to perform other compatibility assessment tasks as well, but I'm focusing on simple stuff first.
-
-
-
-\[caption id="" align="alignright" width="240" caption="Image by Scott Trotter via Flickr"][![southridge-56gold-111105-891.JPG](./img/blog-wp-content-uploads-2011-11-6334305146_57b7976719_m1.jpg "southridge-56gold-111105-891.JPG")](http://www.flickr.com/photos/73745194@N00/6334305146)\[/caption]
-
-
-
-Or at least I thought it was simple.
-
-
-
-The [list of API changes since 0.4.x](https://github.com/joyent/node/wiki/API-changes-between-v0.4-and-v0.6) doesn't seem that long and it should be easy enough to digest. But as it turns out, I spent almost all of Sunday just figuring out how to turn javascript into a beautiful analyzable [AST](http://en.wikipedia.org/wiki/Abstract_syntax_tree "Abstract syntax tree").
-
-
-
-If you don't know what an AST is - it's a so called abstract syntax tree, which means it should look identical regardless of what the actual syntax is. Although it will differ for actually different languages. So a coffeescript AST should look the same as JavaScript, but Python's will differ.
-
-
-
-My research came up with three options:
+Over the weekend I started working on [llamaduck](https://github.com/Swizec/llamaduck)- a simple tool that aims to figure out whether your code will run on the newly released node 0.6.0. Eventually it might be able to perform other compatibility assessment tasks as well, but I'm focusing on simple stuff first. \[caption id="" align="alignright" width="240" caption="Image by Scott Trotter via Flickr"][![southridge-56gold-111105-891.JPG](./img/blog-wp-content-uploads-2011-11-6334305146_57b7976719_m1.jpg "southridge-56gold-111105-891.JPG")](http://www.flickr.com/photos/73745194@N00/6334305146)\[/caption] Or at least I thought it was simple. The [list of API changes since 0.4.x](https://github.com/joyent/node/wiki/API-changes-between-v0.4-and-v0.6) doesn't seem that long and it should be easy enough to digest. But as it turns out, I spent almost all of Sunday just figuring out how to turn javascript into a beautiful analyzable [AST](http://en.wikipedia.org/wiki/Abstract_syntax_tree "Abstract syntax tree"). If you don't know what an AST is - it's a so called abstract syntax tree, which means it should look identical regardless of what the actual syntax is. Although it will differ for actually different languages. So a coffeescript AST should look the same as JavaScript, but Python's will differ. My research came up with three options:
 
 1. Take a parser generator and a JavaScript grammar, hope for the best
 2. [JSLint](http://www.jslint.com/ "JSLint") has a parser ... somewhere around line 2000
@@ -161,15 +141,7 @@ The file parses itself and outputs a tree encoded as a javascript array (scroll 
 
 ## Conclusion
 
-Now we have a simple tree we can recursively analyze and look for incompatibilities. But before anything really practical can be done I need to figure out how to track [variable scope](http://en.wikipedia.org/wiki/Scope_%28programming%29 "Scope (programming)"). That's really the hard bit because the code needs to check when variables become a critical section and then confirm that they do in fact eventually get used in a critical way.
-
-
-
-But once that nut is cracked [llamaduck](https://github.com/Swizec/llamaduck) will be a neat little tool useful for many things.
-
-
-
-If you've got some coding inclination, I'd love a helping hand over at the [llamaduck github repo](https://github.com/Swizec/llamaduck).
+Now we have a simple tree we can recursively analyze and look for incompatibilities. But before anything really practical can be done I need to figure out how to track [variable scope](http://en.wikipedia.org/wiki/Scope_%28programming%29 "Scope (programming)"). That's really the hard bit because the code needs to check when variables become a critical section and then confirm that they do in fact eventually get used in a critical way. But once that nut is cracked [llamaduck](https://github.com/Swizec/llamaduck) will be a neat little tool useful for many things. If you've got some coding inclination, I'd love a helping hand over at the [llamaduck github repo](https://github.com/Swizec/llamaduck).
 
 ###### Related articles
 

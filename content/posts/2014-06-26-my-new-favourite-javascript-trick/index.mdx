@@ -8,19 +8,7 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ../../../defaultHero.jpg
 ---
-Using returns and [callbacks](http://en.wikipedia.org/wiki/Callback_%28computer_programming%29 "Callback (computer programming)") in the same function.
-
-
-
-Sounds like crazy talk I know, but hear me out, I have good reason. I think.
-
-
-
-Let's say you want to make several [TCP](http://en.wikipedia.org/wiki/Transmission_Control_Protocol "Transmission Control Protocol") servers in a node.js application. Have to listen on multiple ports or whatever. Using a factory function is your best bet to avoiding code repetition, right?
-
-
-
-You end up with something like this:
+Using returns and [callbacks](http://en.wikipedia.org/wiki/Callback_%28computer_programming%29 "Callback (computer programming)") in the same function. Sounds like crazy talk I know, but hear me out, I have good reason. I think. Let's say you want to make several [TCP](http://en.wikipedia.org/wiki/Transmission_Control_Protocol "Transmission Control Protocol") servers in a node.js application. Have to listen on multiple ports or whatever. Using a factory function is your best bet to avoiding code repetition, right? You end up with something like this:
 
 ```
 var server = function (port, callback) {
@@ -41,19 +29,7 @@ var server = function (port, callback) {
 };
 ```
 
-Simple. Call a function, give it a port, get notified when server is ready to listen. Never be able to touch the server again.
-
-
-
-Wait, that's not good. What if you want to reference the server later? To close it, for instance.
-
-
-
-That's where using returns alongside callbacks comes in.
-
-
-
-Just adding a `return server` at the bottom of that function lets us do something like this:
+Simple. Call a function, give it a port, get notified when server is ready to listen. Never be able to touch the server again. Wait, that's not good. What if you want to reference the server later? To close it, for instance. That's where using returns alongside callbacks comes in. Just adding a `return server` at the bottom of that function lets us do something like this:
 
 ```
 var make_servers = function (callback) {
@@ -71,19 +47,7 @@ var make_servers = function (callback) {
 }
 ```
 
-I sneakily added the async and underscore libraries because they make life easier.
-
-
-
-`make_servers` will generate three servers listening on ports `5000` to `5002`. The async library helped us ensure the main callback is only called once all the servers are ready to listen, and using `_.bind` let us bind server generation to the current scope.
-
-
-
-When this function is done it returns its scope, which now includes references to all the servers, and it will tell your code to keep going when all the servers are ready.
-
-
-
-You'd use it something like this:
+I sneakily added the async and underscore libraries because they make life easier. `make_servers` will generate three servers listening on ports `5000` to `5002`. The async library helped us ensure the main callback is only called once all the servers are ready to listen, and using `_.bind` let us bind server generation to the current scope. When this function is done it returns its scope, which now includes references to all the servers, and it will tell your code to keep going when all the servers are ready. You'd use it something like this:
 
 ```
 var stuff = make_servers(function () { // all servers listening });
@@ -120,28 +84,4 @@ var server = function (port) {
 };
 ```
 
-Not much has changed. More things were bound to `this` and the [return value](http://en.wikipedia.org/wiki/Return_statement "Return statement") became a function because I feel [partial application](http://en.wikipedia.org/wiki/Partial_application "Partial application") makes this code cleaner.
-
-
-
-You'd call the `server` factory like this now: `this.servers[port] = server(port)(callback)`. The main benefit of this approach is that we can generate servers in a loop and activate them at a later time.
-
-
-
-We've essentially decoupled server generation and server startup. Might come in handy.
-
-
-
-The `stuff` object from before is now going to have a `stuff.connections` as well, which references all currently open connections to each port. Neat!
-
-
-
-Another trick I sneaked into these examples is [Javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript")'s powerful [dynamic scoping](http://en.wikipedia.org/wiki/Scope_%28computer_science%29 "Scope (computer science)"). Getting semi-random functions to run in the same scope like that can really clean up your code.
-
-
-
-At the expense of being almost too clever sometimes. Use at your own peril.
-
-
-
-What do you think, is there a cleaner way to implement something like this?
+Not much has changed. More things were bound to `this` and the [return value](http://en.wikipedia.org/wiki/Return_statement "Return statement") became a function because I feel [partial application](http://en.wikipedia.org/wiki/Partial_application "Partial application") makes this code cleaner. You'd call the `server` factory like this now: `this.servers[port] = server(port)(callback)`. The main benefit of this approach is that we can generate servers in a loop and activate them at a later time. We've essentially decoupled server generation and server startup. Might come in handy. The `stuff` object from before is now going to have a `stuff.connections` as well, which references all currently open connections to each port. Neat! Another trick I sneaked into these examples is [Javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript")'s powerful [dynamic scoping](http://en.wikipedia.org/wiki/Scope_%28computer_science%29 "Scope (computer science)"). Getting semi-random functions to run in the same scope like that can really clean up your code. At the expense of being almost too clever sometimes. Use at your own peril. What do you think, is there a cleaner way to implement something like this?

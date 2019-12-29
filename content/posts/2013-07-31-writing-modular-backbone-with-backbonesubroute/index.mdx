@@ -8,35 +8,11 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ../../../defaultHero.jpg
 ---
-Working on a complicated frontend web app, Backbone soon becomes unwieldy. Routes definitions grow and grow, views steal each other's actions and parts of the code try to become independent modules.
-
-
-
-This is the problem I faced a few weeks ago while working on the fanciest signup funnel I ever helped create. Visitors would see the splash page, create their cart, revise it, sign up, add billing and shipping info, and finally checkout without ever refreshing the page.
-
-
-
-A daunting challenge only made worse by the complexity of components involved. We needed a full-blown inventory listing, a full-blown cart editor and we even added some shiny bits to the billing and shipping forms. The funnel changes into an accordion after the first step.
-
-
-
-Oh and the user can refresh at any point in the funnel without losing their place.
-
-
-
-To divide work among the team, we took a straight-forward modular approach: a module handles the whole funnel, submodules take care of each step. This way everyone can focus on their own piece of the funnel and the javascript code can be reused when making the standalone versions of each step for signed-in users.
+Working on a complicated frontend web app, Backbone soon becomes unwieldy. Routes definitions grow and grow, views steal each other's actions and parts of the code try to become independent modules. This is the problem I faced a few weeks ago while working on the fanciest signup funnel I ever helped create. Visitors would see the splash page, create their cart, revise it, sign up, add billing and shipping info, and finally checkout without ever refreshing the page. A daunting challenge only made worse by the complexity of components involved. We needed a full-blown inventory listing, a full-blown cart editor and we even added some shiny bits to the billing and shipping forms. The funnel changes into an accordion after the first step. Oh and the user can refresh at any point in the funnel without losing their place. To divide work among the team, we took a straight-forward modular approach: a module handles the whole funnel, submodules take care of each step. This way everyone can focus on their own piece of the funnel and the javascript code can be reused when making the standalone versions of each step for signed-in users.
 
 ## The skeleton
 
-[Backbone.SubRoute](http://geekdave.com/2012/04/05/module-specific-subroutes-in-backbone/) makes this approach possible by letting you create Backbone routers attached at a certain path in the URL. By doing something like `var bla = new SubBla("/bla", …)` you create a self-contained Backbone app that handles everything under `/bla` and doesn't care about the outside world.
-
-
-
-We didn't like how the official docs recommend going about this, so we made it automagical-er.
-
-
-
-A simple `app_skeleton.js` file holds the entire application together and loads modules when they're needed.
+[Backbone.SubRoute](http://geekdave.com/2012/04/05/module-specific-subroutes-in-backbone/) makes this approach possible by letting you create Backbone routers attached at a certain path in the URL. By doing something like `var bla = new SubBla("/bla", …)` you create a self-contained Backbone app that handles everything under `/bla` and doesn't care about the outside world. We didn't like how the official docs recommend going about this, so we made it automagical-er. A simple `app_skeleton.js` file holds the entire application together and loads modules when they're needed.
 
 ```
 var YourApp = window.YourApp = {Routers: {}};
@@ -63,19 +39,11 @@ YourApp.Router = Backbone.Router.extend({
 });
 ```
 
-We agree to register all our modules as `window.YourApp.Module.Router`. This lets us put every module in its own file and creates a predictable interface for creating instances of sub routers.
-
-
-
-That was easy, now all we need is a submodule.
+We agree to register all our modules as `window.YourApp.Module.Router`. This lets us put every module in its own file and creates a predictable interface for creating instances of sub routers. That was easy, now all we need is a submodule.
 
 ## A module
 
-Modules work the same as standalone Backbone applications. They have views and collections and models and everything is held together by a router. You just have to conform to what app skeleton expects.
-
-
-
-A simple module might look like this:
+Modules work the same as standalone Backbone applications. They have views and collections and models and everything is held together by a router. You just have to conform to what app skeleton expects. A simple module might look like this:
 
 ```
 (function ($) {
@@ -102,15 +70,7 @@ A simple module might look like this:
 
 ## Sub sub modules
 
-Let's make things interesting; the module is called `Root` because it's going to handle submodules of its own - funnel steps in our case. `Root` loads them on the home page, `app_skeleton` loads them on standalone pages.
-
-
-
-For some reason dynamically instantiating submodules was not an option in this case. Not sure why, but it probably had to do with listening to events between submodules. Yes, unclean, but there's no reason to go overboard with architecture principles. Sometimes you just have to get shit done.
-
-
-
-Root's initialize becomes something like this:
+Let's make things interesting; the module is called `Root` because it's going to handle submodules of its own - funnel steps in our case. `Root` loads them on the home page, `app_skeleton` loads them on standalone pages. For some reason dynamically instantiating submodules was not an option in this case. Not sure why, but it probably had to do with listening to events between submodules. Yes, unclean, but there's no reason to go overboard with architecture principles. Sometimes you just have to get shit done. Root's initialize becomes something like this:
 
 ```
         initialize: function () {
@@ -141,11 +101,7 @@ Every subrouter is instantiated on initialize. If we want to change our views wh
         },
 ```
 
-`__listenToSubrouters` goes through all the instantiated routers and makes sure to call the `step` function when a submodule does something.
-
-
-
-The `step` function becomes something like this:
+`__listenToSubrouters` goes through all the instantiated routers and makes sure to call the `step` function when a submodule does something. The `step` function becomes something like this:
 
 ```
         step: function(step, subpath, options) {
@@ -163,14 +119,6 @@ This makes sure to `.navigate` subrouters when it's appropriate and avoid doing 
 
 ## Win
 
-And there you go. Backbone with a modular design that keeps modules neat, encapsulated and reusable.
-
-
-
-To make things even smoother I also added an event that triggers only when a certain step is fully visible. This helps submodules activate/deactivate their views properly because things like [jQuery Waypoints](http://imakewebthings.com/jquery-waypoints/) don't initialize well when elements aren't at their final positions.
-
-
-
-As for the super fancy signup process - you'll be able to see it when [Dwellers](http://www.dwellers.com/) launches. It's pretty great.
+And there you go. Backbone with a modular design that keeps modules neat, encapsulated and reusable. To make things even smoother I also added an event that triggers only when a certain step is fully visible. This helps submodules activate/deactivate their views properly because things like [jQuery Waypoints](http://imakewebthings.com/jquery-waypoints/) don't initialize well when elements aren't at their final positions. As for the super fancy signup process - you'll be able to see it when [Dwellers](http://www.dwellers.com/) launches. It's pretty great.
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=80eafc50-068a-4f40-acaf-a20b7ce2ed15)](http://www.zemanta.com/?px "Enhanced by Zemanta")

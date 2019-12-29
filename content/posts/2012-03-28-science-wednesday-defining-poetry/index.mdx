@@ -8,91 +8,27 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ./img/wikipedia-commons-thumb-4-48-Alexander_Blok_-_Noch%2C_ulica%2C_fonar%2C_apteka.jpg-300px-Alexander_Blok_-_Noch%2C_ulica%2C_fonar%2C_apteka.jpg
 ---
-> Poetry is a literary form in which language is used in a concentrated blend of sound and imagery to create an emotional response.
->
->
->
-> ~ Levin (1962)
+> Poetry is a literary form in which language is used in a concentrated blend of sound and imagery to create an emotional response. ~ Levin (1962)
 
-Poetry is simple to define - _a [poem](http://en.wikipedia.org/wiki/Poetry "Poetry") is a poem because people consider it a poem._
-
-
-
-Simple. Easy to understand. Useless.
-
-
-
-\[caption id="" align="alignright" width="300" caption="Alexander Blok's poem "][![Alexander Blok's poem 'Noch, ulica, fonar, apt...](./img/wikipedia-commons-thumb-4-48-Alexander_Blok_-_Noch%2C_ulica%2C_fonar%2C_apteka.jpg-300px-Alexander_Blok_-_Noch%2C_ulica%2C_fonar%2C_apteka.jpg "Alexander Blok's poem 'Noch, ulica, fonar, apt...")](http://commons.wikipedia.org/wiki/File:Alexander_Blok_-_Noch%2C_ulica%2C_fonar%2C_apteka.jpg)\[/caption]
-
-
-
-When you are [studying poetry](http://swizec.com/blog/science-wednesday-towards-a-computational-model-of-poetry-generation/swizec/3855) in a scientific context, even [creating a poetry generator](https://github.com/Swizec/Le-Thesis) for your graduation thesis, you need a definition that goes beyond intuitive notions of poetry.
-
-
-
-Specifically, you need [falsifiable](http://en.wikipedia.org/wiki/Falsifiability "Falsifiability") results, a way to decide what piece of text is gibberish and what is poetry. Answering the question "Is this art?" is impossible, so Manurung came up with a better definition of poetry in his doctorate thesis _[An evolutionary algorithm for poetry generation](http://academic.research.microsoft.com/Paper/2348039.aspx)._
-
-
-
-He touches upon three dimensions of poetry: poeticness, grammaticality and meaningfulness and finally arrives at a useful definition.
+Poetry is simple to define - _a [poem](http://en.wikipedia.org/wiki/Poetry "Poetry") is a poem because people consider it a poem._ Simple. Easy to understand. Useless. \[caption id="" align="alignright" width="300" caption="Alexander Blok's poem "][![Alexander Blok's poem 'Noch, ulica, fonar, apt...](./img/wikipedia-commons-thumb-4-48-Alexander_Blok_-_Noch%2C_ulica%2C_fonar%2C_apteka.jpg-300px-Alexander_Blok_-_Noch%2C_ulica%2C_fonar%2C_apteka.jpg "Alexander Blok's poem 'Noch, ulica, fonar, apt...")](http://commons.wikipedia.org/wiki/File:Alexander_Blok_-_Noch%2C_ulica%2C_fonar%2C_apteka.jpg)\[/caption] When you are [studying poetry](http://swizec.com/blog/science-wednesday-towards-a-computational-model-of-poetry-generation/swizec/3855) in a scientific context, even [creating a poetry generator](https://github.com/Swizec/Le-Thesis) for your graduation thesis, you need a definition that goes beyond intuitive notions of poetry. Specifically, you need [falsifiable](http://en.wikipedia.org/wiki/Falsifiability "Falsifiability") results, a way to decide what piece of text is gibberish and what is poetry. Answering the question "Is this art?" is impossible, so Manurung came up with a better definition of poetry in his doctorate thesis _[An evolutionary algorithm for poetry generation](http://academic.research.microsoft.com/Paper/2348039.aspx)._ He touches upon three dimensions of poetry: poeticness, grammaticality and meaningfulness and finally arrives at a useful definition.
 
 ## Poeticness
 
-Usual suspect properties of poetry apply here, exactly the ones you learned about in high school. Things such as rhythm, metre, [phonemic](http://en.wikipedia.org/wiki/Phoneme "Phoneme") patterns and [figurative language](http://en.wikipedia.org/wiki/Literal_and_figurative_language "Literal and figurative language").
-
-
-
-For our experiments to be falsifiable it is useful to focus solely on the technical aspects of poetry i.e. the rhythm and phonemic patterns. If you don't remember - rhythm and metre are the patterns in syllable stress and phonemic patterns are rhymes and such.
-
-
-
-\[caption id="attachment_4084" align="alignnone" width="399" caption="Ambiguity in partitioning metre into feet"][![Ambiguity in partitioning metre into feet](http://swizec.com/blog/wp-content/uploads/2012/03/metre.png "Ambiguity in partitioning metre into feet")](./img/blog-wp-content-uploads-2012-03-metre.png)\[/caption]
-
-
-
-There are several types of phonemic patterns (rhyme, alliteration, assonance and consonance), but considering the syllabication problem solved, these are fairly easy to test.
-
-
-
-Problems arise when considering figurative language. When is something a metaphor, or just using the wrong word? Quinn (1982) lists a taxonomy of 60 different types of figures of speech, both at the symbolic and the rhetorical level. (can't find a link right now, sorry)
-
-
-
-This is a poem produced by an old-style system using purely random functions (ELUAR).
+Usual suspect properties of poetry apply here, exactly the ones you learned about in high school. Things such as rhythm, metre, [phonemic](http://en.wikipedia.org/wiki/Phoneme "Phoneme") patterns and [figurative language](http://en.wikipedia.org/wiki/Literal_and_figurative_language "Literal and figurative language"). For our experiments to be falsifiable it is useful to focus solely on the technical aspects of poetry i.e. the rhythm and phonemic patterns. If you don't remember - rhythm and metre are the patterns in syllable stress and phonemic patterns are rhymes and such. \[caption id="attachment_4084" align="alignnone" width="399" caption="Ambiguity in partitioning metre into feet"][![Ambiguity in partitioning metre into feet](http://swizec.com/blog/wp-content/uploads/2012/03/metre.png "Ambiguity in partitioning metre into feet")](./img/blog-wp-content-uploads-2012-03-metre.png)\[/caption] There are several types of phonemic patterns (rhyme, alliteration, assonance and consonance), but considering the syllabication problem solved, these are fairly easy to test. Problems arise when considering figurative language. When is something a metaphor, or just using the wrong word? Quinn (1982) lists a taxonomy of 60 different types of figures of speech, both at the symbolic and the rhetorical level. (can't find a link right now, sorry) This is a poem produced by an old-style system using purely random functions (ELUAR).
 
 > Sparkles of whiteness fly in my eyes, The moan of stars swang branches of trees, The heart of time sings in the snowy night. Seconds of Eternity fly in grass, The Clock of rain turns, Death of the Apples, The Equinox penetrates the words.
 
-Is it a real poem? I don't know, but the experiment doesn't look very falsifiable either.
-
-
-
-Any [automatic poetry](http://en.wikipedia.org/wiki/Surrealist_techniques "Surrealist techniques") generator bumps into the problem that _Readers of \[poetry] are prepared to do considerable interpretative work ... In general, the more the audience is prepared to contribute in responding to a work of art, themore chance there is that a computer's performance may be acknowledged as aesthetically valuable (Boden 1990)_
-
-
-
-The implication being "this shit is simple". But that's abusing the concept of poetic license - something we want to avoid and make life harder for ourselves.
+Is it a real poem? I don't know, but the experiment doesn't look very falsifiable either. Any [automatic poetry](http://en.wikipedia.org/wiki/Surrealist_techniques "Surrealist techniques") generator bumps into the problem that _Readers of \[poetry] are prepared to do considerable interpretative work ... In general, the more the audience is prepared to contribute in responding to a work of art, themore chance there is that a computer's performance may be acknowledged as aesthetically valuable (Boden 1990)_ The implication being "this shit is simple". But that's abusing the concept of poetic license - something we want to avoid and make life harder for ourselves.
 
 ## Grammaticality
 
 > A poem must obey linguistic conventions that are prescribed by a given grammar and lexicon. This is perhaps the most obvious requirement that by definition all natural lan- guage artifacts should fulfill. However, in the context of poetry, it is \\important to state explicitly, as there is the danger of invoking poetic license (see previous section).
 
-Essentially, we are avoiding purely random strings of words.
-
-
-
-For instance: according to _hyperbaton_(a defined figure of speech) the line "I was in my life alone" is allowed, but "In I life was alone my" is just silly.
+Essentially, we are avoiding purely random strings of words. For instance: according to _hyperbaton_(a defined figure of speech) the line "I was in my life alone" is allowed, but "In I life was alone my" is just silly.
 
 ## Meaningfulness
 
-\[caption id="" align="alignright" width="186" caption="Poetry is an... (Photo credit: liber(the poet);)"][![Poetry is an...](./img/2523-4236215697_595587b794_m.jpg "Poetry is an...")](http://www.flickr.com/photos/22179411@N06/4236215697)\[/caption]
-
-
-
-Simply put, the property of meaningfulness states that a text must _intentionally_ convey some sort of conceptual message that can be interpreted. This holds true for any [Natural Language Generation](http://en.wikipedia.org/wiki/Natural_language_generation "Natural language generation") system and despite what first year english majors might think, it must also hold true for poetry.
-
-
-
-Keyword being _intentionally_. The above poem produced by ELUAR primarily hinges on unguided random processes, so it cannot possibly fulfill this requirement.
+\[caption id="" align="alignright" width="186" caption="Poetry is an... (Photo credit: liber(the poet);)"][![Poetry is an...](./img/2523-4236215697_595587b794_m.jpg "Poetry is an...")](http://www.flickr.com/photos/22179411@N06/4236215697)\[/caption] Simply put, the property of meaningfulness states that a text must _intentionally_ convey some sort of conceptual message that can be interpreted. This holds true for any [Natural Language Generation](http://en.wikipedia.org/wiki/Natural_language_generation "Natural language generation") system and despite what first year english majors might think, it must also hold true for poetry. Keyword being _intentionally_. The above poem produced by ELUAR primarily hinges on unguided random processes, so it cannot possibly fulfill this requirement.
 
 ## Useful definition
 
@@ -100,15 +36,7 @@ Finally we reach a useful definition of poetry:
 
 > A poem is a natural language artifact which simultaneously fulfills the properties of meaningfulness, grammaticality and poeticness. In other words, a text x is a poem if x ∈ P ∩ G ∩ M.
 
-For this definition to be complete, further specification must be done on defining meaningfulness and poeticness - something I hope the authors have published papers on since 2003, otherwise this is an area I hope to tackle in my thesis.
-
-
-
-Since we can measure the technical aspects of poeticness, this definition favors classical poetry - a good thing, since I personally have always found modern poetry to be somewhat contrived in its desperate attempts to be _art_.
-
-
-
-Greeting card poetry serves as a good example of poetry fitting our definition.
+For this definition to be complete, further specification must be done on defining meaningfulness and poeticness - something I hope the authors have published papers on since 2003, otherwise this is an area I hope to tackle in my thesis. Since we can measure the technical aspects of poeticness, this definition favors classical poetry - a good thing, since I personally have always found modern poetry to be somewhat contrived in its desperate attempts to be _art_. Greeting card poetry serves as a good example of poetry fitting our definition.
 
 > Far and away you may be, But the presence of your love is here with me
 

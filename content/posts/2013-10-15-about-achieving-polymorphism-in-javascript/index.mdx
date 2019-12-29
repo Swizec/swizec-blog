@@ -8,43 +8,7 @@ categories: 'Uncategorized'
 author: Swizec Teller
 hero: ../../../defaultHero.jpg
 ---
-Over the weekend I started working on a [node.js client library for Toshl's new API](https://github.com/Swizec/toshl.js). An old side project stopped working recently and I need to fix it because life without [frequent emails about my money](http://swizec.com/blog/a-message-from-your-future-self/swizec/3377) is disorienting as hell.
-
-
-
-The [Toshl beta API](https://developer.toshl.com/) opened up in July is well thought out, has good documentation and provides everything you could possibly want. I love the well granulated permissions system.
-
-
-
-But for users of my node.js library I wanted to make life even simpler. Let's look at fetching expenses.
-
-
-
-After you authenticate - testing [OAuth](http://oauth.net "OAuth") clients sucks, and Toshl invalidates your token _very_ often. Think I had to refresh it four times in a five hour coding spree. - you can talk to `https://api.toshl.com/expenses` to get a list of expenses for the current user.
-
-
-
-This will return the last 30 entries.
-
-
-
-But there are a bunch of options. You have pagination, you can set specific `to` and `from` dates, you can filter things by tags and by not-tags.
-
-
-
-How can a library make this easy to use?
-
-
-
-One approach is to offer a way of specifying an options hash when calling a function, but can we make it even simpler?
-
-
-
-The answer lies in polymorphism.
-
-
-
-Let's say you have a function called `toshl.expenses`, in [Haskell](http://haskell.org "Haskell (programming language)") you could do something like this:
+Over the weekend I started working on a [node.js client library for Toshl's new API](https://github.com/Swizec/toshl.js). An old side project stopped working recently and I need to fix it because life without [frequent emails about my money](http://swizec.com/blog/a-message-from-your-future-self/swizec/3377) is disorienting as hell. The [Toshl beta API](https://developer.toshl.com/) opened up in July is well thought out, has good documentation and provides everything you could possibly want. I love the well granulated permissions system. But for users of my node.js library I wanted to make life even simpler. Let's look at fetching expenses. After you authenticate - testing [OAuth](http://oauth.net "OAuth") clients sucks, and Toshl invalidates your token _very_ often. Think I had to refresh it four times in a five hour coding spree. - you can talk to `https://api.toshl.com/expenses` to get a list of expenses for the current user. This will return the last 30 entries. But there are a bunch of options. You have pagination, you can set specific `to` and `from` dates, you can filter things by tags and by not-tags. How can a library make this easy to use? One approach is to offer a way of specifying an options hash when calling a function, but can we make it even simpler? The answer lies in polymorphism. Let's say you have a function called `toshl.expenses`, in [Haskell](http://haskell.org "Haskell (programming language)") you could do something like this:
 
 ```
 expenses::Result
@@ -69,15 +33,7 @@ make_request::String -> String -> Result
 make_request endpoint query = ;; do stuff to read from full URL
 ```
 
-The syntax is likely wrong but you get what I'm pointing at. You can always call `expenses` with the argument you care about and it will construct a call to the more generalized version of the function magically.
-
-
-
-You can tell what calling `expenses` will do in each case at a glance and checking what type of arguments the function accepts is trivial. Even somebody who isn't familiar with Haskell could understand that code.
-
-
-
-Here's that same polymorphic code in [Javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"). This time tested working code.
+The syntax is likely wrong but you get what I'm pointing at. You can always call `expenses` with the argument you care about and it will construct a call to the more generalized version of the function magically. You can tell what calling `expenses` will do in each case at a glance and checking what type of arguments the function accepts is trivial. Even somebody who isn't familiar with Haskell could understand that code. Here's that same polymorphic code in [Javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"). This time tested working code.
 
 ```
 exports.Toshl.prototype.expenses = function (params, to, callback) {
@@ -111,27 +67,7 @@ exports.Toshl.prototype.expenses = function (params, to, callback) {
 };
 ```
 
-Oh wow, what?
-
-
-
-Even if you're very comfortable with Javascript you're going to have a hard time figuring out what's going on. It seems the majority of the function deals with translating `arguments` into a `query`, then it defers to `this._request` for the hard work.
-
-
-
-This is the cleanest implementation I could think of so far. Let's investigate.
-
-
-
-First we ensured that `callback` is always the last supplied argument, that makes sense when you expect variable amounts of arguments. Everything from one to three is okay.
-
-
-
-Then, if `params` is a number we use it to construct a `?per_page=N` query. If there are three arguments, we use the first two to construct a `?from=Date&to=Date` query. If the first argument is an Array we use it to get tags and if it's an Object we assume it represents a parameters hash for the API.
-
-
-
-The result is that we can do this:
+Oh wow, what? Even if you're very comfortable with Javascript you're going to have a hard time figuring out what's going on. It seems the majority of the function deals with translating `arguments` into a `query`, then it defers to `this._request` for the hard work. This is the cleanest implementation I could think of so far. Let's investigate. First we ensured that `callback` is always the last supplied argument, that makes sense when you expect variable amounts of arguments. Everything from one to three is okay. Then, if `params` is a number we use it to construct a `?per_page=N` query. If there are three arguments, we use the first two to construct a `?from=Date&to=Date` query. If the first argument is an Array we use it to get tags and if it's an Object we assume it represents a parameters hash for the API. The result is that we can do this:
 
 ```
 var toshl = new Toshl();
@@ -147,14 +83,6 @@ toshl.expenses(["coffee", "food"], console.log); // prints last 30 expenses tagg
 toshl.expenses({per_page: 10, tags: ["coffee", "food"]}, console.log) // prints last 10 expenses tagged coffee or food
 ```
 
-The date magic is done with the wonderful [moment.js](http://momentjs.com/) library - you can supply a Date object, a date string or a moment object, but we could obviously improve on this by assuming the `to` date is "now", if none is provided.
-
-
-
-But the code is getting complicated as it is.
-
-
-
-Does anyone know a better way to achieve polymorphism in Javascript? I really like it when I'm using libraries, but I hate implementing it this way ...
+The date magic is done with the wonderful [moment.js](http://momentjs.com/) library - you can supply a Date object, a date string or a moment object, but we could obviously improve on this by assuming the `to` date is "now", if none is provided. But the code is getting complicated as it is. Does anyone know a better way to achieve polymorphism in Javascript? I really like it when I'm using libraries, but I hate implementing it this way ...
 
 [![Enhanced by Zemanta](http://img.zemanta.com/zemified_e.png?x-id=739c8f9e-f369-4125-9471-ec1a4738359c)](http://www.zemanta.com/?px "Enhanced by Zemanta")

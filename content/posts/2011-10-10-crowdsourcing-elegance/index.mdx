@@ -10,25 +10,11 @@ hero: ./img/blog-wp-content-uploads-2011-10-6229977151_4f39755c38_m1.jpg
 ---
 \[caption id="" align="alignright" width="240" caption="Image by ijiwaru jimbo via Flickr"][![soba fest 095](./img/blog-wp-content-uploads-2011-10-6229977151_4f39755c38_m1.jpg "soba fest 095")](http://www.flickr.com/photos/17291033@N00/6229977151)\[/caption]
 
+On Friday I said that [Functional isn't always better](http://swizec.com/blog/functional-isnt-always-better/swizec/2591 "Functional isn’t always better"), but really it was a post about my failings as a functional programmer in finding an elegant solution to the problem of transforming a list of values into a list of pairs. Originally I described the problem like so:
 
+> The problem is one of turning a list of values, say, _\[A, B, C, D]_ into a list of pairs with itself, like so _\[\[A,B], \[A,C], \[A,D], \[B, C], \[B,D], \[C,D]]._ Should be simple enough right? You just make another list shifted by one to the left, make a zip, then repeat until the second list is empty. This solution turns out to be horrible, looks ugly and I’m not even going to show it. So here’s my second functional solution … it’s a lot cleaner.
 
-On Friday I said that [Functional isn't always better](http://swizec.com/blog/functional-isnt-always-better/swizec/2591 "Functional isn’t always better"), but really it was a post about my failings as a functional programmer in finding an elegant solution to the problem of transforming a list of values into a list of pairs.
-
-
-
-Originally I described the problem like so:
-
-> The problem is one of turning a list of values, say, _\[A, B, C, D]_ into a list of pairs with itself, like so _\[\[A,B], \[A,C], \[A,D], \[B, C], \[B,D], \[C,D]]._
->
->
->
-> Should be simple enough right? You just make another list shifted by one to the left, make a zip, then repeat until the second list is empty. This solution turns out to be horrible, looks ugly and I’m not even going to show it. So here’s my second functional solution … it’s a lot cleaner.
-
-Turns out the internet is _super awesome_ and was more than willing to put me in my place. You guys posted a cumulative of 49 comments (on hackernews and this blog) and [Brian Marick](http://exampler.com/) even posted a tutorial on approaching functional programming on this example, entitled _[Top-down design in "functional classic" programming](http://www.exampler.com/blog/2011/10/07/top-down-design-in-functional-classic-programming-2/)._
-
-
-
-Solutions were posted in [Clojure](http://clojure.org "Clojure"), [Haskell](http://haskell.org "Haskell (programming language)"), [Python](http://www.python.org/ "Python (programming language)"), J, Scala, [Javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"), [Erlang](http://www.erlang.org "Erlang (programming language)"), [SmallTalk](http://en.wikipedia.org/wiki/Smalltalk "Smalltalk"), C#, [Ocaml](http://caml.inria.fr/index.en.html "Objective Caml"), F#, ... and some language I didn't recognize nor did the poster specify what it was.
+Turns out the internet is _super awesome_ and was more than willing to put me in my place. You guys posted a cumulative of 49 comments (on hackernews and this blog) and [Brian Marick](http://exampler.com/) even posted a tutorial on approaching functional programming on this example, entitled _[Top-down design in "functional classic" programming](http://www.exampler.com/blog/2011/10/07/top-down-design-in-functional-classic-programming-2/)._ Solutions were posted in [Clojure](http://clojure.org "Clojure"), [Haskell](http://haskell.org "Haskell (programming language)"), [Python](http://www.python.org/ "Python (programming language)"), J, Scala, [Javascript](http://en.wikipedia.org/wiki/JavaScript "JavaScript"), [Erlang](http://www.erlang.org "Erlang (programming language)"), [SmallTalk](http://en.wikipedia.org/wiki/Smalltalk "Smalltalk"), C#, [Ocaml](http://caml.inria.fr/index.en.html "Objective Caml"), F#, ... and some language I didn't recognize nor did the poster specify what it was.
 
 ## Clojure
 
@@ -160,8 +146,6 @@ Output:
 1> combos:combo([a,b,c,d]).[{a,d},{a,c},{a,b},{b,d},{b,c},{c,d}]2>
 ```
 
-
-
 ## More javascript
 
 @refaktor gave it the most attempts ... I think he had a boring weekend, or just got nerd sniped. Here's his his final solution in javascript ... would have expected rebol from him though.
@@ -170,27 +154,17 @@ Output:
 var f = function(a) { return a.length == 0 ? [] : (a.slice(1).map(function(x){return [a[0],x]})).concat(f(a.slice(1))); }
 ```
 
-
-
 ## Smalltalk
 
 By Larry ... he didn't leave a link.
-
-
 
 ```
 in := #(a b c d) asOrderedCollection.out := OrderedCollection new.in size timesRepeat: [	key := in removeFirst.	in do: [ :value |  out add:( Array with: key with: value). ].].
 ```
 
-
-
 ## Conclusion
 
-There were other good solutions, but I think these are the most interesting to look at. This whole experience proves that sometimes when you ask for help on the internets Good Things (tm) happen.
-
-
-
-It also proves that geeks _love_ outdoing each other.
+There were other good solutions, but I think these are the most interesting to look at. This whole experience proves that sometimes when you ask for help on the internets Good Things (tm) happen. It also proves that geeks _love_ outdoing each other.
 
 ###### Related articles
 

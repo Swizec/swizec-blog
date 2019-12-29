@@ -10,41 +10,13 @@ hero: ./img/images-irobot1.jpg
 ---
 > \[18:21:38] &lt;HairyFotr> \_chatty-botko\_ we desire to hear moar of you're infinite wisdom \[18:21:38] &lt;\_chatty-botko\_> know it broken ? \_chatty-botko\_ doesn't though gets
 
-[IRC](http://en.wikipedia.org/wiki/Internet_Relay_Chat "Internet Relay Chat") might seem quaint and outdated, but for keeping in touch with a group of friends it beats [Twitter](http://twitter.com "Twitter"), Facebook and Google+ hands down.
-
-
-
-\[caption id="" align="alignright" width="360" caption="Robot"]![Robot](./img/images-irobot1.jpg "Robot")\[/caption]
-
-
-
-There's a bunch of _others_ on those things. With IRC there's just us ... and a robot overlord.
-
-
-
-Mostly _\_botko\__ makes sure to mention when we repost links and keeps irc logs for us. But as soon as [@smotko](https://twitter.com/#!/smotko) added random phrases to make keeping us in place more interesting. We wanted more.
-
-
-
-We wanted our bot to speak.
-
-
-
-It's been ages since I coded just for fun, so last night I made _\_botko\__ talk.
+[IRC](http://en.wikipedia.org/wiki/Internet_Relay_Chat "Internet Relay Chat") might seem quaint and outdated, but for keeping in touch with a group of friends it beats [Twitter](http://twitter.com "Twitter"), Facebook and Google+ hands down. \[caption id="" align="alignright" width="360" caption="Robot"]![Robot](./img/images-irobot1.jpg "Robot")\[/caption] There's a bunch of _others_ on those things. With IRC there's just us ... and a robot overlord. Mostly _\_botko\__ makes sure to mention when we repost links and keeps irc logs for us. But as soon as [@smotko](https://twitter.com/#!/smotko) added random phrases to make keeping us in place more interesting. We wanted more. We wanted our bot to speak. It's been ages since I coded just for fun, so last night I made _\_botko\__ talk.
 
 ## What to say?
 
 > \[18:03:13] &lt;\_chatty-botko\_> \_botko\_ probably feels left out \[18:12:45] &lt;\_chatty-botko\_> auto complete :D whoa! mind = blown
 
-So how do you make a robot speak?
-
-
-
-Natural language generation is a _huge_ field, hell I'm doing [my thesis](http://swizec.github.com/Le-Thesis/) in that general vicinity. For this project I just wanted to have a little fun, not invent a monster -> [markov chain](http://en.wikipedia.org/wiki/Markov_chain "Markov chain") [text generation](http://en.wikipedia.org/wiki/Natural_language_generation "Natural language generation")!
-
-
-
-The way a markov chain text generator works is basically:
+So how do you make a robot speak? Natural language generation is a _huge_ field, hell I'm doing [my thesis](http://swizec.github.com/Le-Thesis/) in that general vicinity. For this project I just wanted to have a little fun, not invent a monster -> [markov chain](http://en.wikipedia.org/wiki/Markov_chain "Markov chain") [text generation](http://en.wikipedia.org/wiki/Natural_language_generation "Natural language generation")! The way a markov chain text generator works is basically:
 
 1. split a text into words
 2. create n-grams (n-length groups of words, I used n=1)
@@ -64,23 +36,7 @@ You end up with this sort of data structure.
 # and so on for quite a while
 ```
 
-While this works great for static text, an irc chatroom is a rolling [time series](http://en.wikipedia.org/wiki/Time_series "Time series") that never really ends. Not only will you soon run out of memory, how do you deal with staying relevant?
-
-
-
-I had to wait until _**4:03AM**_ for the solution to hit me!
-
-
-
-It doesn't have to be complicated at all - just decay the weights of all _next_ items whenever you poke an element. And do the same whenever a new text is added to the Corpus.
-
-
-
-Especially \\important is to choose the starting point well. The more relevant it is to current discussion, the more chance you have of saying something relevant. So instead of choosing at random, we make a weighted choice here as well.
-
-
-
-When everything is packaged together, usage becomes pretty simple:
+While this works great for static text, an irc chatroom is a rolling [time series](http://en.wikipedia.org/wiki/Time_series "Time series") that never really ends. Not only will you soon run out of memory, how do you deal with staying relevant? I had to wait until _**4:03AM**_ for the solution to hit me! It doesn't have to be complicated at all - just decay the weights of all _next_ items whenever you poke an element. And do the same whenever a new text is added to the Corpus. Especially \\important is to choose the starting point well. The more relevant it is to current discussion, the more chance you have of saying something relevant. So instead of choosing at random, we make a weighted choice here as well. When everything is packaged together, usage becomes pretty simple:
 
 ```
 corpus.add(text) # repeat this a couple of times
@@ -90,11 +46,7 @@ corpus.rewind()
 text = " ".join(take(corpus, 5)) # creates a 5 word text
 ```
 
-All the [code is on github](https://github.com/Swizec/botko/blob/speaking/src/Corpus.py).
-
-
-
-Making the data structure iterable like that was especially interesting. Now I can change how the generator works without affecting external code.
+All the [code is on github](https://github.com/Swizec/botko/blob/speaking/src/Corpus.py). Making the data structure iterable like that was especially interesting. Now I can change how the generator works without affecting external code.
 
 ```
     def __iter__(self):
@@ -135,31 +87,7 @@ Pretty cool right?
 
 ## When to speak?
 
-Okay, that takes care of generating the text. But when should _\_botko\__ speak anyway?
-
-
-
-\[caption id="" align="alignright" width="240" caption="How Should You Act on IRC (Internet Relay Chatroom)? (Photo credit: Chris Pirillo)"][![How Should You Act on IRC (Internet Relay Chat...](./img/3246-2866792711_027e60dd7e_m.jpg "How Should You Act on IRC (Internet Relay Chat...")](http://www.flickr.com/photos/49503157467@N01/2866792711)\[/caption]
-
-
-
-You certainly don't want the bot to spam everyone. But you don't want him to be completely quiet most of the time. Speaking every X amount of events is simply too predictable and boring ...
-
-
-
-Ideally you'd want him to speak more when the chatroom is busier and less when it's a bit quiet. When it's been quiet for a long time and it suddenly becomes very busy, that's also a good time to speak.
-
-
-
-Sort of like a greeting.
-
-
-
-I ended up using a combination of chat velocity and the rate of chat acceleration change to determine the probability of speaking, which is then still left up to [randomness](http://en.wikipedia.org/wiki/Randomness "Randomness").
-
-
-
-Velocity is measured as the ratio between the timespan of the last 10 messages and the timespan of the last 60. This basically measures how densely the messages are coming into the chatroom right now.
+Okay, that takes care of generating the text. But when should _\_botko\__ speak anyway? \[caption id="" align="alignright" width="240" caption="How Should You Act on IRC (Internet Relay Chatroom)? (Photo credit: Chris Pirillo)"][![How Should You Act on IRC (Internet Relay Chat...](./img/3246-2866792711_027e60dd7e_m.jpg "How Should You Act on IRC (Internet Relay Chat...")](http://www.flickr.com/photos/49503157467@N01/2866792711)\[/caption] You certainly don't want the bot to spam everyone. But you don't want him to be completely quiet most of the time. Speaking every X amount of events is simply too predictable and boring ... Ideally you'd want him to speak more when the chatroom is busier and less when it's a bit quiet. When it's been quiet for a long time and it suddenly becomes very busy, that's also a good time to speak. Sort of like a greeting. I ended up using a combination of chat velocity and the rate of chat acceleration change to determine the probability of speaking, which is then still left up to [randomness](http://en.wikipedia.org/wiki/Randomness "Randomness"). Velocity is measured as the ratio between the timespan of the last 10 messages and the timespan of the last 60. This basically measures how densely the messages are coming into the chatroom right now.
 
 ```
 velocity_rate = (now - 10_messages_ago_time)/(now - 60_messages_ago_time)
@@ -173,23 +101,11 @@ a_i = delta_of_two_speeds
 accel_rate = a_1/a_2
 ```
 
-It looks simple in pseudocode, but I promise it took a fair amount of head banging to come up with that!
-
-
-
-This part of the [code is also on github](https://github.com/Swizec/botko/blob/speaking/src/chitchat.py).
+It looks simple in pseudocode, but I promise it took a fair amount of head banging to come up with that! This part of the [code is also on github](https://github.com/Swizec/botko/blob/speaking/src/chitchat.py).
 
 ## Lovely!
 
-That's pretty much it. Our IRC room now has a bot that entertains everyone with its nonsense and I couldn't make myself go to bed until almost five in the morning.
-
-
-
-All that's left to do now is tweaking the parameters a bit, perhaps iron out a bug or two.
-
-
-
-I'm almost tempted to connect this guy to #startups ...
+That's pretty much it. Our IRC room now has a bot that entertains everyone with its nonsense and I couldn't make myself go to bed until almost five in the morning. All that's left to do now is tweaking the parameters a bit, perhaps iron out a bug or two. I'm almost tempted to connect this guy to #startups ...
 
 > \[18:27:27] wisdom ACTION uses this quote in blogpost because it's starting \[18:27:43] I almost have to use that ... \[18:27:44] kul, to da si se spet zacel ful pogovarjat, prej
 
